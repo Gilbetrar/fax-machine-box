@@ -139,7 +139,7 @@ class OuterShell(Boxes):
             text_y = h - text_height - 12
             self.draw_pixel_text(text, text_x, text_y, pixel_size)
 
-        self.rectangularWall(x, h, "FFFe", callback=[add_drawer_openings_and_engraving, None, None, None], label="Front Wall")
+        self.rectangularWall(x, h, "FFFe", callback=[add_drawer_openings_and_engraving, None, None, None], move="right", label="Front Wall")
         self.rectangularWall(x, h, "FFFf", move="left", label="Back Wall")
         self.rectangularWall(x, y, "ffff", move="up", label="Bottom")
 

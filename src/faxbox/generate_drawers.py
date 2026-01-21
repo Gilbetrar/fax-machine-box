@@ -75,6 +75,7 @@ class DrawerBox(Boxes):
         self.rectangularWall(
             y, h,
             "FFeF",  # bottom=F, right=F, top=e (open), left=F
+            move="up",
             label="Left Side"
         )
 
