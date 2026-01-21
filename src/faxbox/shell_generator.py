@@ -147,22 +147,29 @@ class OuterShell(Boxes):
         # === INTERNAL DIVIDER ===
         # Vertical divider separating paper compartment from drawer bay
         # Height = full height, depth = full depth (y)
-        # Needs slots for horizontal shelf
+        # Needs slots for horizontal shelf and lid groove for paper compartment
 
-        def add_shelf_slot():
-            """Add slot for horizontal shelf."""
-            # Slot at shelf height, spanning drawer bay side
+        def add_divider_features():
+            """Add shelf slot and lid groove to vertical divider."""
+            # Shelf slot at shelf height, spanning drawer bay side
             slot_x = paper_depth + t + (drawer_bay_depth - t) / 2
             self.rectangularHole(
                 slot_x, shelf_height,
                 drawer_bay_depth - 2 * t, t,
                 r=0
             )
+            # Lid groove matching left wall (for sliding lid)
+            groove_y = h - LID_GROOVE_DEPTH / 2
+            self.rectangularHole(
+                paper_depth / 2, groove_y,
+                paper_depth - 2 * t, LID_GROOVE_WIDTH,
+                r=0
+            )
 
         self.rectangularWall(
             y, h,
             "ffef",  # bottom and sides finger holes, top plain
-            callback=[add_shelf_slot, None, None, None],
+            callback=[add_divider_features, None, None, None],
             move="right",
             label="Vertical Divider"
         )

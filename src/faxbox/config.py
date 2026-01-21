@@ -54,5 +54,8 @@ LID_GROOVE_DEPTH = 5.0  # How deep the groove cuts into the wall
 
 # Lid dimensions
 LID_TAB_CLEARANCE = 0.3  # Clearance for lid tabs to fit in grooves
+SLIDING_LID_TAB_DEPTH = LID_GROOVE_DEPTH - 1.0  # How far tab extends into groove
+
+# Flat tabbed lid for drawer bay (sits on top)
 FLAT_LID_TAB_WIDTH = 10.0  # Width of alignment tabs on flat lid
-FLAT_LID_TAB_DEPTH = 5.0  # How deep alignment tabs extend
+FLAT_LID_TAB_DEPTH = 5.0  # How deep alignment tabs extend into wall tops
