@@ -24,6 +24,9 @@ class DrawerBox(Boxes):
 
     def render(self) -> None:
         """Render all drawer pieces."""
+        # Set default cut color to blue for Ponoko compatibility (#0000FF)
+        self.set_source_color([0.0, 0.0, 1.0])
+
         x, y, h = self.x, self.y, self.h
         t = self.thickness
 

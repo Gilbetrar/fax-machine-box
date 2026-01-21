@@ -31,6 +31,9 @@ class LidGenerator(Boxes):
 
     def render(self) -> None:
         """Render both lid pieces."""
+        # Set default cut color to blue for Ponoko compatibility (#0000FF)
+        self.set_source_color([0.0, 0.0, 1.0])
+
         t = self.thickness
 
         # Calculate internal dimensions from external shell
