@@ -211,3 +211,41 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 - ✅ Sliding lid: 73.0mm × 158.8mm
 - ✅ Flat lid: 222.2mm × 158.8mm
 - ✅ All generators still work after changes
+
+---
+
+## Agent Session - Issue #5
+
+**Worked on:** Issue #5 - Add "FAX MACHINE" Engraving
+
+**What I did:**
+- Added pixel font definitions for retro 5x7 pixel characters (F, A, X, M, C, H, I, N, E, space)
+- Implemented `draw_pixel_char` method to render individual characters as rectangle outlines
+- Implemented `draw_pixel_text` method to render text strings with engrave color
+- Integrated text engraving into the front wall callback
+- Text is centered horizontally and positioned near the top of the front wall
+
+**What I learned:**
+- Boxes.py `ctx.fill()` is NOT implemented - must use stroke-based drawing
+- Use `self.ctx.set_source_rgb(*color)` to set RGB color for drawing
+- Pixel font approach works well for retro aesthetic without font dependencies
+- Files in this project may be auto-modified by a linter/watcher process
+
+**Codebase facts discovered:**
+- Config already had ENGRAVE_COLOR, ENGRAVE_FONT_SPACING from previous agent
+- External font files (Press Start 2P) were referenced but not actually present
+- The text_renderer.py module exists but requires fonttools dependency and missing font file
+
+**Design decisions:**
+- Used inline pixel font instead of external font to avoid dependencies
+- Pixel size of 3mm gives readable text that fits the front wall width
+- Text positioned 12mm below top edge to clear finger joints
+
+**Mistakes made:**
+- Initially tried to use `ctx.fill()` which isn't implemented in Boxes.py
+- File kept getting modified by external process, causing edit conflicts
+- Had to use Bash heredoc to write the entire file atomically
+
+**Verification:**
+- SVG output has 5 blue paths (cuts) and 160 red paths (engraves)
+- All generators still work (shell, drawer, lids, test)
