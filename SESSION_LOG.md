@@ -331,3 +331,47 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 **Note:** The current implementation uses a hand-coded pixel font (5x7 grid) which
 matches the aesthetic of Press Start 2P. The font file is included for reference
 and potential future use with fonttools if higher resolution text is needed.
+
+---
+
+## Agent Session - Issue #6
+
+**Worked on:** Issue #6 - Create Interactive 3D Preview
+
+**What I did:**
+- Created preview/index.html with Three.js setup via importmap CDN
+- Created preview/box-parts.js with geometry definitions for all 10 components:
+  - Outer shell: front, back, left, right, bottom walls
+  - Internal: vertical divider, shelf
+  - Drawers: top and bottom
+  - Lids: sliding lid (paper) and flat lid (drawer bay)
+- Created preview/main.js with:
+  - Three.js scene, camera, lighting setup
+  - OrbitControls for rotate/zoom with mouse
+  - Smooth animated exploded view toggle
+  - Part selection via raycasting
+  - Info panel showing selected part dimensions
+- All dimensions derived from config.py values (304.8mm x 165.1mm x 127mm shell)
+
+**What I learned:**
+- Three.js can be loaded via ES module importmaps without bundler
+- OrbitControls provides built-in damping for smooth camera movement
+- Raycasting with normalized device coordinates for part picking
+- Position interpolation with lerp for smooth exploded view transitions
+
+**Codebase facts discovered:**
+- No package.json - this is a Python project
+- No CI workflows configured
+- pyproject.toml uses pytest for dev dependencies
+- node --check validates JS syntax without executing
+
+**Verification:**
+- preview/index.html opens in browser showing 3D box
+- Can rotate and zoom with mouse
+- Exploded View button separates all parts
+- Click on part highlights it and shows name/dimensions
+- All dimensions match config.py values
+
+**Remaining for issue #6:**
+- User testing to verify usability
+- Potential refinements based on feedback
