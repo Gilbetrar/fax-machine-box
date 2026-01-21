@@ -70,4 +70,4 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 - Check `git status` for uncommitted work from previous agents
 - Sliding lids need grooves on BOTH sides
 - `--outside 0` means dimensions are internal; external = internal + 2×thickness
-- Drawer dimensions were set independently of shell - verify fit before cutting
+- Config coordinate naming differs from spec: config "width"=12" is spec "length", config "depth"=6.5" is spec "width"

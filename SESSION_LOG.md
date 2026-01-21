@@ -434,3 +434,38 @@ strict tests that fail, and created Issue #10 to track the config fix.
 - 2 tests correctly fail due to config.py dimension mismatch
 - Created Issue #10 to fix the config
 - Issue #7 blocked until #10 is resolved and all tests pass
+
+---
+
+## Agent Session - Issue #10
+
+**Worked on:** Issue #10 - Fix drawer/shell dimension mismatch in config.py
+
+**What I did:**
+- Fixed DRAWER dimensions in config.py:
+  - width: 222mm → 150mm (side-to-side, fits in shell's 6.5" depth)
+  - depth: 158mm → 210mm (pull direction, fits in 9" drawer bay)
+  - height: 53mm (unchanged - correctly fits two stacked)
+- Added coordinate system comments to config.py clarifying:
+  - SHELL["width"] = 12" (front-to-back, drawer pull direction)
+  - SHELL["depth"] = 6.5" (side-to-side)
+- Fixed tests to use correct shell dimension for drawer bay:
+  - test_drawer_width_fits_in_shell: now uses SHELL["depth"] not SHELL["width"]
+  - test_drawer_depth_fits_in_drawer_bay: now uses SHELL["width"] not SHELL["depth"]
+  - test_divider_leaves_drawer_bay_space: same fix
+- Regenerated drawer SVG with corrected dimensions
+
+**What I learned:**
+- The SHELL coordinate system in config.py differs from SPEC.md terminology:
+  - config "width" = spec "length" (12", front-to-back)
+  - config "depth" = spec "width" (6.5", side-to-side)
+- This naming confusion caused DRAWER dimensions to be calculated against wrong axis
+- Tests were checking drawer depth against shell's 6.5" instead of 12"
+
+**Verification:**
+- All 22 tests pass: `pytest tests/ -v`
+- Drawer now fits correctly:
+  - External width: 156.35mm fits in 158.75mm internal shell side
+  - External depth: 216.35mm fits in 219.075mm drawer bay length
+
+**Issue #10 closed:** Commit ac27d63 with "Fixes #10" auto-closed the issue
