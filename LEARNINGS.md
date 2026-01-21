@@ -27,6 +27,7 @@ python3 -m faxbox.test_generator         # Test box (proof of concept)
 python3 -m faxbox.generate_drawers       # Generate drawer SVGs
 python3 -m faxbox.shell_generator        # Generate outer shell SVGs
 python3 -m faxbox.generate_lids          # Generate lid SVGs
+python3 -m faxbox.layout                 # Generate final combined layout
 pytest tests/                            # Run dimension validation tests
 ```
 
@@ -62,6 +63,13 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 
 - Boxes.py from GitHub: `boxes @ git+https://github.com/florianfesti/boxes.git`
 - PyPI "boxes" is WRONG package
+
+## SVG Color Coding (Ponoko Compatible)
+
+- Blue `rgb(0,0,255)` = cut lines
+- Red `rgb(255,0,0)` = engrave lines
+- `layout.py` converts black strokes to blue via `convert_colors_to_ponoko()`
+- Must strip metadata with namespace prefixes (rdf:, cc:, dc:) when combining SVGs
 
 ## Gotchas
 
