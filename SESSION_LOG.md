@@ -469,3 +469,36 @@ strict tests that fail, and created Issue #10 to track the config fix.
   - External depth: 216.35mm fits in 219.075mm drawer bay length
 
 **Issue #10 closed:** Commit ac27d63 with "Fixes #10" auto-closed the issue
+
+---
+
+## Agent Session - Issue #8
+
+**Worked on:** Issue #8 - Laser Cutting Service Comparison
+
+**What I did:**
+- Researched 4 laser cutting services for 1/8" plywood validation cut:
+  1. NYC Resistor (Brooklyn) - $1/min self-operated
+  2. SendCutSend (online) - per-part pricing, instant quotes
+  3. Ponoko (online) - ships from Oakland
+  4. Laser-CutZ (NYC) - $500/hr, $750 minimum
+- Created docs/service-comparison.md with detailed comparison table
+- Added pricing, turnaround, pros/cons for each service
+- Recommended NYC Resistor as cheapest option (~$35-50 for validation)
+
+**What I learned:**
+- NYC Resistor offers $1/min self-operated laser cutting after taking their class
+- Laser-CutZ increased prices to $750 minimum due to tariffs (Feb 2025)
+- SendCutSend has no minimum and instant quotes - good for production runs
+- Ponoko ships from Oakland so longer transit to East Coast
+
+**Codebase facts discovered:**
+- Project uses ~12" x 24" of plywood for all parts
+- SVG files in output/ are ready for upload to services
+- Config shows engraving color is red (#FF0000) for Ponoko compatibility
+
+**Cost breakdown for validation:**
+- NYC Resistor: ~$35-50 (materials + $20-30 cutting)
+- SendCutSend: ~$40-60 (includes materials, free shipping)
+- Ponoko: ~$50-80 (longer turnaround)
+- Laser-CutZ: $750+ (not viable for validation)
