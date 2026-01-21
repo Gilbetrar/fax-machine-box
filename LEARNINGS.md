@@ -26,6 +26,9 @@ python3 -m pip install -e .
 
 # Generate test box
 python3 -m faxbox.test_generator
+
+# Generate drawer
+python3 -m faxbox.drawer_generator
 ```
 
 ## Boxes.py Usage Pattern
@@ -60,8 +63,30 @@ List all: `from boxes.generators import getAllBoxGenerators`
 - Boxes.py must be installed from GitHub (PyPI "boxes" is wrong package)
 - Dependency: `boxes @ git+https://github.com/florianfesti/boxes.git`
 
+## Edge Types for Custom Boxes
+
+Edge string is bottom, right, top, left (counter-clockwise from bottom-left):
+- `F` = finger joints (male, protrudes)
+- `f` = finger holes (female, accepts joints)
+- `e` = plain edge (no joints)
+
+**Open-top drawer pattern:**
+- Front/Back: "Ffef" (finger joints to bottom, holes for sides, plain top)
+- Sides: "FFeF" (finger joints all around except plain top)
+- Bottom: "ffff" (all holes to accept wall joints)
+
+## Adding Holes via Callback
+
+```python
+def add_hole():
+    self.rectangularHole(x/2, y_pos, width, height, r=corner_radius)
+
+self.rectangularWall(x, h, "Ffef", callback=[add_hole, None, None, None])
+```
+
 ## Config Constants (config.py)
 
 - `MATERIAL_THICKNESS = 3.0` mm (standard laser-cut plywood)
+- `DRAWER_MATERIAL_THICKNESS = 3.175` mm (1/8" plywood)
 - `BURN = 0.05` mm (adjust for joint tightness)
 - `OUTPUT_DIR = "output"`
