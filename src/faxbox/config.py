@@ -20,14 +20,16 @@ DEFAULT_BOX = {
 OUTPUT_DIR = "output"
 
 # Drawer dimensions in mm
-# Internal dimensions: ~8.75" × 6.25" × 2.1" with clearance for sliding
-# The issue specifies 3.175mm material (1/8" plywood)
+# COORDINATE SYSTEM:
+#   width  = side-to-side (fits within shell's 6.5" depth)
+#   depth  = pull direction / front-to-back (fits within 9" drawer bay)
+#   height = vertical
 DRAWER_MATERIAL_THICKNESS = 3.175  # 1/8" plywood
 
 DRAWER = {
-    "width": 222.0,   # ~8.75" internal width (slightly under for clearance)
-    "depth": 158.0,   # ~6.25" internal depth (slightly under for clearance)
-    "height": 53.0,   # ~2.1" internal height
+    "width": 150.0,   # ~5.9" internal (external ~6.15", fits in 6.5" with clearance)
+    "depth": 210.0,   # ~8.3" internal (external ~8.5", fits in 9" drawer bay)
+    "height": 53.0,   # ~2.1" internal (two fit vertically with shelf)
 }
 
 # Clearance for drawer sliding (per side)
@@ -38,9 +40,13 @@ FINGER_NOTCH_RADIUS = 15.0  # 15mm radius for comfortable grip
 
 # Outer shell dimensions in mm
 # External: 12" × 6.5" × 5"
+# COORDINATE SYSTEM (matches spec but with different names):
+#   width  = 12" (spec calls this "length") = front-to-back, drawer pull direction
+#   depth  = 6.5" (spec calls this "width") = side-to-side
+#   height = 5"
 SHELL = {
-    "width": 304.8,   # 12" external width (left to right)
-    "depth": 165.1,   # 6.5" external depth (front to back)
+    "width": 304.8,   # 12" (spec "length") - front to back, contains paper + drawer bay
+    "depth": 165.1,   # 6.5" (spec "width") - side to side
     "height": 127.0,  # 5" external height
 }
 

@@ -26,30 +26,32 @@ class TestDrawerFitsInShell:
     """Tests verifying drawers fit inside the outer shell with clearance."""
 
     def test_drawer_width_fits_in_shell(self):
-        """Drawer width + walls + clearance must fit within shell internal width."""
-        shell_internal_width = SHELL["width"] - (2 * DRAWER_MATERIAL_THICKNESS)
+        """Drawer width + walls + clearance must fit within shell's 6.5" side-to-side dimension."""
+        # DRAWER["width"] (side-to-side) must fit in SHELL["depth"] (6.5" side-to-side)
+        shell_internal_side = SHELL["depth"] - (2 * DRAWER_MATERIAL_THICKNESS)
         drawer_external_width = DRAWER["width"] + (2 * DRAWER_MATERIAL_THICKNESS)
         required_clearance = 2 * DRAWER_CLEARANCE
 
         total_drawer_width_needed = drawer_external_width + required_clearance
-        assert total_drawer_width_needed <= shell_internal_width, (
+        assert total_drawer_width_needed <= shell_internal_side, (
             f"Drawer external width ({drawer_external_width}mm) + clearance "
             f"({required_clearance}mm) = {total_drawer_width_needed}mm exceeds "
-            f"shell internal width ({shell_internal_width}mm)"
+            f"shell internal side ({shell_internal_side}mm)"
         )
 
     def test_drawer_depth_fits_in_drawer_bay(self):
-        """Drawer depth + walls must fit in drawer bay (shell depth - paper compartment)."""
-        shell_internal_depth = SHELL["depth"] - (2 * DRAWER_MATERIAL_THICKNESS)
-        drawer_bay_depth = shell_internal_depth - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
+        """Drawer depth + walls must fit in drawer bay (along shell's 12" width dimension)."""
+        # Drawer bay is along SHELL["width"] (12" front-to-back), not SHELL["depth"] (6.5" side-to-side)
+        shell_internal_length = SHELL["width"] - (2 * DRAWER_MATERIAL_THICKNESS)
+        drawer_bay_length = shell_internal_length - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
         drawer_external_depth = DRAWER["depth"] + (2 * DRAWER_MATERIAL_THICKNESS)
         required_clearance = 2 * DRAWER_CLEARANCE
 
         total_drawer_depth_needed = drawer_external_depth + required_clearance
-        assert total_drawer_depth_needed <= drawer_bay_depth, (
+        assert total_drawer_depth_needed <= drawer_bay_length, (
             f"Drawer external depth ({drawer_external_depth}mm) + clearance "
             f"({required_clearance}mm) = {total_drawer_depth_needed}mm exceeds "
-            f"drawer bay depth ({drawer_bay_depth}mm)"
+            f"drawer bay length ({drawer_bay_length}mm)"
         )
 
     def test_drawer_height_fits_in_shell(self):
@@ -123,12 +125,13 @@ class TestDividerAndShelfPositions:
 
     def test_divider_leaves_drawer_bay_space(self):
         """Vertical divider position must leave enough space for drawer bay."""
-        shell_internal_depth = SHELL["depth"] - (2 * DRAWER_MATERIAL_THICKNESS)
-        drawer_bay_depth = shell_internal_depth - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
+        # Drawer bay is along SHELL["width"] (12" front-to-back), not SHELL["depth"] (6.5" side-to-side)
+        shell_internal_length = SHELL["width"] - (2 * DRAWER_MATERIAL_THICKNESS)
+        drawer_bay_length = shell_internal_length - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
         min_drawer_depth = DRAWER["depth"] + (2 * DRAWER_CLEARANCE)
 
-        assert drawer_bay_depth >= min_drawer_depth, (
-            f"Drawer bay depth ({drawer_bay_depth}mm) insufficient for "
+        assert drawer_bay_length >= min_drawer_depth, (
+            f"Drawer bay length ({drawer_bay_length}mm) insufficient for "
             f"drawer ({min_drawer_depth}mm including clearance)"
         )
 

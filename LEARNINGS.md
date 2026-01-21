@@ -11,6 +11,9 @@ fax-machine-box/
 │   ├── generate_drawers.py
 │   ├── generate_lids.py
 │   └── shell_generator.py
+├── tests/                # pytest dimension tests
+│   ├── conftest.py       # Config fixtures
+│   └── test_dimensions.py
 ├── preview/              # 3D preview (Three.js)
 ├── output/               # Generated SVGs (gitignored)
 └── assets/fonts/         # Press Start 2P font
@@ -24,6 +27,7 @@ python3 -m faxbox.test_generator         # Test box (proof of concept)
 python3 -m faxbox.generate_drawers       # Generate drawer SVGs
 python3 -m faxbox.shell_generator        # Generate outer shell SVGs
 python3 -m faxbox.generate_lids          # Generate lid SVGs
+pytest tests/                            # Run dimension validation tests
 ```
 
 ## Boxes.py Patterns
@@ -65,3 +69,5 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 - No CI workflows configured - can push directly
 - Check `git status` for uncommitted work from previous agents
 - Sliding lids need grooves on BOTH sides
+- `--outside 0` means dimensions are internal; external = internal + 2×thickness
+- Drawer dimensions were set independently of shell - verify fit before cutting
