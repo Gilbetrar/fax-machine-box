@@ -18,3 +18,20 @@ DEFAULT_BOX = {
 
 # Output directory for generated SVG files
 OUTPUT_DIR = "output"
+
+# Drawer dimensions in mm
+# Internal dimensions: ~8.75" × 6.25" × 2.1" with clearance for sliding
+# The issue specifies 3.175mm material (1/8" plywood)
+DRAWER_MATERIAL_THICKNESS = 3.175  # 1/8" plywood
+
+DRAWER = {
+    "width": 222.0,   # ~8.75" internal width (slightly under for clearance)
+    "depth": 158.0,   # ~6.25" internal depth (slightly under for clearance)
+    "height": 53.0,   # ~2.1" internal height
+}
+
+# Clearance for drawer sliding (per side)
+DRAWER_CLEARANCE = 1.0  # 1mm clearance on each side
+
+# Finger-notch pull dimensions (half-circle cutout on front face)
+FINGER_NOTCH_RADIUS = 15.0  # 15mm radius for comfortable grip
