@@ -38,25 +38,18 @@ class TestDrawerFitsInShell:
             f"shell internal width ({shell_internal_width}mm)"
         )
 
-    def test_drawer_depth_reasonable_for_shell(self):
-        """Drawer depth should be reasonable relative to shell depth.
-
-        Note: In this design, drawers slide from the front and may extend
-        out when pulled. This test ensures drawer depth is within 2x the
-        shell depth (sanity check against gross misconfiguration).
-        """
-        shell_external_depth = SHELL["depth"]
+    def test_drawer_depth_fits_in_drawer_bay(self):
+        """Drawer depth + walls must fit in drawer bay (shell depth - paper compartment)."""
+        shell_internal_depth = SHELL["depth"] - (2 * DRAWER_MATERIAL_THICKNESS)
+        drawer_bay_depth = shell_internal_depth - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
         drawer_external_depth = DRAWER["depth"] + (2 * DRAWER_MATERIAL_THICKNESS)
+        required_clearance = 2 * DRAWER_CLEARANCE
 
-        # Drawer depth should not exceed 2x shell depth (sanity check)
-        assert drawer_external_depth <= 2 * shell_external_depth, (
-            f"Drawer external depth ({drawer_external_depth}mm) exceeds "
-            f"2x shell external depth ({2 * shell_external_depth}mm)"
-        )
-
-        # Drawer depth should be positive and reasonable (at least 50mm)
-        assert drawer_external_depth >= 50.0, (
-            f"Drawer external depth ({drawer_external_depth}mm) too shallow"
+        total_drawer_depth_needed = drawer_external_depth + required_clearance
+        assert total_drawer_depth_needed <= drawer_bay_depth, (
+            f"Drawer external depth ({drawer_external_depth}mm) + clearance "
+            f"({required_clearance}mm) = {total_drawer_depth_needed}mm exceeds "
+            f"drawer bay depth ({drawer_bay_depth}mm)"
         )
 
     def test_drawer_height_fits_in_shell(self):
@@ -129,17 +122,14 @@ class TestDividerAndShelfPositions:
         )
 
     def test_divider_leaves_drawer_bay_space(self):
-        """Vertical divider position must leave positive space for drawer bay."""
+        """Vertical divider position must leave enough space for drawer bay."""
         shell_internal_depth = SHELL["depth"] - (2 * DRAWER_MATERIAL_THICKNESS)
         drawer_bay_depth = shell_internal_depth - PAPER_COMPARTMENT_DEPTH - DRAWER_MATERIAL_THICKNESS
+        min_drawer_depth = DRAWER["depth"] + (2 * DRAWER_CLEARANCE)
 
-        # Drawer bay must have positive depth (drawers may extend out front)
-        assert drawer_bay_depth > 0, (
-            f"Drawer bay depth ({drawer_bay_depth}mm) must be positive"
-        )
-        # Drawer bay should be at least 50mm for practical use
-        assert drawer_bay_depth >= 50.0, (
-            f"Drawer bay depth ({drawer_bay_depth}mm) too shallow for practical use"
+        assert drawer_bay_depth >= min_drawer_depth, (
+            f"Drawer bay depth ({drawer_bay_depth}mm) insufficient for "
+            f"drawer ({min_drawer_depth}mm including clearance)"
         )
 
 
