@@ -502,3 +502,25 @@ strict tests that fail, and created Issue #10 to track the config fix.
 - SendCutSend: ~$40-60 (includes materials, free shipping)
 - Ponoko: ~$50-80 (longer turnaround)
 - Laser-CutZ: $750+ (not viable for validation)
+
+---
+
+## Agent Session - Issue #9 (Verification)
+
+**Worked on:** Issue #9 - Final Assembly Layout for Ordering (verification)
+
+**What I did:**
+- Verified `output/final_layout.svg` exists and contains all parts
+- Regenerated layout to ensure color conversion is working
+- Confirmed color coding: 40 blue cuts, 160 red engraves (no black strokes)
+- Found issue was already closed by previous agent
+
+**What I learned:**
+- The layout.py `convert_colors_to_ponoko()` function handles color normalization
+- Layout combines shell (~628mm × 457mm), 2 drawers (~455mm × 306mm each), and lids (~372mm × 337mm)
+- Total layout size: ~1291mm × 800mm requires custom sheet size from laser cutter
+
+**Codebase state:**
+- All 10 issues completed and closed
+- All components generated and functional
+- README has full assembly instructions
