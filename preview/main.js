@@ -5,18 +5,16 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { PARTS, CONFIG, COLORS, getScaledDimensions, getScaledPosition, getExplodedOffset, SCALE } from './box-parts.js';
+import { createBoxParts, PART_INFO } from './box-parts.js';
+
+// Configuration for camera positioning (mm scale)
+const SHELL = { width: 304.8, depth: 165.1, height: 127.0 };
 
 // Scene state
 let scene, camera, renderer, controls;
-let partMeshes = {};
+let parts = [];
 let selectedPart = null;
 let isExploded = false;
-let animationId = null;
-
-// Animation state for smooth transitions
-const targetPositions = {};
-const currentPositions = {};
 
 // Initialize the scene
 function init() {
@@ -27,33 +25,38 @@ function init() {
     // Camera
     const container = document.getElementById('canvas-container');
     const aspect = container.clientWidth / container.clientHeight;
-    camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
-    camera.position.set(5, 3, 5);
+    camera = new THREE.PerspectiveCamera(50, aspect, 1, 2000);
+    camera.position.set(400, 300, 400);
 
     // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Controls
+    // Controls - orbit around center of the box
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 2;
-    controls.maxDistance = 15;
+    controls.target.set(SHELL.width / 2, SHELL.height / 2, SHELL.depth / 2);
+    controls.minDistance = 200;
+    controls.maxDistance = 1000;
+    controls.update();
 
     // Lighting
     setupLighting();
 
     // Create all box parts
-    createParts();
+    parts = createBoxParts();
+    parts.forEach(part => {
+        scene.add(part.mesh);
+        // Store original position for animation
+        part.originalPosition = part.mesh.position.clone();
+    });
 
     // Grid helper for reference
-    const gridHelper = new THREE.GridHelper(10, 20, 0x444466, 0x333355);
-    gridHelper.position.y = -1.5;
+    const gridHelper = new THREE.GridHelper(500, 20, 0x444466, 0x333355);
+    gridHelper.position.y = -5;
     scene.add(gridHelper);
 
     // Event listeners
@@ -70,75 +73,22 @@ function setupLighting() {
 
     // Main directional light
     const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    mainLight.position.set(5, 10, 5);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
+    mainLight.position.set(400, 400, 300);
     scene.add(mainLight);
 
-    // Fill light
+    // Fill light from back
     const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-    fillLight.position.set(-5, 5, -5);
+    fillLight.position.set(-300, 200, -300);
     scene.add(fillLight);
-}
-
-function createParts() {
-    Object.entries(PARTS).forEach(([key, part]) => {
-        const dims = getScaledDimensions(key);
-        const pos = getScaledPosition(key);
-        
-        // Create geometry
-        const geometry = new THREE.BoxGeometry(dims.width, dims.height, dims.depth);
-        
-        // Create material
-        const material = new THREE.MeshStandardMaterial({
-            color: part.color,
-            roughness: 0.8,
-            metalness: 0.1,
-        });
-        
-        // Create mesh
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(pos.x, pos.y, pos.z);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        
-        // Store reference data
-        mesh.userData = {
-            partKey: key,
-            partName: part.name,
-            dimensions: part.dimensions,
-            originalColor: part.color,
-        };
-        
-        // Add to scene and track
-        scene.add(mesh);
-        partMeshes[key] = mesh;
-        
-        // Initialize position tracking
-        currentPositions[key] = { x: pos.x, y: pos.y, z: pos.z };
-        targetPositions[key] = { x: pos.x, y: pos.y, z: pos.z };
-    });
-
-    // Add edge lines to drawers for visibility
-    ['drawerTop', 'drawerBottom'].forEach(key => {
-        const mesh = partMeshes[key];
-        const edges = new THREE.EdgesGeometry(mesh.geometry);
-        const line = new THREE.LineSegments(
-            edges,
-            new THREE.LineBasicMaterial({ color: 0x8b7355 })
-        );
-        mesh.add(line);
-    });
 }
 
 function setupEventListeners() {
     // Window resize
     window.addEventListener('resize', onWindowResize);
-    
+
     // Mouse click for selection
     renderer.domElement.addEventListener('click', onMouseClick);
-    
+
     // Buttons
     document.getElementById('toggle-explode').addEventListener('click', toggleExplodedView);
     document.getElementById('reset-view').addEventListener('click', resetView);
@@ -151,6 +101,9 @@ function onWindowResize() {
     renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
+// Store original materials for highlighting
+const originalMaterials = new Map();
+
 function onMouseClick(event) {
     // Calculate mouse position in normalized device coordinates
     const rect = renderer.domElement.getBoundingClientRect();
@@ -158,119 +111,129 @@ function onMouseClick(event) {
         ((event.clientX - rect.left) / rect.width) * 2 - 1,
         -((event.clientY - rect.top) / rect.height) * 2 + 1
     );
-    
+
     // Raycast
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-    
-    const meshArray = Object.values(partMeshes);
+
+    const meshArray = parts.map(p => p.mesh);
     const intersects = raycaster.intersectObjects(meshArray);
-    
-    if (intersects.length > 0) {
-        selectPart(intersects[0].object);
-    } else {
-        deselectPart();
-    }
-}
 
-function selectPart(mesh) {
-    // Deselect previous
-    if (selectedPart && selectedPart !== mesh) {
-        selectedPart.material.color.setHex(selectedPart.userData.originalColor);
-        selectedPart.material.emissive.setHex(0x000000);
-    }
-    
-    // Select new
-    selectedPart = mesh;
-    mesh.material.color.setHex(COLORS.highlight);
-    mesh.material.emissive.setHex(0x112233);
-    
-    // Update info panel
-    updateInfoPanel(mesh.userData);
-}
-
-function deselectPart() {
+    // Reset previous selection
     if (selectedPart) {
-        selectedPart.material.color.setHex(selectedPart.userData.originalColor);
-        selectedPart.material.emissive.setHex(0x000000);
-        selectedPart = null;
+        const prevMesh = parts.find(p => p.name === selectedPart)?.mesh;
+        if (prevMesh && originalMaterials.has(prevMesh)) {
+            prevMesh.material = originalMaterials.get(prevMesh);
+        }
     }
-    
-    // Reset info panel to show full box
-    document.getElementById('part-name').textContent = 'Fax Machine Box';
-    document.getElementById('part-width').textContent = CONFIG.SHELL.width + 'mm';
-    document.getElementById('part-depth').textContent = CONFIG.SHELL.depth + 'mm';
-    document.getElementById('part-height').textContent = CONFIG.SHELL.height + 'mm';
-    document.getElementById('part-material').textContent = CONFIG.MATERIAL_THICKNESS + 'mm plywood';
+
+    if (intersects.length > 0) {
+        const clickedMesh = intersects[0].object;
+        const part = parts.find(p => p.mesh === clickedMesh);
+
+        if (part) {
+            selectedPart = part.name;
+            // Store original material if not already stored
+            if (!originalMaterials.has(clickedMesh)) {
+                originalMaterials.set(clickedMesh, clickedMesh.material);
+            }
+            // Create highlight material
+            clickedMesh.material = new THREE.MeshStandardMaterial({
+                color: 0x4cc9f0,
+                roughness: 0.5,
+                metalness: 0.2,
+                emissive: 0x112244,
+            });
+            updateInfoPanel(part.name);
+        }
+    } else {
+        selectedPart = null;
+        resetInfoPanel();
+    }
 }
 
-function updateInfoPanel(userData) {
-    document.getElementById('part-name').textContent = userData.partName;
-    document.getElementById('part-width').textContent = userData.dimensions.width.toFixed(1) + 'mm';
-    document.getElementById('part-depth').textContent = userData.dimensions.depth.toFixed(1) + 'mm';
-    document.getElementById('part-height').textContent = userData.dimensions.height.toFixed(1) + 'mm';
-    document.getElementById('part-material').textContent = CONFIG.MATERIAL_THICKNESS + 'mm plywood';
+function updateInfoPanel(partName) {
+    const info = PART_INFO[partName];
+    if (info) {
+        document.getElementById('part-name').textContent = info.name;
+        // Parse dimensions string to extract values
+        const dims = info.dimensions.replace('mm', '').split(' x ');
+        document.getElementById('part-width').textContent = dims[0] + 'mm';
+        document.getElementById('part-depth').textContent = (dims[1] || dims[0]) + 'mm';
+        document.getElementById('part-height').textContent = (dims[2] || dims[1] || dims[0]).replace('mm', '') + 'mm';
+        document.getElementById('part-material').textContent = '3.175mm plywood';
+    }
+}
+
+function resetInfoPanel() {
+    document.getElementById('part-name').textContent = 'Fax Machine Box';
+    document.getElementById('part-width').textContent = SHELL.width + 'mm';
+    document.getElementById('part-depth').textContent = SHELL.depth + 'mm';
+    document.getElementById('part-height').textContent = SHELL.height + 'mm';
+    document.getElementById('part-material').textContent = '3.175mm plywood';
 }
 
 function toggleExplodedView() {
     isExploded = !isExploded;
-    
+
     const button = document.getElementById('toggle-explode');
     button.textContent = isExploded ? 'Assembled View' : 'Exploded View';
-    
-    // Update target positions
-    Object.keys(PARTS).forEach(key => {
-        const basePos = getScaledPosition(key);
-        const offset = getExplodedOffset(key);
-        
-        if (isExploded) {
-            targetPositions[key] = {
-                x: basePos.x + offset.x,
-                y: basePos.y + offset.y,
-                z: basePos.z + offset.z,
-            };
-        } else {
-            targetPositions[key] = {
-                x: basePos.x,
-                y: basePos.y,
-                z: basePos.z,
-            };
+    button.classList.toggle('active', isExploded);
+
+    // Animate parts to exploded or assembled positions
+    parts.forEach(part => {
+        const target = part.originalPosition.clone();
+        if (isExploded && part.explodeOffset) {
+            target.add(part.explodeOffset);
         }
+        animatePosition(part.mesh, target);
     });
+}
+
+function animatePosition(mesh, targetPos) {
+    const startPos = mesh.position.clone();
+    const duration = 500;
+    const startTime = Date.now();
+
+    function update() {
+        const elapsed = Date.now() - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        mesh.position.lerpVectors(startPos, targetPos, eased);
+
+        if (t < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    update();
 }
 
 function resetView() {
     // Reset camera
-    camera.position.set(5, 3, 5);
-    controls.target.set(0, 0, 0);
+    camera.position.set(400, 300, 400);
+    controls.target.set(SHELL.width / 2, SHELL.height / 2, SHELL.depth / 2);
     controls.update();
-    
+
     // Deselect any selected part
-    deselectPart();
-    
-    // Reset to assembled view
+    if (selectedPart) {
+        const prevMesh = parts.find(p => p.name === selectedPart)?.mesh;
+        if (prevMesh && originalMaterials.has(prevMesh)) {
+            prevMesh.material = originalMaterials.get(prevMesh);
+        }
+        selectedPart = null;
+        resetInfoPanel();
+    }
+
+    // Reset to assembled view if currently exploded
     if (isExploded) {
         toggleExplodedView();
     }
 }
 
 function animate() {
-    animationId = requestAnimationFrame(animate);
-    
-    // Smoothly interpolate positions
-    const lerpFactor = 0.08;
-    Object.keys(partMeshes).forEach(key => {
-        const mesh = partMeshes[key];
-        const target = targetPositions[key];
-        const current = currentPositions[key];
-        
-        current.x += (target.x - current.x) * lerpFactor;
-        current.y += (target.y - current.y) * lerpFactor;
-        current.z += (target.z - current.z) * lerpFactor;
-        
-        mesh.position.set(current.x, current.y, current.z);
-    });
-    
+    requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
 }
