@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fax Machine Box - 3D Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4a4a6a;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #5a5a8a;
+        }
+        button.active {
+            background: #6a6aaa;
+        }
+        #info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 8px;
+            min-width: 250px;
+            z-index: 100;
+        }
+        #info-panel h3 {
+            margin-bottom: 10px;
+            color: #8af;
+        }
+        #info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        #dimensions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 100;
+            font-size: 12px;
+        }
+        #dimensions h4 {
+            margin-bottom: 10px;
+            color: #8af;
+        }
+        #dimensions .dim-item {
+            margin: 3px 0;
+            opacity: 0.8;
+        }
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            z-index: 100;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="toggle-explode">Exploded View</button>
+        <button id="reset-view">Reset View</button>
+    </div>
+
+    <div id="dimensions">
+        <h4>Dimensions (mm)</h4>
+        <div class="dim-item">Shell: 304.8 x 165.1 x 127.0</div>
+        <div class="dim-item">Drawer: 222.0 x 158.0 x 53.0</div>
+        <div class="dim-item">Paper Area: 76.2mm deep</div>
+        <div class="dim-item">Material: 3.175mm</div>
+    </div>
+
+    <div id="info-panel">
+        <h3 id="part-name">Fax Machine Box</h3>
+        <p>Width: <span id="part-width">304.8mm</span></p>
+        <p>Depth: <span id="part-depth">165.1mm</span></p>
+        <p>Height: <span id="part-height">127.0mm</span></p>
+        <p>Material: <span id="part-material">3.175mm plywood</span></p>
+    </div>
+
+    <div id="instructions">
+        Rotate: Left-click drag | Zoom: Scroll | Pan: Right-click drag
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
