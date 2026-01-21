@@ -1,92 +1,67 @@
 # Fax Machine Box - Learnings
 
-Distilled patterns and gotchas for future agents. Keep under 100 lines.
-
-## Project Overview
-
-Laser-cut fax machine themed desktop organizer using Boxes.py.
+Distilled patterns for future agents. For full session history, see SESSION_LOG.md.
 
 ## Project Structure
 
 ```
 fax-machine-box/
-├── src/faxbox/         # Python source
-│   ├── config.py       # Dimensions, material thickness
-│   └── test_generator.py
-├── output/             # Generated SVG files (gitignored)
-├── LEARNINGS.md        # Distilled patterns (read this first)
-└── SESSION_LOG.md      # Raw session history (don't read)
+├── src/faxbox/           # Python generators
+│   ├── config.py         # All dimensions and constants
+│   ├── generate_drawers.py
+│   ├── generate_lids.py
+│   └── shell_generator.py
+├── preview/              # 3D preview (Three.js)
+├── output/               # Generated SVGs (gitignored)
+└── assets/fonts/         # Press Start 2P font
 ```
 
-## Commands That Work
+## Build & Test
 
 ```bash
-# Install project
-python3 -m pip install -e .
-
-# Generate test box
-python3 -m faxbox.test_generator
-
-# Generate drawer
-python3 -m faxbox.generate_drawers
+python3 -m pip install -e .              # Install project
+python3 -m faxbox.test_generator         # Test box (proof of concept)
+python3 -m faxbox.generate_drawers       # Generate drawer SVGs
+python3 -m faxbox.shell_generator        # Generate outer shell SVGs
+python3 -m faxbox.generate_lids          # Generate lid SVGs
 ```
 
-## Boxes.py Usage Pattern
+## Boxes.py Patterns
 
-**Critical**: Must call `open()` before `render()` and `close()` after to get output.
+**Critical call sequence:** `parseArgs()` → `open()` → `render()` → `close()`
 
+**Edge types** (counter-clockwise from bottom-left):
+- `F` = finger joints (male), `f` = finger holes (female), `e` = plain edge
+
+**Common edge combinations:**
+- Open-top drawer: Front "Ffef", Sides "FFeF", Bottom "ffff"
+- Simple flat pieces (lids): "eeee"
+
+**Callbacks:** Array of 4 functions [bottom, right, top, left] called at edge start
 ```python
-from boxes.generators.closedbox import ClosedBox
-
-box = ClosedBox()
-box.parseArgs(["--x", "100", "--y", "80", "--h", "60", "--output", "out.svg"])
-box.open()      # Initialize canvas - REQUIRED before render
-box.render()    # Generate geometry
-data = box.close()  # Finalize - returns BytesIO
-
-# Write to file
-with open("out.svg", "wb") as f:
-    f.write(data.getvalue())
-```
-
-## Available Generators
-
-Key generators for this project:
-- `ClosedBox` - Basic fully closed box
-- `OpenBox` - Open top box
-- `SlidingLidBox` - Box with sliding lid (for drawers?)
-
-List all: `from boxes.generators import getAllBoxGenerators`
-
-## Dependencies
-
-- Boxes.py must be installed from GitHub (PyPI "boxes" is wrong package)
-- Dependency: `boxes @ git+https://github.com/florianfesti/boxes.git`
-
-## Edge Types for Custom Boxes
-
-Edge string is bottom, right, top, left (counter-clockwise from bottom-left):
-- `F` = finger joints (male, protrudes)
-- `f` = finger holes (female, accepts joints)
-- `e` = plain edge (no joints)
-
-**Open-top drawer pattern:**
-- Front/Back: "Ffef" (finger joints to bottom, holes for sides, plain top)
-- Sides: "FFeF" (finger joints all around except plain top)
-- Bottom: "ffff" (all holes to accept wall joints)
-
-## Adding Holes via Callback
-
-```python
-def add_hole():
-    self.rectangularHole(x/2, y_pos, width, height, r=corner_radius)
-
 self.rectangularWall(x, h, "Ffef", callback=[add_hole, None, None, None])
 ```
 
-## Config Constants (config.py)
+**Engraving:** ctx.fill() NOT implemented - use stroke() with closed paths
+```python
+self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
+```
 
-- `MATERIAL_THICKNESS = 3.0` mm (standard laser-cut plywood)
-- `DRAWER_MATERIAL_THICKNESS = 3.175` mm (1/8" plywood)
-- `BURN = 0.05` mm (adjust for joint tightness)
-- `OUTPUT_DIR = "output"`
+## 3D Preview (preview/)
+
+- Three.js via ES module importmaps (no bundler needed)
+- OrbitControls for camera rotation/zoom
+- Raycasting for part selection
+- Open `preview/index.html` in browser
+
+## Dependencies
+
+- Boxes.py from GitHub: `boxes @ git+https://github.com/florianfesti/boxes.git`
+- PyPI "boxes" is WRONG package
+
+## Gotchas
+
+- File names must match acceptance criteria commands exactly
+- No CI workflows configured - can push directly
+- Check `git status` for uncommitted work from previous agents
+- Sliding lids need grooves on BOTH sides
