@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faxbox"
+version = "0.1.0"
+description = "Laser-cut fax machine themed box generator using Boxes.py"
+requires-python = ">=3.9"
+dependencies = [
+    "boxes @ git+https://github.com/florianfesti/boxes.git",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
