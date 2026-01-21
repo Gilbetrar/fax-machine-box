@@ -88,3 +88,45 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 
 **Mistakes made:**
 - Previous agent named the module differently than the issue specified
+
+---
+
+## Agent Session - Issue #3
+
+**Worked on:** Issue #3 - Generate Outer Shell with Internal Dividers
+
+**What I did:**
+- Added shell dimensions to config.py (304.8mm × 165.1mm × 127mm external)
+- Added paper compartment depth (76.2mm / 3") and lid groove dimensions
+- Created shell_generator.py with OuterShell class extending Boxes
+- Generated all outer shell pieces:
+  - Left/Right walls with finger joints
+  - Front wall with drawer openings
+  - Back wall
+  - Bottom panel
+  - Internal vertical divider (separates paper from drawer bay)
+  - Horizontal shelf (divides drawer bay into 2 slots)
+- Added lid groove cutouts on left wall for sliding lid
+
+**What I learned:**
+- Complex multi-piece generators need careful dimension planning
+- rectangularHole works for internal cutouts (drawer openings, lid grooves)
+- For internal dividers, edge type "f" (holes) allows other pieces to slot in
+- The `move` parameter on rectangularWall controls piece layout on canvas
+- callback parameter is array of 4 functions [bottom, right, top, left] called at edge drawing
+
+**Layout understanding:**
+- Paper compartment (3" wide) on left side with sliding lid
+- Drawer bay (~9" wide) on right side
+- Horizontal shelf divides drawer bay vertically into 2 drawer slots
+- Vertical divider runs front-to-back separating paper from drawers
+
+**Codebase facts discovered:**
+- No CI workflows configured for this repo
+- Output files go to output/ directory (gitignored except .gitkeep)
+- All generators follow same pattern: Class(Boxes) → parseArgs → open → render → close
+
+**Potential refinements for future:**
+- Lid groove implementation uses rectangularHole cutouts - may need adjustment when implementing actual lids in issue #4
+- Drawer opening positions should be verified against actual drawer dimensions
+- Finger joint alignment between shell and internal dividers needs verification
