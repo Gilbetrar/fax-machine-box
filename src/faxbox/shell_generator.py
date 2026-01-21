@@ -10,9 +10,7 @@ from faxbox.config import (
     DRAWER,
     DRAWER_MATERIAL_THICKNESS,
     ENGRAVE_COLOR,
-    ENGRAVE_FONT_SIZE,
     ENGRAVE_FONT_SPACING,
-    ENGRAVE_LINE_WIDTH,
     LID_GROOVE_DEPTH,
     LID_GROOVE_WIDTH,
     OUTPUT_DIR,
@@ -21,8 +19,9 @@ from faxbox.config import (
 )
 
 
-# Pixel font definitions: 5 columns x 7 rows, 1=filled, 0=empty
-# Each letter is defined as a list of (x, y) pixel coordinates that should be filled
+# Pixel font definitions: 5 columns x 7 rows
+# Each letter is defined as (col, row) coordinates where pixels are filled
+# Row 0 is top of character, row 6 is bottom
 PIXEL_FONT = {
     'F': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
           (1, 0), (2, 0), (3, 0), (4, 0),
@@ -81,6 +80,61 @@ class OuterShell(Boxes):
         self.buildArgParser("x", "y", "h", "outside")
         self.addSettingsArgs(edges.FingerJointSettings)
 
+    def draw_pixel_char(self, char: str, x: float, y: float,
+                        pixel_size: float) -> float:
+        """Draw a single character using pixel font.
+
+        Args:
+            char: Character to draw
+            x: X position (left edge)
+            y: Y position (bottom edge)
+            pixel_size: Size of each pixel cell in mm
+
+        Returns:
+            Width of the character drawn (for spacing next character)
+        """
+        if char not in PIXEL_FONT:
+            return pixel_size * 3  # Default space for unknown chars
+
+        pixels = PIXEL_FONT[char]
+        if not pixels:
+            return pixel_size * 3  # Space character width
+
+        # Draw each pixel as a stroked rectangle outline
+        pixel_cell = pixel_size * 0.85  # Pixel size with small gap
+        for col, row in pixels:
+            # Flip y so row 0 is at top (y increases downward in pixel coords)
+            px = x + col * pixel_size + (pixel_size - pixel_cell) / 2
+            py = y + (6 - row) * pixel_size + (pixel_size - pixel_cell) / 2
+
+            # Draw pixel as a rectangle outline using Cairo context
+            self.ctx.move_to(px, py)
+            self.ctx.line_to(px + pixel_cell, py)
+            self.ctx.line_to(px + pixel_cell, py + pixel_cell)
+            self.ctx.line_to(px, py + pixel_cell)
+            self.ctx.line_to(px, py)
+            self.ctx.stroke()
+
+        return pixel_size * 5 + ENGRAVE_FONT_SPACING  # 5 columns + spacing
+
+    def draw_pixel_text(self, text: str, x: float, y: float,
+                        pixel_size: float) -> None:
+        """Draw text using pixel font with engraving color.
+
+        Args:
+            text: Text to draw
+            x: X position (left edge)
+            y: Y position (bottom edge)
+            pixel_size: Size of each pixel cell in mm
+        """
+        # Set engrave color (red for Ponoko)
+        self.set_source_color(ENGRAVE_COLOR)
+
+        current_x = x
+        for char in text.upper():
+            width = self.draw_pixel_char(char, current_x, y, pixel_size)
+            current_x += width
+
     def render(self) -> None:
         """Render all shell pieces."""
         x, y, h = self.x, self.y, self.h
@@ -138,13 +192,9 @@ class OuterShell(Boxes):
             label="Right Wall"
         )
 
-        # Front wall - with two drawer openings
-        def add_drawer_openings():
-            """Cut openings for two drawers."""
-            # Position from right edge where drawers go
-            # Drawers are in the drawer bay (past paper compartment)
-            # Front wall is x wide, drawer bay starts at paper_depth + t from left
-
+        # Front wall - with drawer openings and "FAX MACHINE" engraving
+        def add_drawer_openings_and_engraving():
+            """Cut drawer openings and add FAX MACHINE engraving."""
             # Opening horizontal center: in the drawer bay
             opening_x = paper_depth + t + drawer_width / 2
 
@@ -164,10 +214,26 @@ class OuterShell(Boxes):
                 r=2
             )
 
+            # Add "FAX MACHINE" engraving across the top of front wall
+            # Uses pixel font for retro aesthetic, rendered as paths (not text)
+            pixel_size = 3.0  # 3mm per pixel cell
+            text = "FAX MACHINE"
+            # Calculate text dimensions: 11 chars, each 5 pixels wide + spacing
+            char_width = 5 * pixel_size + ENGRAVE_FONT_SPACING
+            text_width = len(text) * char_width - ENGRAVE_FONT_SPACING
+            text_height = 7 * pixel_size  # 7 pixel rows
+
+            # Center text horizontally on front wall
+            text_x = (x - text_width) / 2
+            # Position near top, leaving margin below top edge
+            text_y = h - text_height - 12
+
+            self.draw_pixel_text(text, text_x, text_y, pixel_size)
+
         self.rectangularWall(
             x, h,
             "FFFe",  # finger joints except top (for potential lid overlap)
-            callback=[add_drawer_openings, None, None, None],
+            callback=[add_drawer_openings_and_engraving, None, None, None],
             label="Front Wall"
         )
 
@@ -260,7 +326,7 @@ def generate_shell() -> Path:
         f.write(data.getvalue())
 
     print(f"Generated outer shell SVG: {output_file.absolute()}")
-    print(f"  External dimensions: {SHELL['width']}mm × {SHELL['depth']}mm × {SHELL['height']}mm")
+    print(f"  External dimensions: {SHELL['width']}mm x {SHELL['depth']}mm x {SHELL['height']}mm")
     print(f"  Paper compartment depth: {PAPER_COMPARTMENT_DEPTH}mm")
     print(f"  Material thickness: {DRAWER_MATERIAL_THICKNESS}mm")
     return output_file
