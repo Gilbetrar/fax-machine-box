@@ -35,3 +35,19 @@ DRAWER_CLEARANCE = 1.0  # 1mm clearance on each side
 
 # Finger-notch pull dimensions (half-circle cutout on front face)
 FINGER_NOTCH_RADIUS = 15.0  # 15mm radius for comfortable grip
+
+# Outer shell dimensions in mm
+# External: 12" × 6.5" × 5"
+SHELL = {
+    "width": 304.8,   # 12" external width (left to right)
+    "depth": 165.1,   # 6.5" external depth (front to back)
+    "height": 127.0,  # 5" external height
+}
+
+# Paper compartment dimensions (front section with sliding lid)
+# ~3" from front (76.2mm internal)
+PAPER_COMPARTMENT_DEPTH = 76.2  # 3" internal depth
+
+# Lid groove dimensions for sliding lid
+LID_GROOVE_WIDTH = 3.5  # Slightly wider than material for sliding fit
+LID_GROOVE_DEPTH = 5.0  # How deep the groove cuts into the wall
