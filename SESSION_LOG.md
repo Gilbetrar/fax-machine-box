@@ -189,3 +189,25 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 - ✅ Sliding lid tabs fit groove width (4mm tabs in 3.5mm grooves)
 - ✅ Flat lid has alignment tabs (4 small squares)
 - ✅ Dimensions match compartments (73mm × 159mm and 222mm × 159mm)
+
+---
+
+## Agent Session - Issue #4 File Rename
+
+**Worked on:** Issue #4 - Generate Lids (file naming fix)
+
+**What I did:**
+- Renamed lid_generator.py → generate_lids.py to match issue acceptance criteria
+- Added SLIDING_LID_TAB_DEPTH constant to config.py
+- Verified `python -m faxbox.generate_lids` runs correctly
+
+**What I learned:**
+- Issue #4 acceptance criteria specifies `python -m faxbox.generate_lids` command
+- File was named lid_generator.py but should be generate_lids.py
+- This pattern matches generate_drawers.py and shell_generator.py
+
+**Verification completed:**
+- ✅ `python -m faxbox.generate_lids` runs without error
+- ✅ Sliding lid: 73.0mm × 158.8mm
+- ✅ Flat lid: 222.2mm × 158.8mm
+- ✅ All generators still work after changes
