@@ -59,3 +59,9 @@ SLIDING_LID_TAB_DEPTH = LID_GROOVE_DEPTH - 1.0  # How far tab extends into groov
 # Flat tabbed lid for drawer bay (sits on top)
 FLAT_LID_TAB_WIDTH = 10.0  # Width of alignment tabs on flat lid
 FLAT_LID_TAB_DEPTH = 5.0  # How deep alignment tabs extend into wall tops
+
+# Engraving settings for "FAX MACHINE" text
+ENGRAVE_COLOR = [1.0, 0.0, 0.0]  # Red RGB for Ponoko engraving (#FF0000)
+ENGRAVE_FONT_SIZE = 8.0  # Size of each pixel cell in mm
+ENGRAVE_FONT_SPACING = 2.0  # Space between letters in mm
+ENGRAVE_LINE_WIDTH = 0.5  # Line width for engraving strokes in mm
