@@ -65,6 +65,13 @@ def extract_svg_content(svg_path: Path) -> str:
     if match:
         content = match.group(1)
 
+    # Remove metadata blocks (contain namespace prefixes that break combined SVG)
+    content = re.sub(r'<metadata>.*?</metadata>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<title>.*?</title>', '', content, flags=re.DOTALL)
+
+    # Remove comments (boxes.py metadata)
+    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+
     # Convert colors to Ponoko standard
     content = convert_colors_to_ponoko(content)
 
