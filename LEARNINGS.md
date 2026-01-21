@@ -28,7 +28,7 @@ python3 -m pip install -e .
 python3 -m faxbox.test_generator
 
 # Generate drawer
-python3 -m faxbox.drawer_generator
+python3 -m faxbox.generate_drawers
 ```
 
 ## Boxes.py Usage Pattern
