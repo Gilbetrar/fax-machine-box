@@ -63,3 +63,28 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 **Mistakes made:**
 - Initially thought callback was called during face rendering - it's called at edge start
 - First tried complex callback signature - callbacks take no arguments, use self for dimensions
+
+---
+
+## Agent Session - Issue #2 Cleanup
+
+**Worked on:** Issue #2 - Generate Drawer Boxes (acceptance criteria fix)
+
+**What I did:**
+- Renamed drawer_generator.py → generate_drawers.py to match acceptance criteria
+- Updated LEARNINGS.md with correct command
+- Verified both generators still work after rename
+- Closed issue #2
+
+**What I learned:**
+- Always check that file names match the acceptance criteria commands exactly
+- Issue acceptance criteria verification steps are the spec - if they say `python -m faxbox.generate_drawers`, that's what should work
+- This repo has no CI workflows configured - don't need to wait for CI
+
+**Codebase facts discovered:**
+- Project is Python-only, no npm/package.json
+- No pytest tests yet - just generator scripts
+- test_generator.py is a proof-of-concept generator, not a pytest test file
+
+**Mistakes made:**
+- Previous agent named the module differently than the issue specified
