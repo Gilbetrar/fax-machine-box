@@ -51,3 +51,8 @@ PAPER_COMPARTMENT_DEPTH = 76.2  # 3" internal depth
 # Lid groove dimensions for sliding lid
 LID_GROOVE_WIDTH = 3.5  # Slightly wider than material for sliding fit
 LID_GROOVE_DEPTH = 5.0  # How deep the groove cuts into the wall
+
+# Lid dimensions
+LID_TAB_CLEARANCE = 0.3  # Clearance for lid tabs to fit in grooves
+FLAT_LID_TAB_WIDTH = 10.0  # Width of alignment tabs on flat lid
+FLAT_LID_TAB_DEPTH = 5.0  # How deep alignment tabs extend
