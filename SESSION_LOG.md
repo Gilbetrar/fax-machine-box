@@ -130,3 +130,38 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 - Lid groove implementation uses rectangularHole cutouts - may need adjustment when implementing actual lids in issue #4
 - Drawer opening positions should be verified against actual drawer dimensions
 - Finger joint alignment between shell and internal dividers needs verification
+
+---
+
+## Agent Session - Issue #4
+
+**Worked on:** Issue #4 - Generate Lids (Sliding + Tabbed Flat)
+
+**What I did:**
+- Created lid_generator.py with LidGenerator class
+- Implemented two lid types:
+  - Sliding lid for paper compartment with edge tab strips
+  - Flat tabbed lid for drawer bay with alignment tabs
+- Generator outputs: `python -m faxbox.lid_generator` → output/lids.svg
+- Lid dimensions derived from shell config values (PAPER_COMPARTMENT_DEPTH, SHELL dimensions)
+
+**What I learned:**
+- Simple flat pieces can use "eeee" edge type (all plain edges)
+- For lids with attached tabs, generate tab pieces separately for gluing
+- Config already had LID_GROOVE_WIDTH (3.5mm) and LID_GROOVE_DEPTH (5mm) from shell work
+- This repo has NO CI workflows - can push directly without waiting for CI
+
+**Lid dimensions calculated:**
+- Sliding lid: ~73mm × ~159mm (paper compartment area)
+- Flat lid: ~222mm × ~159mm (drawer bay area)
+- Tab strips: 4mm wide for groove engagement
+
+**Codebase facts discovered:**
+- Config had some uncommitted lid constants from previous work
+- All generators follow same pattern and produce SVGs to output/
+- rectangularHole can show alignment marks for glue-on tabs
+
+**Potential improvements:**
+- Shell groove implementation may need revision - current slots are cutouts not grooves
+- Tab attachment method (glue vs integral) should be verified for laser cutting
+- Consider adding finger pull notch to sliding lid for easier grip
