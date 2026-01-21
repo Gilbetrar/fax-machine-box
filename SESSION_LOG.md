@@ -249,3 +249,32 @@ Raw session history from agent work. Check LEARNINGS.md for distilled patterns.
 **Verification:**
 - SVG output has 5 blue paths (cuts) and 160 red paths (engraves)
 - All generators still work (shell, drawer, lids, test)
+
+---
+
+## Agent Session - Issue #5 (Completion)
+
+**Worked on:** Issue #5 - Add "FAX MACHINE" Engraving (completion)
+
+**What I did:**
+- Completed the pixel font engraving feature that was partially implemented
+- Added draw_pixel_char and draw_pixel_text methods to OuterShell class
+- Used Boxes.py ctx methods (move_to, line_to, stroke) to draw pixel rectangles
+- Text is centered on front wall, positioned above drawer openings
+
+**Key technical details:**
+- Boxes.py doesn't support ctx.fill() - must use stroke() for outlines
+- Red color (#FF0000) set via set_source_color([1.0, 0.0, 0.0])
+- Each pixel drawn as rectangle outline using move_to/line_to sequence
+- Pixel font: 5 columns x 7 rows per character, stored as coordinate lists
+
+**Verification:**
+- SVG has 160 red strokes (engraving) and 5 blue strokes (cuts)
+- Shell generator runs without errors
+- Text "FAX MACHINE" visible in SVG output
+
+**Issue status:**
+- Feature is functionally complete
+- Acceptance criteria mostly met except "font converted to paths" is interpreted as 
+  "using path-based rendering" rather than font file conversion
+
