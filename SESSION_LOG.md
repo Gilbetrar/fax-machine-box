@@ -428,3 +428,13 @@ strict tests that fail, and created Issue #10 to track the config fix.
 - tests/svg_utils.py + 3 test files: 84 passed, 32 xfailed (each xfail cites #17 or #18).
 - Negative controls verified: dropped move= param -> overlap test FAILED; black stroke -> color test FAILED; both restored.
 - New findings: boxes.py black calibration rect (need --reference 0 in rebuilds); bbox-clustering hole/piece disambiguation via HOLE_AREA_RATIO=0.5; current shell/drawer layouts have real piece-nesting overlaps previously undetected.
+
+## 2026-07-07 — Design amendment before #17 (Claude Fable 5)
+
+Harness review exposed three untestable-as-specced expectations and one construction flaw. Amended DESIGN.md/config/tests in one pass:
+- Bottom panel now INSET between full-height walls (was walls-on-panel, which left the rear wall's sill-free openings open-bottomed on fragile legs). Interior numbers unchanged.
+- Lid slot documented as an edge NOTCH (must be open at the front; detection now via outline-segment signature, new svg_utils.outline_segments/count_outline_segments).
+- Divider/shelf finger-hole lines documented as DASHED rows (fingerHolesAt); detection via new svg_utils.hole_line_spans.
+- Faceplate pull changed from top-edge notch to closed 30x15 r7.5 grip slot through faceplate + body front (stiffer, testable).
+- Side walls documented as MIRROR-IMAGE parts (slot at front only); engraving right wall, exterior face up.
+Suite: 91 passed, 31 xfailed after amendment (one former xfail now passes legitimately: old notch was already a 30x15 hole).

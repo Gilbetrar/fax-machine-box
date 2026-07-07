@@ -309,6 +309,82 @@ def non_cut_engrave_strokes(svg_path: str | Path) -> list[PathInfo]:
     return [p for p in iter_paths(svg_path) if normalize_color(p.stroke) not in ("blue", "red")]
 
 
+def outline_segments(piece: Piece) -> list[tuple[str, float]]:
+    """Axis-aligned straight segments of a piece's OUTER path, as
+    (orientation, length) tuples with orientation 'h' (horizontal) or 'v'
+    (vertical); non-axis-aligned or curved segments are reported as ('o',
+    chord_length). Used to detect edge NOTCHES (e.g. the side walls' open
+    lid-slot mouth), which are part of the outline and therefore invisible
+    to hole-based checks.
+    """
+    parsed = svgpathtools.parse_path(piece.outer.d)
+    out: list[tuple[str, float]] = []
+    for seg in parsed:
+        if isinstance(seg, svgpathtools.Line):
+            dx = abs(seg.end.real - seg.start.real)
+            dy = abs(seg.end.imag - seg.start.imag)
+            if dy < 0.01 and dx > 0.01:
+                out.append(("h", dx))
+            elif dx < 0.01 and dy > 0.01:
+                out.append(("v", dy))
+            elif dx > 0.01 or dy > 0.01:
+                out.append(("o", abs(seg.end - seg.start)))
+        else:
+            out.append(("o", abs(seg.end - seg.start)))
+    return out
+
+
+def count_outline_segments(piece: Piece, orientation: str, length: float, tol: float = 1.0) -> int:
+    """How many outer-path segments of `orientation` are within `tol` of
+    `length`. Finger teeth are short (roughly T to a few T), so probing for a
+    long, specific length is a reliable presence-signature for a designed
+    notch without depending on where the piece sits on the canvas."""
+    return sum(
+        1
+        for o, seg_len in outline_segments(piece)
+        if o == orientation and abs(seg_len - length) <= tol
+    )
+
+
+def hole_line_spans(
+    holes: list[PathInfo],
+    thickness: float,
+    axis: str,
+    thickness_tol: float = 0.5,
+    group_tol: float = 1.5,
+    min_holes: int = 2,
+) -> list[float]:
+    """Extents of dashed finger-hole rows (Boxes.py `fingerHolesAt` output).
+
+    A finger-hole "line" is a row of separate small holes, each `thickness`
+    across in the cross-axis direction, dashed along the row axis.
+    axis='x': horizontal rows (hole height ~ thickness) -> returns each row's
+    X extent. axis='y': vertical rows (hole width ~ thickness) -> Z extents.
+    Rows are grouped by cross-axis center; groups with fewer than `min_holes`
+    holes are ignored (a single T-sized hole is not a row).
+    """
+    if axis not in ("x", "y"):
+        raise ValueError(f"axis must be 'x' or 'y', got {axis!r}")
+    groups: dict[int, list[BBox]] = {}
+    for h in holes:
+        cross = h.bbox.height if axis == "x" else h.bbox.width
+        if abs(cross - thickness) > thickness_tol:
+            continue
+        center = (
+            (h.bbox.ymin + h.bbox.ymax) / 2 if axis == "x" else (h.bbox.xmin + h.bbox.xmax) / 2
+        )
+        groups.setdefault(round(center / group_tol), []).append(h.bbox)
+    spans = []
+    for boxes in groups.values():
+        if len(boxes) < min_holes:
+            continue
+        if axis == "x":
+            spans.append(max(b.xmax for b in boxes) - min(b.xmin for b in boxes))
+        else:
+            spans.append(max(b.ymax for b in boxes) - min(b.ymin for b in boxes))
+    return spans
+
+
 def expected_band(nominal: float, jointed_edges: int, thickness: float, slack: float = 0.5) -> tuple[float, float]:
     """DESIGN.md's per-axis blank-size tolerance band.
 

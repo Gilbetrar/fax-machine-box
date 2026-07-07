@@ -336,3 +336,75 @@ def test_expected_band_two_jointed_edges_adds_two_thicknesses():
 def test_expected_band_rejects_invalid_edge_count():
     with pytest.raises(ValueError):
         su.expected_band(100.0, 3, 3.175)
+
+
+# --- outline_segments / count_outline_segments ---------------------------------
+
+def _notched_rect_piece(tmp_path):
+    """A 100x40 rectangle with a 30x5 notch cut into its left edge at y=20:
+    the outline detours in by 30, up 5, back out 30 (like the side walls'
+    open lid-slot mouth, which is part of the outline, not a hole)."""
+    d = (
+        "M 0 0 L 100 0 L 100 40 L 0 40 "
+        "L 0 25 L 30 25 L 30 20 L 0 20 Z"
+    )
+    body = f'<g><path d="{d}" stroke="rgb(0,0,255)" fill="none"/></g>'
+    pieces = su.get_pieces(write_svg(tmp_path, body))
+    assert len(pieces) == 1
+    return pieces[0]
+
+
+def test_outline_segments_classifies_axis_aligned(tmp_path):
+    piece = _notched_rect_piece(tmp_path)
+    segments = su.outline_segments(piece)
+    assert ("h", 100.0) in segments
+    assert ("v", 40.0) in segments
+
+
+def test_count_outline_segments_finds_notch_signature(tmp_path):
+    piece = _notched_rect_piece(tmp_path)
+    # The notch contributes two 30mm horizontal runs and one 5mm vertical.
+    assert su.count_outline_segments(piece, "h", 30.0) == 2
+    assert su.count_outline_segments(piece, "v", 5.0) == 1
+    # A plain rectangle has neither.
+    assert su.count_outline_segments(piece, "h", 77.0) == 0
+
+
+def test_count_outline_segments_respects_tolerance(tmp_path):
+    piece = _notched_rect_piece(tmp_path)
+    assert su.count_outline_segments(piece, "h", 30.4, tol=0.5) == 2
+    assert su.count_outline_segments(piece, "h", 30.4, tol=0.1) == 0
+
+
+# --- hole_line_spans -------------------------------------------------------------
+
+def _hole(x0, x1, y0, y1):
+    return su.PathInfo(d="", stroke="rgb(0,0,255)", bbox=su.BBox(x0, x1, y0, y1))
+
+
+def test_hole_line_spans_horizontal_row():
+    t = 3.0
+    # Dashed row at y=10..13: three dashes spanning x=5..95.
+    row = [_hole(5, 25, 10, 13), _hole(40, 60, 10, 13), _hole(75, 95, 10, 13)]
+    spans = su.hole_line_spans(row, t, axis="x")
+    assert spans == [pytest.approx(90.0)]
+
+
+def test_hole_line_spans_vertical_row_and_grouping():
+    t = 3.0
+    # One vertical row at x=10, plus a second distinct row at x=50.
+    rows = [
+        _hole(10, 13, 0, 20), _hole(10, 13, 30, 50),
+        _hole(50, 53, 5, 15), _hole(50, 53, 25, 35),
+    ]
+    spans = sorted(su.hole_line_spans(rows, t, axis="y"))
+    assert spans == [pytest.approx(30.0), pytest.approx(50.0)]
+
+
+def test_hole_line_spans_ignores_wrong_thickness_and_singletons():
+    t = 3.0
+    mixed = [
+        _hole(0, 40, 10, 25),   # 15 tall: not a finger row (wrong thickness)
+        _hole(60, 80, 10, 13),  # right thickness but alone in its row
+    ]
+    assert su.hole_line_spans(mixed, t, axis="x") == []

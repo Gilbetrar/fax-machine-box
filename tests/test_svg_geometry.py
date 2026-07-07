@@ -162,49 +162,50 @@ def test_lids_pieces_do_not_overlap():
 # =============================================================================
 
 # --- Shell parts -------------------------------------------------------------
-# DESIGN.md #1: "Blank: 304.8 x 165.1 (full footprint, exact; edges plain)."
-# NOT xfail: the outer envelope (SHELL_EXT) is the one thing #15 didn't
-# change -- it's the fixed SPEC target both before and after the DESIGN.md
-# rewrite -- so the legacy generator's Bottom panel (built straight from
-# SHELL_EXT-derived numbers) already measures correctly. This genuinely
-# passes today; confirmed by running the suite rather than assumed.
+# DESIGN.md #1 (as amended 2026-07-07): bottom panel is INSET between
+# full-height walls, nominal INTERIOR_LENGTH x INTERIOR_WIDTH with edge
+# fingers on all four edges -> 2 jointed edges per axis. NOT xfail: the
+# legacy generator's full-footprint Bottom (304.8 x 165.1) sits exactly at
+# nominal + 2T on both axes, which is this band's upper bound -- a real
+# (maximal) pass under the DESIGN.md tolerance rule, same situation as the
+# divider tests below.
 def test_bottom_panel_blank_size():
     piece = _piece(SHELL_SVG, "bottom")
-    _assert_band(piece, "X", piece.bbox.width, c.SHELL_EXT["length"], jointed_edges=0)
-    _assert_band(piece, "Y", piece.bbox.height, c.SHELL_EXT["width"], jointed_edges=0)
+    _assert_band(piece, "X", piece.bbox.width, c.INTERIOR_LENGTH, jointed_edges=2)
+    _assert_band(piece, "Y", piece.bbox.height, c.INTERIOR_WIDTH, jointed_edges=2)
 
 
-# DESIGN.md #2: nominal 298.45 (X) x 123.825 (Z). X-axis: front edge jointed
-# "only up to Z=118.025" (partial, still counts) + rear edge jointed "full
-# height" -> 2 jointed edges. Z-axis: bottom edge "fingers down into bottom
-# panel" (jointed) + top edge "plain over paper compartment/rail; finger-
-# jointed to top panel over the bay" (partial, still counts) -> 2 jointed.
+# DESIGN.md #2 (amended): nominal 298.45 (X) x 127.0 (Z), full height.
+# X-axis: front edge jointed "only up to Z=118.025" (partial, still counts)
+# + rear edge jointed "full height" -> 2 jointed edges. Z-axis: bottom edge
+# straight (panel hole line is a cutout, doesn't extend the blank) + top
+# edge finger-jointed to top panel over the bay (partial) -> 1 jointed.
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: uses legacy SHELL dict; wrong dims and missing dado slots")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_blank_size(side):
     piece = _piece(SHELL_SVG, side)
     _assert_band(piece, "X", piece.bbox.width, c.INTERIOR_LENGTH, jointed_edges=2)
-    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=2)
+    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=1)
 
 
-# DESIGN.md #3: nominal 158.75 (Y) x 114.85 (Z). Y-axis: both vertical edges
-# finger-joint to side walls -> 2. Z-axis: bottom jointed into bottom panel,
-# top "plain" (lid slides over it) -> 1.
+# DESIGN.md #3 (amended): nominal 158.75 (Y) x 118.025 (Z), running from
+# Z=0. Y-axis: both vertical edges finger-joint to side walls -> 2. Z-axis:
+# bottom straight (hole line only), top plain (lid slides over it) -> 0.
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: front wall currently gets the rear wall's openings/engraving instead")
 def test_front_wall_blank_size():
     piece = _piece(SHELL_SVG, "front wall")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
-    _assert_band(piece, "Z", piece.bbox.height, c.FRONT_WALL_HEIGHT, jointed_edges=1)
+    _assert_band(piece, "Z", piece.bbox.height, c.FRONT_WALL_HEIGHT, jointed_edges=0)
 
 
-# DESIGN.md #4: nominal 158.75 (Y) x 123.825 (Z), full height. Both axes:
-# "sides -> side walls" and "top -> top panel" / "Bottom -> bottom panel" ->
-# 2 jointed edges each.
+# DESIGN.md #4 (amended): nominal 158.75 (Y) x 127.0 (Z), full height.
+# Y-axis: sides -> side walls -> 2. Z-axis: bottom straight (hole line
+# only), top -> top panel -> 1.
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: labeled 'Back Wall' but has no drawer openings at all currently")
 def test_rear_wall_blank_size():
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
-    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=2)
+    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=1)
 
 
 # DESIGN.md #5: nominal 158.75 (Y) x 120.65 (Z). Both axes fully captive
@@ -324,48 +325,89 @@ def test_rear_wall_has_two_drawer_openings():
 
 # --- Side walls: lid through-slot + divider finger-hole line + shelf finger-
 # hole line ---------------------------------------------------------------------
-LID_SLOT_SIZE = (c.LID_SLOT_X_END, c.LID_SLOT_HEIGHT)          # 79.375 x 3.975
-DIVIDER_HOLE_LINE_SIZE = (T, c.DIVIDER_HEIGHT)                  # 3.175 x 120.65
-SHELF_HOLE_LINE_SIZE = (c.BAY_LENGTH, T)                        # 219.075 x 3.175
+# The lid slot is an EDGE NOTCH in the blank outline (DESIGN.md #2, amended:
+# it must be open at the wall's front edge or the lid could never be
+# inserted), so it can't be found as a closed hole. We detect it by its
+# outline signature instead: the notch contributes two long horizontal
+# segments of exactly the slot length (top and bottom of the notch) and a
+# vertical closing segment of the slot height. Finger teeth are far shorter
+# and the rail top (79.375) differs from the slot length (76.2) by a full T,
+# so neither can false-positive at these probe lengths. Placement-blind by
+# design; front-vs-rear mouth orientation is checked visually per #17.
+LID_SLOT_LENGTH = c.LID_SLOT_X_END - T                          # 76.2
+
+# Finger-hole lines are DASHED rows of separate T-wide holes (Boxes.py
+# fingerHolesAt), not single continuous slots -- detected as grouped rows
+# via svg_utils.hole_line_spans. A row's dashes don't reach the very ends of
+# its nominal span, so we accept >= 75% coverage; the upper bound rules out
+# some unrelated full-width row being mistaken for the target.
+DIVIDER_LINE_NOMINAL = c.DIVIDER_HEIGHT                          # 120.65 (vertical)
+SHELF_LINE_NOMINAL = c.BAY_LENGTH                                # 219.075 (horizontal)
 
 
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_lid_slot(side):
     piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, *LID_SLOT_SIZE)
-    assert len(matches) == 1, f"expected 1 lid through-slot ~{LID_SLOT_SIZE}mm, found {len(matches)}"
+    h_hits = su.count_outline_segments(piece, "h", LID_SLOT_LENGTH, tol=1.0)
+    v_hits = su.count_outline_segments(piece, "v", c.LID_SLOT_HEIGHT, tol=0.5)
+    assert h_hits >= 2 and v_hits >= 1, (
+        f"expected lid-slot notch signature (>=2 horizontal segments ~{LID_SLOT_LENGTH}mm, "
+        f">=1 vertical ~{c.LID_SLOT_HEIGHT}mm) in {side} outline; got h={h_hits}, v={v_hits}"
+    )
+
+
+def _blue_holes(piece):
+    return [h for h in piece.holes if su.normalize_color(h.stroke) == "blue"]
 
 
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_divider_hole_line(side):
     piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, *DIVIDER_HOLE_LINE_SIZE)
-    assert len(matches) == 1, f"expected 1 divider finger-hole line ~{DIVIDER_HOLE_LINE_SIZE}mm, found {len(matches)}"
+    spans = su.hole_line_spans(_blue_holes(piece), T, axis="y")
+    hits = [s for s in spans if 0.75 * DIVIDER_LINE_NOMINAL <= s <= DIVIDER_LINE_NOMINAL + 1.0]
+    assert len(hits) == 1, (
+        f"expected 1 vertical divider finger-hole row spanning ~{DIVIDER_LINE_NOMINAL}mm "
+        f"in {side}; vertical row spans found: {[round(s, 1) for s in spans]}"
+    )
 
 
 @pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_shelf_hole_line(side):
     piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, *SHELF_HOLE_LINE_SIZE)
-    assert len(matches) == 1, f"expected 1 shelf finger-hole line ~{SHELF_HOLE_LINE_SIZE}mm, found {len(matches)}"
+    spans = su.hole_line_spans(_blue_holes(piece), T, axis="x")
+    hits = [s for s in spans if 0.75 * SHELF_LINE_NOMINAL <= s <= SHELF_LINE_NOMINAL + 1.0]
+    assert len(hits) == 1, (
+        f"expected 1 horizontal shelf finger-hole row spanning ~{SHELF_LINE_NOMINAL}mm "
+        f"in {side}; horizontal row spans found: {[round(s, 1) for s in spans]} "
+        "(the near-full-width bottom-panel row is longer and must not land in this band)"
+    )
 
 
-# --- Drawer: finger-notch pull belongs on the faceplate, not the body front
-# (#18 scope: "goes in the faceplate, not the body") ----------------------------
-NOTCH_SIZE = (c.FINGER_NOTCH_RADIUS * 2, c.FINGER_NOTCH_RADIUS)  # 30 x 15
+# --- Drawer: grip slot through BOTH faceplate and body front, aligned
+# (DESIGN.md #9, amended: a closed 30x15 r7.5 slot replaced the old top-edge
+# notch -- a closed hole keeps the top edge stiff and stays detectable) ---------
+GRIP_SLOT_SIZE = (c.DRAWER_GRIP_SLOT["width"], c.DRAWER_GRIP_SLOT["height"])  # 30 x 15
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: notch is still cut into the body's Front panel, not a (nonexistent) faceplate")
-def test_faceplate_has_finger_notch():
+@pytest.mark.xfail(strict=False, reason=f"{XF18}: faceplate piece does not exist yet")
+def test_faceplate_has_grip_slot():
     piece = _piece(DRAWER_SVG, "faceplate")
-    matches = _cut_holes_matching(piece, *NOTCH_SIZE, tol=2.0)
+    matches = _cut_holes_matching(piece, *GRIP_SLOT_SIZE, tol=1.0)
     assert len(matches) == 1
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: body's Front panel currently carries the notch; #18 moves it to the faceplate")
-def test_drawer_body_front_has_no_cutouts():
+# NOT xfail: the legacy generator's "notch" is implemented as a rounded
+# 30x15 rectangularHole in the body Front -- dimensionally identical to the
+# DESIGN.md grip slot (position differs, which this size-based check doesn't
+# see). Passes today for real; #18 keeps it passing.
+def test_drawer_body_front_has_matching_grip_slot():
     piece = _piece(DRAWER_SVG, "front")
-    assert piece.holes == [], f"body Front panel should have no cutouts once the notch moves to the faceplate, found {piece.holes}"
+    blue = _blue_holes(piece)
+    matches = _cut_holes_matching(piece, *GRIP_SLOT_SIZE, tol=1.0)
+    assert len(matches) == 1 and len(blue) == 1, (
+        f"body Front should carry exactly one cut hole, the {GRIP_SLOT_SIZE} grip slot; "
+        f"found {[(round(h.bbox.width, 1), round(h.bbox.height, 1)) for h in blue]}"
+    )

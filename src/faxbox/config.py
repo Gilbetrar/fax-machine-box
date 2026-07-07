@@ -39,9 +39,11 @@ PAPER_COMPARTMENT_LENGTH = 76.2  # X interior span of the paper compartment (3")
 INTERIOR_LENGTH = SHELL_EXT["length"] - 2 * T   # 298.45
 INTERIOR_WIDTH = SHELL_EXT["width"] - 2 * T     # 158.75
 
-# Walls stand ON the bottom panel (full-footprint base).
-WALL_Z0 = T                                      # 3.175
-WALL_HEIGHT = SHELL_EXT["height"] - T            # 123.825
+# Walls run full height; the bottom panel is inset between them (standard
+# finger-box construction — see DESIGN.md amendment note).
+WALL_Z0 = 0.0
+WALL_HEIGHT = SHELL_EXT["height"]                # 127.0
+FLOOR_TOP = T                                    # 3.175, top of inset bottom panel
 
 # Longitudinal layout (X)
 DIVIDER_X0 = T + PAPER_COMPARTMENT_LENGTH        # 79.375
@@ -55,20 +57,20 @@ LID_RAIL_HEIGHT = 5.0                            # material left above the slot
 LID_SLOT_TOP = SHELL_EXT["height"] - LID_RAIL_HEIGHT      # 122.0
 LID_SLOT_HEIGHT = T + LID_SLOT_VERTICAL_CLEARANCE         # 3.975
 LID_SLOT_BOTTOM = LID_SLOT_TOP - LID_SLOT_HEIGHT          # 118.025
-LID_SLOT_X_END = DIVIDER_X0                      # slot runs X 0 -> 79.375
+LID_SLOT_X_END = DIVIDER_X0    # slot runs X 3.175 -> 79.375, open at front edge
 
 FRONT_WALL_TOP = LID_SLOT_BOTTOM                 # lid slides over the front wall
-FRONT_WALL_HEIGHT = FRONT_WALL_TOP - WALL_Z0     # 114.85
+FRONT_WALL_HEIGHT = FRONT_WALL_TOP - WALL_Z0     # 118.025
 
 # Fixed top panel over the drawer bay
 TOP_PANEL_Z0 = SHELL_EXT["height"] - T           # 123.825
 DIVIDER_TOP = TOP_PANEL_Z0                       # divider supports the top panel
-DIVIDER_HEIGHT = DIVIDER_TOP - WALL_Z0           # 120.65
+DIVIDER_HEIGHT = DIVIDER_TOP - FLOOR_TOP         # 120.65
 
 # Drawer bay vertical split
-BAY_INTERIOR_HEIGHT = TOP_PANEL_Z0 - T           # 120.65
+BAY_INTERIOR_HEIGHT = TOP_PANEL_Z0 - FLOOR_TOP   # 120.65
 DRAWER_SLOT_HEIGHT = (BAY_INTERIOR_HEIGHT - T) / 2        # 58.7375
-SHELF_Z0 = WALL_Z0 + DRAWER_SLOT_HEIGHT          # 61.9125
+SHELF_Z0 = FLOOR_TOP + DRAWER_SLOT_HEIGHT        # 61.9125
 SHELF_Z1 = SHELF_Z0 + T                          # 65.0875
 
 # --- Rear wall drawer openings ----------------------------------------------
@@ -76,7 +78,7 @@ SHELF_Z1 = SHELF_Z0 + T                          # 65.0875
 OPENING_WIDTH = INTERIOR_WIDTH - 2 * T           # 152.4 (leaves T webs at corners)
 OPENING_HEIGHT = 55.0
 # Sill-free: each opening's bottom edge is exactly its slot's floor.
-BOTTOM_OPENING_Z0 = WALL_Z0                      # 3.175
+BOTTOM_OPENING_Z0 = FLOOR_TOP                    # 3.175
 BOTTOM_OPENING_Z1 = BOTTOM_OPENING_Z0 + OPENING_HEIGHT    # 58.175
 TOP_OPENING_Z0 = SHELF_Z1                        # 65.0875
 TOP_OPENING_Z1 = TOP_OPENING_Z0 + OPENING_HEIGHT          # 120.0875
@@ -94,7 +96,10 @@ FACEPLATE = {
     "height": OPENING_HEIGHT - 2 * FACEPLATE_REVEAL,  # 53.5
 }
 
-FINGER_NOTCH_RADIUS = 15.0  # half-round pull in faceplate + body front top edges
+# Closed grip slot cut through BOTH faceplate and body front, aligned
+# (DESIGN.md: 30 x 15 r7.5, slot top 8.0 below the part top edge).
+DRAWER_GRIP_SLOT = {"width": 30.0, "height": 15.0, "radius": 7.5,
+                    "top_below_edge": 8.0}
 
 # --- Sliding lid -------------------------------------------------------------
 
@@ -124,6 +129,7 @@ OUTPUT_DIR = "output"
 
 DRAWER_MATERIAL_THICKNESS = MATERIAL_THICKNESS  # single thickness everywhere
 KERF = BURN
+FINGER_NOTCH_RADIUS = 15.0  # old notch pull; superseded by DRAWER_GRIP_SLOT
 DRAWER_CLEARANCE = SLIDE_CLEARANCE
 PAPER_COMPARTMENT_DEPTH = PAPER_COMPARTMENT_LENGTH
 SHELL = {"width": SHELL_EXT["length"], "depth": SHELL_EXT["width"],

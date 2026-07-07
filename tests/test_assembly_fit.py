@@ -114,7 +114,7 @@ def test_total_drawer_length_within_spec_target():
 
 def test_openings_are_sill_free():
     """Opening floors must be exactly at bay floor / shelf top or drawers catch."""
-    assert c.BOTTOM_OPENING_Z0 == pytest.approx(c.WALL_Z0, **APPROX)
+    assert c.BOTTOM_OPENING_Z0 == pytest.approx(c.FLOOR_TOP, **APPROX)
     assert c.TOP_OPENING_Z0 == pytest.approx(c.SHELF_Z1, **APPROX)
 
 
@@ -124,10 +124,12 @@ def test_openings_stay_within_their_slots():
 
 
 def test_rear_wall_webs_are_structural():
+    web_below_bottom = c.BOTTOM_OPENING_Z0 - c.WALL_Z0  # backed by the inset panel
     web_below_shelf = c.SHELF_Z0 - c.BOTTOM_OPENING_Z1
     web_above_top = c.TOP_PANEL_Z0 - c.TOP_OPENING_Z1
     side_web = (c.INTERIOR_WIDTH - c.OPENING_WIDTH) / 2 + c.T
-    for name, web in [("below shelf", web_below_shelf),
+    for name, web in [("below bottom opening", web_below_bottom),
+                      ("below shelf", web_below_shelf),
                       ("above top opening", web_above_top),
                       ("beside openings", side_web)]:
         assert web >= c.MIN_WEB, f"web {name} = {web} < {c.MIN_WEB}"
@@ -138,7 +140,7 @@ def test_rear_wall_webs_are_structural():
 def test_divider_is_full_height_to_top_panel():
     """SPEC: divider is structural; it must reach the top panel underside."""
     assert c.DIVIDER_TOP == pytest.approx(c.TOP_PANEL_Z0, **APPROX)
-    assert c.DIVIDER_HEIGHT == pytest.approx(c.TOP_PANEL_Z0 - c.WALL_Z0, **APPROX)
+    assert c.DIVIDER_HEIGHT == pytest.approx(c.TOP_PANEL_Z0 - c.FLOOR_TOP, **APPROX)
 
 
 def test_divider_blocks_lid_slot_band():
@@ -165,7 +167,9 @@ def test_lid_slot_geometry():
 
 def test_front_wall_top_is_slot_bottom():
     assert c.FRONT_WALL_TOP == pytest.approx(c.LID_SLOT_BOTTOM, **APPROX)
-    assert c.FRONT_WALL_HEIGHT == pytest.approx(c.FRONT_WALL_TOP - c.WALL_Z0, **APPROX)
+    assert c.FRONT_WALL_HEIGHT == pytest.approx(c.FRONT_WALL_TOP, **APPROX), (
+        "front wall runs from Z=0 (walls full height, bottom panel inset)"
+    )
 
 
 def test_lid_engages_both_slots_with_play():
@@ -191,10 +195,12 @@ def test_lid_clears_rail_and_top_panel():
 
 # --- Bottom panel ---------------------------------------------------------------
 
-def test_bottom_panel_is_full_footprint():
-    """Walls stand on the bottom panel; base spans the full 12" (SPEC)."""
-    assert c.WALL_Z0 == pytest.approx(c.T, **APPROX)
-    assert c.WALL_HEIGHT == pytest.approx(SPEC_HEIGHT - c.T, **APPROX)
+def test_bottom_panel_inset_between_full_height_walls():
+    """DESIGN.md amendment: full-height walls, bottom panel inset between them
+    (gives the rear wall a solid web under its sill-free openings)."""
+    assert c.WALL_Z0 == pytest.approx(0.0, **APPROX)
+    assert c.WALL_HEIGHT == pytest.approx(SPEC_HEIGHT, **APPROX)
+    assert c.FLOOR_TOP == pytest.approx(c.T, **APPROX)
 
 
 # --- Sanity: derived interior values ----------------------------------------------
