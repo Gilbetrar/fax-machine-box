@@ -8,6 +8,8 @@ Coordinate convention (DESIGN.md): origin at the exterior front-left-bottom
 corner. X+ rearward (length, 12"), Y+ rightward (width, 6.5"), Z+ up (5").
 """
 
+import math
+
 # --- Material & laser -------------------------------------------------------
 
 MATERIAL_THICKNESS = 3.175  # 1/8" plywood, uniform for ALL parts (SPEC)
@@ -134,6 +136,196 @@ ENGRAVE_TEXT = "FAX MACHINE"
 ENGRAVE_PIXEL_SIZE = 4.0          # 5x7 pixel font cell size
 ENGRAVE_FONT_SPACING = 2.0        # gap between letters
 ENGRAVE_CENTER = {"x": SHELL_EXT["length"] / 2, "z": 63.5}  # right wall exterior
+
+# --- Retention (iteration 3, issue #20 red-team) -----------------------------
+# Two in-plane laser-cut cantilever spring detents. Mechanism A (side-wall
+# lid detent) is unchanged in kinematics from iteration 2, only re-tuned for
+# strain (FIX2). Mechanism B (drawer retention) is a NEW mechanism replacing
+# iteration 2's faceplate detent, which red-team review found geometrically
+# impossible (a Y-Z faceplate can't cam against drawer travel along X --
+# square interference, not a ramp). See DESIGN.md's "Retention (iteration 3)"
+# section for the full derivation, kinematics, and strain numbers.
+#
+# Mechanism A (side walls): a cantilever cut into the wall material just
+# below the lid slot floor, with a ramped nub poking up through the floor
+# into the slot cavity -- the lid's closed position carries a matching
+# edge-open notch that the nub pops into.
+# Mechanism B (drawer sides): a cantilever cut into EACH drawer side wall
+# (an X-Z part -- its plane contains both the travel axis X and the
+# deflection axis Z, so the ramps genuinely cam), nub on the free end
+# protruding DOWN below the side's bottom edge. On insertion the nub cams up
+# over the rear-wall opening's own sill web, rides deflected along the floor
+# (bottom drawer) / shelf (top drawer), and drops into a catch hole cut
+# through that panel at the closed position.
+
+# Nub engagement / interference depths (the two values Ben tunes against the
+# retention coupon before cutting real parts -- see calibration.py).
+LID_DETENT_ENGAGE = 1.5        # nub rise above the lid slot floor (mm); must
+                                # exceed LID_SLOT_VERTICAL_CLEARANCE (0.8) so
+                                # the nub stays engaged when the lid shifts
+                                # within its own vertical play.
+DRAWER_DETENT_ENGAGE = 2.2     # nub protrusion below the drawer side wall's
+                                # bottom edge (mm); exceeds the drawer's
+                                # 1.5mm opening vertical clearance by 0.7mm
+                                # so the nub stays engaged at worst-case
+                                # drawer lift within that clearance.
+
+# Shared cantilever proportions (both mechanisms use the same beam stock;
+# only the nub height/protrusion and beam span differ per mechanism below).
+DETENT_BEAM_WIDTH = 2.5         # beam cross-section width in the flex
+                                # direction (mm) -- the dimension that bends
+DETENT_ROOT_FILLET = 1.0        # minimum root fillet radius (mm)
+DETENT_CLEARANCE = 2.5          # clearance behind/below the beam so it can
+                                # deflect its own engagement depth without
+                                # bottoming out (mm)
+DETENT_RAMP_DEG = 30.0          # nub ramp angle from the beam's rest plane,
+                                # matching Boxes.py LidRight's barb angle `a`
+DETENT_SEVER_WIDTH = 1.0        # width of the release cut that frees the
+                                # beam's tip from the surrounding material
+                                # (mm) -- well above kerf so it fully parts
+DETENT_NUB_TOP_WIDTH = 2.5      # flat land at the nub's tip (mm); a flat
+                                # top (rather than a knife edge) avoids the
+                                # stress-concentrating point a bare 30 degree
+                                # wedge would leave in cross-grain plywood
+DETENT_SEVER_CLEARANCE = 1.5    # gap kept between a nub's own (ramped) base
+                                # edge and its release/sever cut, so the
+                                # sever cut cannot undercut the nub's own
+                                # base and leave it bridged to the fixed
+                                # material on its outward side (verified
+                                # empirically against the pre-fix wall
+                                # geometry: the ORIGINAL nub-mid-beam design
+                                # already relied on exactly this separation,
+                                # just via a much larger, accidental gap;
+                                # see also DESIGN.md's "Retention" section).
+
+
+def _ramp_run(rise: float) -> float:
+    return rise / math.tan(math.radians(DETENT_RAMP_DEG))
+
+
+def _nub_base_width(rise: float) -> float:
+    return DETENT_NUB_TOP_WIDTH + 2 * _ramp_run(rise)
+
+
+# --- Mechanism A: side-wall lid detent ---------------------------------------
+# The nub sits at the beam's FREE end (FIX2, red-team pass 2: the previous
+# revision put the nub mid-beam at X=20 with root at X=29, a 9mm root-to-nub
+# span giving eps~6.9% -- above plywood's ~1.5-2% crack threshold). Nub
+# position (LID_DETENT_X) is UNCHANGED so the lid notch position is
+# unaffected; the beam is lengthened and re-anchored so the root sits
+# LID_DETENT_NUB_TO_ROOT_SPAN away from the nub, and the sever cut (the
+# beam's free/tip end) sits DETENT_SEVER_CLEARANCE beyond the nub's own base
+# -- close to the nub (so root-to-nub, the strain-relevant span, is nearly
+# the whole beam) but not so close that the sever cut undercuts the nub's
+# own base and leaves it bridged to the fixed material outward of it.
+LID_DETENT_X = 20.0             # box X, nub center (both walls; the mirror
+                                 # convention in shell_generator.py lands
+                                 # both walls' nubs at this same real box X)
+LID_DETENT_NUB_TO_ROOT_SPAN = 22.0   # root-to-nub span (mm); eps ~= 1.16%
+                                      # at DETENT_BEAM_WIDTH=2.5,
+                                      # LID_DETENT_ENGAGE=1.5 (see DESIGN.md)
+
+LID_DETENT_NUB_BASE_WIDTH = _nub_base_width(LID_DETENT_ENGAGE)   # ~7.70
+
+LID_DETENT_TIP_X = LID_DETENT_X - LID_DETENT_NUB_BASE_WIDTH / 2 - DETENT_SEVER_CLEARANCE  # ~14.65, free/severed end
+LID_DETENT_ROOT_X = LID_DETENT_X + LID_DETENT_NUB_TO_ROOT_SPAN                            # 42.0, solid anchor end
+
+LID_DETENT_NUB_TOP_Z = LID_SLOT_BOTTOM + LID_DETENT_ENGAGE          # 119.525
+LID_DETENT_BEAM_BOTTOM_Z = LID_SLOT_BOTTOM - DETENT_BEAM_WIDTH      # 115.525
+LID_DETENT_CAVITY_BOTTOM_Z = LID_DETENT_BEAM_BOTTOM_Z - DETENT_CLEARANCE  # 113.025
+
+# Mating notch in the lid's side edges (DESIGN.md #8: closed lid front edge
+# sits at box X = LID_SLOT_X_END - SLIDING_LID["length"], "~0.4mm shy" of the
+# front face -- lid-local X = box X - that offset).
+LID_CLOSED_FRONT_X = LID_SLOT_X_END - SLIDING_LID["length"]        # 0.375
+LID_NOTCH_X = LID_DETENT_X - LID_CLOSED_FRONT_X                    # 19.625, lid-local
+LID_NOTCH_WIDTH = LID_DETENT_NUB_BASE_WIDTH + 1.0                  # ~8.7
+LID_NOTCH_DEPTH = 3.5                # >= LID lid-slot engagement (2.425) + margin;
+                                      # bumped from 3.0 (FIX3, burn consistency):
+                                      # once the notch is drawn shrunk-by-BURN
+                                      # (so its AS-CUT depth matches nominal
+                                      # instead of drifting with BURN), 3.0 left
+                                      # only ~0.075mm of real margin over the
+                                      # 2.925 requirement -- less than BURN
+                                      # itself could erase. 3.5 restores a real
+                                      # margin regardless of BURN's exact value.
+LID_NOTCH_CHAMFER = 1.0              # corner ease at the notch mouth (mm)
+
+# --- Mechanism B: drawer side-wall flexure (iteration 3, issue #20) ----------
+# Cut into EACH drawer side wall (Left Side, Right Side -- both, per drawer),
+# near the FRONT (faceplate) end. Convention (this project's own choice,
+# since both ends finger-joint identically to Front/Back and are otherwise
+# symmetric): drawer-local x=0 is the end assembled against the Front panel
+# (the faceplate end); x=BODY_INTERIOR_LENGTH is the Back-panel end. This
+# means each side panel is no longer front/back-symmetric once cut, and must
+# be assembled with its flexure end toward the Front panel -- flagged
+# explicitly here and in DESIGN.md/README since it's a new assembly
+# constraint the pre-iteration-3 parts didn't have.
+#
+# Beam sizing by strain (FIX1): eps = 3*w*delta/(2*L^2), w=DETENT_BEAM_WIDTH,
+# delta=DRAWER_DETENT_ENGAGE. Solving eps<=1.5% for L at w=2.5, delta=2.2
+# gives L >= ~23.45mm; DRAWER_DETENT_NUB_TO_ROOT_SPAN=26 gives eps~=1.22%,
+# a real margin below the ~1.5-2% plywood cracking threshold.
+DRAWER_DETENT_NUB_TO_ROOT_SPAN = 26.0
+
+DRAWER_DETENT_NUB_BASE_WIDTH = _nub_base_width(DRAWER_DETENT_ENGAGE)  # ~10.12
+
+# Nub position (drawer-local X, front/faceplate end): far enough from the
+# front finger joints (>=15mm clear, per issue instructions) even after
+# backing out DETENT_SEVER_CLEARANCE + the nub's own half-base for the sever
+# cut position below.
+DRAWER_DETENT_NUB_X = 24.0
+DRAWER_DETENT_TIP_X = DRAWER_DETENT_NUB_X - DRAWER_DETENT_NUB_BASE_WIDTH / 2 - DETENT_SEVER_CLEARANCE  # ~17.44
+DRAWER_DETENT_ROOT_X = DRAWER_DETENT_NUB_X + DRAWER_DETENT_NUB_TO_ROOT_SPAN                            # 50.0
+
+# The side wall's bottom edge is finger-jointed to the drawer's own Bottom
+# panel along its ENTIRE length except a short PLAIN zone here, sized to
+# contain the flexure's tip-to-root span with margin (a finger-jointed edge
+# can't locally express the nub's protrusion -- see generate_drawers.py). The
+# Bottom panel's matching finger-hole row is split to skip this same zone.
+DRAWER_DETENT_PLAIN_LO = DRAWER_DETENT_TIP_X - 2.0    # ~15.44
+DRAWER_DETENT_PLAIN_HI = DRAWER_DETENT_ROOT_X + 2.0   # 52.0
+
+# --- Catch holes (bottom panel for the bottom drawer, shelf for the top
+# drawer): X position derived from existing datums (rear wall plane, the
+# drawer's own closed-position "bay gap" reveal, body length, faceplate
+# thickness) so hole center = nub center at the closed position.
+DRAWER_BAY_GAP = BAY_LENGTH - DRAWER_BODY["length"]   # 0.475, closed-position
+                                                       # reveal (DESIGN.md #9)
+DRAWER_FRONT_INNER_FACE_CLOSED_X = BAY_X1 - DRAWER_BAY_GAP - T   # 297.975,
+                                   # box X of the Front panel's INNER face
+                                   # (interior-facing surface) when the
+                                   # drawer is fully closed
+CATCH_HOLE_X = DRAWER_FRONT_INNER_FACE_CLOSED_X - DRAWER_DETENT_NUB_X   # ~273.975
+
+# X-length: nub base + ramp clearance, keeping engaged X-slop <= 0.8mm total.
+CATCH_HOLE_X_LENGTH = DRAWER_DETENT_NUB_BASE_WIDTH + 0.8   # ~10.92
+
+# Y-width: side thickness + both drawers' full lateral float + margin, so
+# the nub can't miss the hole even at worst-case drawer skew (DESIGN.md
+# derives this from the drawer's own ~4.9mm/side bay float).
+DRAWER_LATERAL_GAP = (INTERIOR_WIDTH - DRAWER_BODY["width"]) / 2   # 4.875, "~4.9mm/side"
+CATCH_HOLE_Y_WIDTH = T + 2 * DRAWER_LATERAL_GAP + 1.0              # ~13.925
+
+# Y centers: box Y of each side wall's mid-thickness when the drawer is
+# laterally centered in the bay (the catch hole's own width, above, covers
+# the full float either side of this nominal center).
+CATCH_HOLE_LEFT_Y = T + DRAWER_LATERAL_GAP + T / 2                              # ~9.6375
+CATCH_HOLE_RIGHT_Y = T + DRAWER_LATERAL_GAP + DRAWER_BODY["width"] - T / 2      # ~155.4625
+
+# Catch holes need real 0.5mm margin at the drawer's WORST-CASE lateral
+# extreme (side wall flush against the bay wall) -- at that extreme, the
+# nub's own footprint already reaches exactly to the bay wall's interior
+# face, so the required margin necessarily pushes the hole a hair PAST that
+# face, into the zone where the bottom panel's/shelf's own finger tabs to
+# that wall would otherwise sit. Rather than let the catch hole silently
+# clip 1-2 finger teeth (verified by rendering: it does), both the bottom
+# panel's and shelf's edges to the LEFT/RIGHT walls carry a short PLAIN
+# zone at the catch hole's own X range (same CompoundEdge technique as the
+# drawer side wall's flexure zone) so there's no tooth there to clip.
+CATCH_HOLE_PLAIN_MARGIN = 3.0
+CATCH_HOLE_X_PLAIN_LO = CATCH_HOLE_X - CATCH_HOLE_X_LENGTH / 2 - CATCH_HOLE_PLAIN_MARGIN
+CATCH_HOLE_X_PLAIN_HI = CATCH_HOLE_X + CATCH_HOLE_X_LENGTH / 2 + CATCH_HOLE_PLAIN_MARGIN
 
 # --- Output ------------------------------------------------------------------
 

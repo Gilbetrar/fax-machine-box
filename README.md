@@ -25,7 +25,9 @@ Generate every part, then nest them onto cut-ready sheets:
 .venv/bin/python -m faxbox.generate_drawers   # one drawer's 6 pieces -> output/drawer.svg (cut TWICE)
 .venv/bin/python -m faxbox.generate_lids      # sliding lid: 1 piece -> output/lids.svg
 .venv/bin/python -m faxbox.layout             # nests all of the above onto output/sheet_1.svg, sheet_2.svg, ...
-.venv/bin/python -m faxbox.calibration        # kerf/thickness test coupon -> output/kerf_coupon.svg (cut on scrap FIRST, see "Cut-day checklist")
+.venv/bin/python -m faxbox.calibration        # kerf/thickness coupon -> output/kerf_coupon.svg,
+                                               # AND retention-tuning coupon -> output/retention_coupon.svg
+                                               # (cut both on scrap FIRST, see "Cut-day checklist")
 ```
 
 `layout.py` also writes `output/final_layout.svg` — a combined, true-scale
@@ -58,7 +60,8 @@ fax-machine-box/
 │   ├── generate_drawers.py  # one drawer's 6 pieces (body x5 + faceplate); cut this sheet twice
 │   ├── generate_lids.py     # sliding lid (1 piece)
 │   ├── layout.py            # nests all parts onto bed-sized sheets for cutting
-│   └── calibration.py       # kerf/ply-thickness test coupon -> output/kerf_coupon.svg
+│   └── calibration.py       # kerf/ply-thickness coupon -> kerf_coupon.svg, AND
+│                            # the retention-tuning coupon -> retention_coupon.svg
 ├── tests/                   # pytest harness: geometry, laser-compliance, and layout checks
 ├── docs/service-comparison.md  # laser service comparison + verified NYC Resistor constraints
 ├── DESIGN.md                # canonical geometry — the source of truth for every number
@@ -122,11 +125,16 @@ There is **no separate flat/tabbed lid** — that part doesn't exist in this
 design. The drawer bay is covered by the fixed Top Panel above, not a
 removable cover.
 
-**Calibration — standalone, not part of the box (from `kerf_coupon.svg`):**
+**Calibration — standalone, not part of the box (from `kerf_coupon.svg` and
+`retention_coupon.svg`):**
 
 - [ ] 1× Kerf/thickness coupon — three ply-thickness gauge slots (3.05 /
   3.175 / 3.30mm) and a 10mm reference square. Cut this on scrap *before*
   cutting any real part; see "Cut-day checklist" step 3.
+- [ ] 5× Retention coupon pieces (issue #20, iteration 3) — Wall Flexure
+  Sample, Lid Notch Strip, Drawer-Side Flexure Sample, Mock Sill Edge, Mock
+  Floor Strip. Cut on scrap *before* the real iteration-3 parts; see
+  "Cut-day checklist" step 3b.
 
 ## Wall identification (read this before assembly)
 
@@ -259,16 +267,36 @@ This design accepts some real tradeoffs to hit the SPEC envelope and the
 front-insert lid concept. None of these are bugs — they're documented so
 nobody "fixes" them mid-build or is surprised later:
 
-- **The sliding lid has no retention along its travel axis.** The divider
-  stops it from sliding in too far (rearward), but nothing stops it sliding
-  back *out* the front. Tip the box front-down and the lid will slide out.
-  This is an accepted cost of the front-insert design (the slots have to be
-  open at the front edge for the lid to go in at all) — **carry the box
-  level**, especially with the lid closed.
-- **The drawers have no out-stop either.** Nothing prevents a drawer from
-  sliding fully out its rear-wall opening. Tip the box rear-down and a
-  drawer will slide free. Don't rely on friction to keep drawers seated in
-  transit.
+- **The sliding lid has spring-detent retention (issue #20), not a lock.**
+  Each side wall carries a cantilever nub that pops through a matching
+  notch in the lid's side edges when it's closed, holding it seated if the
+  box tips 90° front-down. It's still a light detent, not a latch — don't
+  rely on it against a hard drop, and it still slides free with normal
+  one-finger effort when you want it to. See DESIGN.md "Retention
+  (iteration 3)" for the mechanism; **tune the fit on the retention coupon
+  before cutting real parts** (see the checklist below). If a fractured
+  flexure ever drops a loose chunk into the lid's slot channel, **never
+  force the lid** — remove it fully and check the channel for debris first.
+- **The drawers have the same kind of detent, not a hard stop — and it
+  lives in the SIDE panels, not the faceplate.** Each drawer side wall
+  (Left Side, Right Side) carries a cantilever nub near its front
+  (faceplate) end that snaps into a catch hole in the bottom panel/shelf on
+  close, holding the drawer seated. (An earlier revision tried this on the
+  faceplate instead; red-team review found that geometrically impossible —
+  a faceplate is a Y-Z plate and can't cam against the drawer's X-axis
+  travel — so it was moved to the side walls, an X-Z part, before any real
+  part was cut.) Same caveat as the lid: a detent, not a latch — pull with
+  the grip slot as usual to open. If a flexure ever fractures, the drawer
+  simply loses its "seated" feel but keeps sliding freely (not a jam).
+  **Both drawer side panels must be installed with their flexure end
+  (near one end of the panel) toward the Front panel, not the Back** — see
+  DESIGN.md "Retention" for which end that is; getting it backwards means
+  the nub ends up near the divider instead of the rear-wall opening.
+- **Recorded fallback if either flexure proves too weak or won't tune
+  well on the coupon: magnets.** 6mm discs in through-holes, 0.3–0.5mm
+  undersize press-fit + CA glue, in place of the cut flexure/nub. Not
+  implemented in this design — noted here and in DESIGN.md so it isn't
+  rediscovered from scratch if the plywood proves too brittle in practice.
 - **Drawers close flush by bottoming out on the divider, not the rear
   wall.** The inset faceplate never bears against the rear-wall opening
   frame — the drawer body's front face is what stops against the divider
@@ -299,20 +327,31 @@ this checklist is current.
    current machine is an **Epilog Fusion 32 60W — 32"×20" (812×508mm) work
    area**, confirmed by their wiki (edited 2026), 2025–26 class listings,
    and Epilog's spec sheet for that exact model (sources in
-   docs/service-comparison.md). This project's three sheets measure
-   ~**21.8"×14.0"**, **21.6"×17.1"**, and **21.6"×9.8"** — all fit with
-   room to spare. A five-second look at the machine confirms it (the
-   Fusion 32 bed is visibly ~2.5ft wide). If it somehow isn't that machine,
-   re-nest: change `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in
-   `src/faxbox/layout.py`, rerun `.venv/bin/python -m faxbox.layout`, and
-   re-check the printed sheet dimensions.
+   docs/service-comparison.md). This project's three sheets currently
+   measure ~**21.8"×14.0"**, **22.8"×17.1"**, and **21.5"×10.0"**
+   (regenerate and read the real numbers with `.venv/bin/python -m
+   faxbox.layout` before cutting — these will drift slightly whenever
+   config.py's retention constants change) — all fit with room to spare. A
+   five-second look at the machine confirms it (the Fusion 32 bed is
+   visibly ~2.5ft wide). If it somehow isn't that machine, re-nest: change
+   `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in `src/faxbox/layout.py`, rerun
+   `.venv/bin/python -m faxbox.layout`, and re-check the printed sheet
+   dimensions.
 2. **Material.** Bring **Baltic Birch specifically**, not generic/cheap
    plywood — cheap ply's interior voids can blow out this design's thinnest
    features (the 3.175mm webs in the rear-wall drawer openings and the
    5.0mm cantilevered lid rail) when the laser hits a void instead of solid
    wood. Bring at least **three sheets, each at least 22"×15"**, plus extra
-   scrap for the kerf coupon (step 3). Orient sheets with the **face grain
-   running along the sheet's long axis** for stiffness on the long spans.
+   scrap for the kerf coupon (step 3).
+   - **HARD GATE: orient every sheet with the face grain running along the
+     sheet's long axis before cutting anything.** This isn't optional
+     styling guidance — both retention flexures (lid detent and drawer
+     side-wall detent, DESIGN.md "Retention") are cantilevers whose beam
+     runs along each part's long (X) axis; plywood bends ~3× weaker across
+     the grain than with it (SpringFit, UIST 2019), so cutting a sheet
+     rotated 90° from this turns a margin-checked 1.2% strain into a
+     cross-grain beam that can crack on the first snap. Check grain
+     direction on the actual sheet before it goes on the bed, not after.
 3. **Cut `output/kerf_coupon.svg` on scrap FIRST, before any real part.**
    It has three ply-thickness gauge slots (3.05 / 3.175 / 3.30mm) and a
    10mm reference square. Find which gauge slot *your actual sheet* fits
@@ -324,6 +363,41 @@ this checklist is current.
    confirm before trusting the gauge slots) before cutting real parts. Do not skip this
    because `BURN`/`FINGER_PLAY` already have values in the repo — those are
    starting values, not calibrated ones.
+3b. **Cut `output/retention_coupon.svg` on scrap NEXT (after the kerf
+   coupon, before the real iteration-3 parts)** — issue #20's spring-detent
+   lid/drawer retention, see DESIGN.md "Retention (iteration 3)". Five
+   small pieces:
+   - **Wall Flexure Sample + Lid Notch Strip**: press the strip's notch
+     over the sample's nub and feel it snap in/out.
+   - **Drawer-Side Flexure Sample + Mock Sill Edge + Mock Floor Strip**:
+     this one exercises the REAL travel axis, not just a press-fit — hold
+     the Mock Sill Edge across the sample near its nub end and slide the
+     sample under it (the nub cams up and over, same as a real insertion
+     crossing the rear-wall opening's own web), then keep sliding the
+     sample across the Mock Floor Strip until it reaches the strip's catch
+     hole and snaps down into it.
+
+   **Tuning rule (same spirit as the kerf coupon's own BURN formula, step
+   3 above)**: seated sample pops free when inverted and shaken → raise
+   the relevant ENGAGE value (`LID_DETENT_ENGAGE` or
+   `DRAWER_DETENT_ENGAGE`, in `src/faxbox/config.py`) by 0.25 and re-cut
+   that coupon; can't slide/seat with one-finger force → lower it by 0.25.
+   Iterate on scrap until BOTH mechanisms pass, THEN regenerate all real
+   sheets. This is the recorded validation for issue #20's force criteria.
+   Regenerate `calibration` (and everything else, since those constants
+   also drive the real wall/lid/drawer-side geometry) and re-cut before
+   trusting the real parts' fit.
+
+   **If you change `BURN` after this step (e.g. from the kerf coupon in
+   step 3), the retention coupon must be re-cut too** — every retention
+   nub/notch/catch-hole is now drawn BURN-compensated (DESIGN.md "Retention",
+   burn paragraph), so its as-cut size tracks `BURN` the same way the rest
+   of the box's finger joints do.
+
+   Cut every flexure sample with the same grain orientation the real parts
+   will have (see the hard gate in step 2, and DESIGN.md's Grain caveat) —
+   both mechanisms are grain-favorable under that orientation, but a
+   rotated sheet defeats that.
 4. **CorelDraw import.** NYC Resistor's workflow is CorelDraw-based; their
    tips page warns Inkscape's raw SVG export can get corrupted there and
    recommends exporting PDF instead. On import: set all strokes to

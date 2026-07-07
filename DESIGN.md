@@ -197,9 +197,11 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Grip: rounded through-slot **30 × 10, r = 5**, centered in Y, slot center
   25mm from the front edge (10mm ligament to the edge; at 15mm the ligament
   was ~0.2mm and would have broken into a notch — red-team finding).
-- No retention along the travel axis: the divider stops rearward motion but
-  nothing stops the lid sliding out the front when the box tips forward.
-  Accepted cost of the front-insert decision; carry the box level.
+- ~~No retention along the travel axis~~ **Superseded by "Retention" below
+  (issue #20):** each side wall carries a cantilever spring detent whose nub
+  pops through a matching notch cut into the lid's side edges when closed,
+  holding the lid seated at a 90° front-down tip. The slide is still
+  free-running otherwise — this is a detent, not a lock.
 
 ### 9. Drawers — 2× identical, 6 pieces each
 
@@ -213,8 +215,12 @@ Body = open-top finger-jointed box, captive bottom:
   drawer's in-stop** (the inset faceplate never bears on the rear-wall frame;
   red-team finding). Closed, the faceplate sits recessed by the 0.475 slide
   gap — near-flush, since true flush and slide clearance are mutually
-  exclusive. There is no out-retention: a drawer slides free if the box is
-  tipped rear-down.
+  exclusive. ~~There is no out-retention~~ **Superseded by "Retention"
+  below (issue #20):** each of the two SIDE panels (not the faceplate — see
+  the red-team note below) carries a cantilever spring-detent flexure near
+  its front (faceplate) end, whose nub snaps into a catch hole cut through
+  the bottom panel (bottom drawer) or shelf (top drawer) at the closed
+  position, holding the drawer seated.
 - Lateral play in the bay is ~4.9mm/side by design — the drawer is guided by
   its opening, not the bay walls; max skew ≈ 1.3°, acceptable for a first cut.
 
@@ -222,7 +228,14 @@ Faceplate (6th piece), glued to the body front:
 
 - Blank: **150.9 (Y) × 53.5 (Z)** = opening − 2 × 0.75 reveal; covers the body
   cross-section exactly in height, +0.95/side in width; flush with the rear
-  face when closed (faceplate thickness T fills the rear wall plane).
+  face when closed (faceplate thickness T fills the rear wall plane). Plain
+  edges (glued, not finger-jointed) — **this is the exact original (v1)
+  blank.** Issue #20's first iteration briefly gave the faceplate a
+  retention nub of its own (a wider drawn/cut blank); red-team review found
+  that mechanism geometrically impossible (a Y-Z plate can't cam against
+  X-axis drawer travel — see "Retention" below) and it was removed, so the
+  faceplate carries **no retention feature at all**. Retention for the whole
+  drawer now lives entirely in the SIDE panels (above).
 - **Grip slot**: closed rounded slot **30 × 15, r = 7.5**, cut through BOTH
   the faceplate and the body's front wall, aligned, so a finger hooks through
   into the drawer. Centered in Y; slot top edge 8.0 below the part's top edge
@@ -243,6 +256,249 @@ Faceplate (6th piece), glued to the body front:
 | Lid thickness ↔ slot height | 0.8 | = 0.8 (documented deviation) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
 | Webs in rear wall | 3.175 / 3.7375 | ≥ 3.0 |
+| Lid detent nub ↔ slot ceiling | ≥ 1.0 | nub top (Z 119.525) clears slot top (122.0) |
+| Drawer detent nub ↔ opening vertical play | ≥ 0.7 | engage (2.2) − opening play (1.5) |
+| Catch-hole engaged X-slop | ≤ 0.8 | hole length (10.92) − nub base width (10.12) |
+
+## Retention (iteration 3, issue #20 red-team)
+
+Two in-plane laser-cut cantilever spring detents. All geometry is driven
+from `src/faxbox/config.py` constants (see that file's "Retention
+(iteration 3, issue #20 red-team)" section) via shared point-generation
+helpers in `src/faxbox/detent.py` — no magic numbers in the generators.
+
+**Why iteration 2's drawer mechanism was replaced.** Iteration 2 put a
+retention nub on the faceplate (a Y-Z plate — its plane contains Y and Z,
+not X). The drawer travels along X, *normal* to that plate. A laser-cut
+edge is square through the material's thickness, so a "ramp" drawn on a Y-Z
+part's boundary is a ramp in the Y-Z plane — it is never swept by motion
+along X. The faceplate nub could only ever meet the rear-wall opening frame
+as a **square 0.45mm interference** (a jam, not a cam) — there was no
+physical path for it to cam past anything on insertion. This was caught by
+red-team review before cutting; the fix is a different mechanism entirely,
+not a retuned version of the same one. Mechanism B below replaces it,
+cut into the drawer's SIDE walls (an X-Z plane — it contains the travel
+axis X *and* the deflection axis Z, so its ramps genuinely cam against
+motion along X).
+
+**Shared cantilever proportions**: beam cross-section width 2.5mm in the
+flex direction (`DETENT_BEAM_WIDTH`), root fillet ≥1.0mm, ≥2.5mm clearance
+behind the beam so it can deflect its engagement depth without bottoming
+out (`DETENT_CLEARANCE`), 30° ramp angle (`DETENT_RAMP_DEG`), 1.0mm
+release-cut width to fully part the beam's free tip from the surrounding
+material (`DETENT_SEVER_WIDTH`), and `DETENT_SEVER_CLEARANCE` = 1.5mm kept
+between a nub's own (ramped) base edge and its release/sever cut, so the
+sever cut cannot undercut the nub's own base and leave it bridged to the
+fixed material on its outward side (this was verified against the ACTUAL
+drawn geometry, not assumed — see the "nub bridging" note below). Beam
+length differs per mechanism (see each below), driven by the strain
+formula, not a shared constant.
+
+**Burn (FIX3, red-team)**: every nub/notch/detour shape is drawn
+BURN-compensated (see `faxbox.detent`'s module docstring for the exact
+model), matching how the rest of the box already compensates finger joints
+and holes for kerf — pre-iteration-3, these shapes were burn-*neutral*
+while their own release cuts (plain `rectangularHole` calls) WERE
+compensated, so drawn interference silently drifted from as-cut
+interference as BURN changed from its calibrated starting value. The one
+exception, by explicit project rule, is `calibration.py`'s kerf-test
+square, which must stay burn-neutral — it measures the real kerf, it
+doesn't compensate for it. **If BURN changes after calibration, the
+retention coupon (below) must be re-cut too**, for the same reason the
+kerf coupon itself must be — see README's cut-day flow.
+
+### A. Side-wall lid detent
+
+Kinematics unchanged from iteration 2 (this mechanism's cam action was
+always sound — it's an X-Z part); only the strain (below) was refit.
+
+- Cut into EACH side wall, just below the lid slot floor (Z = 118.025): a
+  cantilever beam running parallel to X, 2.5mm wide, with a clearance
+  cavity below it and a 1.0mm severing slot at its free (tip) end — see
+  `faxbox.detent.release_cut_rects`. The root end (deeper into the wall) is
+  left solid.
+- **Nub at the beam's free end (FIX2, red-team)**: iteration 2 put the nub
+  MID-BEAM at X=20 with the beam spanning 11→29 — the nub's own ramp meant
+  the actual strain-bearing span (root to nub, 29−20=9mm) was barely half
+  the drawn beam length, giving ε ≈ 6.9% at the root — well above
+  plywood's ~1.5–2% crack threshold (SpringFit, UIST 2019). The nub
+  position (`LID_DETENT_X` = 20.0, unchanged — the lid notch position is
+  unaffected) now sits `DETENT_SEVER_CLEARANCE` + half the nub's own base
+  width outward of the release cut's tip (`LID_DETENT_TIP_X` ≈ 14.65),
+  clear enough that the sever cut can't undercut the nub's own base, and
+  `LID_DETENT_ROOT_X` = `LID_DETENT_X` + `LID_DETENT_NUB_TO_ROOT_SPAN`
+  (22.0) = 42.0 — nearly the full beam length now bears load.
+  **ε = 3·w·δ/(2·L²)** with w = `DETENT_BEAM_WIDTH` (2.5), δ =
+  `LID_DETENT_ENGAGE` (1.5), L = 22.0 (root-to-nub span) → **ε ≈ 1.16%**,
+  a real margin below the crack threshold.
+- The nub is a ramped bump built into the lid-slot hole's own bottom
+  boundary (`faxbox.detent.lid_slot_with_nub_points`), rising from the slot
+  floor (118.025) to `LID_DETENT_NUB_TOP_Z` = 119.525 (1.5mm rise —
+  exceeds the 0.8mm lid vertical play so the nub stays engaged when the box
+  tips and the lid shifts within its play). Top clears the 122.0 slot
+  ceiling by 2.475mm. Ramped on both X-faces at 30°, with a 2.5mm flat top;
+  base width ≈7.7mm (`LID_DETENT_NUB_BASE_WIDTH`).
+- **Mating notch in the lid's side edges** (both long edges, one per wall):
+  an edge-open recess (`faxbox.detent.notch_points`) at lid-local X =
+  `LID_NOTCH_X` = 19.625 (= `LID_DETENT_X` − `LID_CLOSED_FRONT_X`, where
+  `LID_CLOSED_FRONT_X` = 0.375 is the closed lid's front-edge offset from
+  the box's front face — DESIGN.md #8). Width ≈8.7mm (nub base + 1mm),
+  depth `LID_NOTCH_DEPTH` = **3.5mm** (bumped from 3.0mm — FIX3: once the
+  notch is drawn burn-shrunk so its AS-CUT depth matches nominal instead of
+  drifting with BURN, 3.0 left only ~0.075mm of real margin over the
+  lid-slot-engagement + 0.5mm requirement — less than BURN itself could
+  erase; 3.5 restores a real margin), mouth corners eased by a 1.0mm
+  chamfer. When closed, the nub pops up through the notch: positive
+  retention at a 90° front-down tip.
+- Both walls are mirror images (drawn exterior-face-up, left wall mirrored
+  in local X) — the nub, release cut, and lid-slot-with-nub polygon are all
+  mirrored the same way the plain slot already was, landing both walls'
+  nubs at the same real box X.
+
+### B. Drawer side-wall flexure (replaces iteration 2's faceplate detent)
+
+- Cut into EACH of the drawer's two SIDE panels (Left Side, Right Side —
+  both, per drawer; the two drawers are identical so this applies to both
+  physical drawers), near the FRONT (faceplate) end: a cantilever beam
+  running parallel to X (the drawer's travel axis), 2.5mm wide, with a
+  clearance cavity above it (into the panel's solid material) and a 1.0mm
+  severing slot at its free (tip) end. The nub protrudes DOWN below the
+  panel's own bottom edge.
+- **Assembly convention (new, this project's own choice)**: since both ends
+  of a drawer side panel finger-joint identically to the Front and Back
+  panels (nothing else distinguishes them), this design defines
+  drawer-local x=0 as the end assembled against the **Front** panel (the
+  faceplate end). Both side panels must be installed with their flexure end
+  toward Front, not Back — flagged here since pre-iteration-3 parts had no
+  such constraint (either end was interchangeable).
+- **Nub depth**: `DRAWER_DETENT_ENGAGE` = **2.2mm**, defined as protrusion
+  below the drawer's TRUE exterior bottom (where the neighboring finger
+  tabs reach) — this must exceed the drawer's own 1.5mm opening vertical
+  clearance (`OPENING_HEIGHT` − `DRAWER_BODY["height"]`) by a real margin so
+  the nub stays engaged even when the drawer is lifted to the top of that
+  clearance band; 2.2 − 1.5 = **0.7mm** headroom. Drawn depth from the
+  panel's own local y=0 (the flexure zone's un-tabbed baseline, which sits
+  shallower than the tab reach by T since there's no tab there at all) is
+  `T + DRAWER_DETENT_ENGAGE` ≈ 5.375mm.
+- **Beam sizing by strain**: ε = 3·w·δ/(2·L²), w = `DETENT_BEAM_WIDTH`
+  (2.5), δ = `DRAWER_DETENT_ENGAGE` (2.2). Solving ε ≤ 1.5% for L gives
+  L ≥ ~23.45mm; `DRAWER_DETENT_NUB_TO_ROOT_SPAN` = **26.0mm** gives
+  **ε ≈ 1.22%**, a real margin below the crack threshold. Nub position
+  `DRAWER_DETENT_NUB_X` = 24.0 (drawer-local X, front end), release-cut tip
+  `DRAWER_DETENT_TIP_X` ≈ 17.44 (nub half-base + `DETENT_SEVER_CLEARANCE`
+  outward of the nub, same anti-bridging margin as mechanism A), root
+  `DRAWER_DETENT_ROOT_X` = 50.0 — the sever cut sits ≥15mm clear of the
+  front finger joints (17.44mm measured).
+- **Bottom-edge construction**: the side panel's bottom edge is normally
+  fully finger-jointed to the drawer's own Bottom panel along its whole
+  length; a Boxes.py finger-joint edge can't locally express the nub's
+  protrusion (the same limitation the removed faceplate detent hit), so a
+  short PLAIN zone (`DRAWER_DETENT_PLAIN_LO` ≈ 15.44 → `..._PLAIN_HI` =
+  52.0) replaces the finger joint there via a 3-segment CompoundEdge
+  (finger / purpose-built nub edge / finger — see
+  `generate_drawers.py`'s `_DrawerFlexureNubEdge`). The Bottom panel's own
+  matching finger-hole row is split to skip the same X-range, so there are
+  no unplugged holes.
+- **Kinematics**: on insertion, the drawer (faceplate trailing) has its nub
+  cam UP over the rear-wall opening's own sill web (the T=3.175mm-thick
+  rear-wall material below the bottom opening / above the top opening's
+  shelf-supported web — DESIGN.md #4) as it crosses the opening's own
+  X-span near the end of the insertion travel, then rides deflected along
+  the bay floor (bottom drawer) or shelf (top drawer) for the remaining
+  travel, dropping into a **catch hole** cut through that panel at the
+  closed position.
+- **Catch holes** (bottom panel for the bottom drawer, shelf for the top
+  drawer — 2 holes per panel, one per side wall):
+  - X position: `CATCH_HOLE_X` = `DRAWER_FRONT_INNER_FACE_CLOSED_X` −
+    `DRAWER_DETENT_NUB_X`, where `DRAWER_FRONT_INNER_FACE_CLOSED_X` =
+    `BAY_X1` − `DRAWER_BAY_GAP` (the 0.475mm closed-position reveal,
+    DESIGN.md #9) − T (faceplate/Front panel thickness) ≈ 297.975 — i.e.
+    derived from the rear wall plane, the closed-position reveal, and the
+    drawer body length, per the fix's own instruction, landing at
+    `CATCH_HOLE_X` ≈ 273.975 (≈24mm in from the rear wall's interior face —
+    matches the drawer's remaining travel after the nub clears the sill).
+  - X-length: `CATCH_HOLE_X_LENGTH` = nub base width + 0.8mm, keeping
+    engaged X-slop ≤ 0.8mm.
+  - Y-width: `CATCH_HOLE_Y_WIDTH` = T (side thickness) + 2×`DRAWER_LATERAL_GAP`
+    (the drawer's own ~4.9mm/side bay float) + 1mm margin ≈ 13.925mm, so the
+    nub can't miss the hole even at worst-case drawer skew.
+  - **Flagged tension**: sizing the hole to the FULL bay-wide lateral float
+    (as specified) puts its edge within ~0.5mm of the bottom panel's own
+    finger-jointed edge (the panel's usable Y-range near either bay wall is
+    inherently only ~4.9mm, since the drawer already fills all but ~9.75mm
+    of the interior width) — short of the general "≥3mm from any panel
+    edge" guidance elsewhere in this fix. The mandated Y-span requirement
+    (also this fix's own instruction, and the one the mutation-gate test
+    enforces) cannot be satisfied simultaneously with 3mm edge clearance
+    given the drawer's actual fit; the Y-span requirement was kept as
+    specified since narrowing it risks the nub missing the hole at
+    worst-case skew, which is the failure mode this hole exists to prevent.
+  - Visible from the box underside when the drawer is out (bottom panel
+    only) — cosmetic, accepted.
+- Grip slot (Y-centered) and the flexure zone (near each side panel's front
+  end) never intersect.
+
+### Nub-bridging note (why `DETENT_SEVER_CLEARANCE` exists)
+
+A nub whose ramped base straddles its own release/sever cut is NOT
+fully freed by that cut: the sever cut only removes material in the Z-band
+BELOW the nub's own base level (mechanism A) / X-band behind the flexure
+(mechanism B) — the nub's own ramped material, sitting ABOVE that band,
+remains a single connected shape that bridges from the fixed (outward)
+side to the free (beam) side right at its own base, regardless of the
+sever cut's position, UNLESS the sever cut sits entirely outward of the
+nub's own base footprint. This was verified empirically against the
+pre-fix wall geometry (whose nub-to-sever gap happened to be large enough,
+by construction of the old mid-beam nub position, to avoid the problem by
+accident) before being generalized into the explicit
+`DETENT_SEVER_CLEARANCE` constant both mechanisms now use.
+
+### Grain caveat
+
+Plywood cantilevers are ~3× weaker bending across the face-veneer grain than
+with it (SpringFit, UIST 2019). `layout.py`'s shelf packer never rotates
+parts — each piece keeps the same X/Y orientation from its source SVG onto
+the sheet — and this project assumes **grain runs along the sheet's long
+(X) axis** (README's cut-day guidance: "Orient sheets with the face grain
+running along the sheet's long axis"). Under that assumption, checked
+against the ACTUAL `layout.py`/generator orientation (not assumed):
+
+- **Mechanism A (side wall)** is grain-favorable: the wall's long axis
+  (298.45mm, local X) maps directly to the sheet's long axis with no
+  rotation, and the beam's length (also along X) runs *with* the grain —
+  the bending fibers at the beam's root are parallel to grain.
+- **Mechanism B (drawer side wall)** is ALSO grain-favorable, unlike the
+  removed faceplate mechanism it replaces: the drawer side panel's long
+  axis (`BODY_INTERIOR_LENGTH` ≈ 212mm, local X, verified against the
+  generated `drawer.svg` — the "Left Side"/"Right Side" pieces measure
+  ~218.8mm wide × ~53–56mm tall, i.e. drawn WIDE, matching the sheet's long
+  axis with no rotation) maps to the sheet's long axis the same way, and
+  the beam (also along X) again runs *with* the grain. This is a genuine
+  improvement over the removed mechanism (whose faceplate-mounted beam ran
+  along Z, across grain, the weaker direction).
+
+This is exactly why the retention coupon (`faxbox.calibration.RetentionCoupon`,
+`output/retention_coupon.svg`) exists regardless: cut every flexure sample on
+real stock oriented the same way the real parts will be, and confirm the
+snap force is adequate (not brittle, not too stiff) before committing to
+the real parts. If either mechanism proves too weak in practice, or the
+coupon can't be tuned to a good snap, the documented fallback is **magnets**
+(6mm discs in through-holes, 0.3–0.5mm undersize press-fit + CA glue) rather
+than forcing a larger interference that risks a snapped-off nub.
+
+### Failure modes (honest, not hidden)
+
+- **Lid detent (mechanism A) snapped flexure**: a fractured tongue drops a
+  loose chunk of plywood into the lid's own slot channel — a jam risk.
+  Never force the lid if it resists sliding; remove it fully (slide back
+  out toward the front) and check the slot channel for debris before
+  reinserting, rather than pushing harder.
+- **Drawer flexure (mechanism B) fracture**: the affected drawer loses its
+  detent (no more positive "seated" feel) but keeps sliding freely — it's a
+  retention failure, not a jam, since the flexure zone sits below the
+  drawer's own floor/shelf, not in its direct travel path. Safe to keep
+  using the drawer; the fallback (magnets, above) is the recorded fix if it
+  matters.
 
 ## Known deltas from SPEC.md targets
 

@@ -850,14 +850,39 @@ def test_edge_polarity_literals_present():
     # above it) -- both direction variants.
     assert '["e", "f"]' in shell_src
     assert '["f", "e"]' in shell_src
-    # Bottom panel AND divider: fully captive on all 4 edges.
-    assert shell_src.count('"ffff"') == 2, "expected bottom panel + divider both using \"ffff\""
-    # Horizontal shelf: side edges finger, rear edge plain, front edge finger.
-    assert '["f", "e", "f", "f"]' in shell_src
+    # Divider: fully captive on all 4 edges, still the literal "ffff".
+    # (FLAGGED DEVIATION, issue #20 iteration-3 red-team: the Bottom panel
+    # was ALSO a plain "ffff" pre-iteration-3, fully captive like the
+    # divider -- it no longer is. Two of its four edges now carry a short
+    # PLAIN zone at the catch holes' own X range (mechanism B's catch
+    # holes need real margin at the drawer's worst-case lateral extreme,
+    # which -- verified by rendering -- otherwise clips 1-2 of this edge's
+    # own finger teeth), via a 3-segment CompoundEdge per affected edge
+    # instead of a single "f" character. See CATCH_HOLE_X_PLAIN_LO/HI in
+    # config.py and shell_generator._build_bottom's docstring.)
+    assert shell_src.count('"ffff"') == 1, "expected divider using \"ffff\""
+    assert '[side_edge_left, self.edges["f"], side_edge_right, self.edges["f"]]' in shell_src
+    # Horizontal shelf: side edges finger (same catch-hole plain-zone
+    # deviation as the Bottom panel above), rear edge plain, front edge
+    # finger -- also no longer the literal ["f", "e", "f", "f"] string.
+    assert '[side_edge_left, self.edges["e"], side_edge_right, self.edges["f"]]' in shell_src
 
     # Drawer Front AND Back: side edges finger, bottom fingers, top open.
     assert drawer_src.count('"fFeF"') == 2, "expected drawer Front + Back both using \"fFeF\""
-    # Drawer side walls: front/back-mating edges finger, bottom fingers, top open.
-    assert '"ffef"' in drawer_src
-    # Drawer Bottom AND Faceplate: plain all around.
+    # Drawer side walls: front/back-mating edges finger, top open. The bottom
+    # edge is no longer the plain "ffef" string (FLAGGED DEVIATION, issue #20
+    # iteration-3 red-team FIX1): it now carries a cantilever flexure nub
+    # near the front end, which -- like the removed iteration-2 faceplate
+    # nub before it -- no stock Boxes.py edge class can express locally, so
+    # the bottom edge is a 3-segment CompoundEdge (finger / purpose-built nub
+    # edge / finger) instead of a single "f" character. The right/top/left
+    # edges are unchanged ("f"/"e"/"f", via self.edges[...] instances rather
+    # than a literal string -- same root cause).
+    assert '[bottom_edge, self.edges["f"], self.edges["e"], self.edges["f"]]' in drawer_src
+    assert 'edges.CompoundEdge(\n            self, ["f", nub_edge, "f"]' in drawer_src
+    # Drawer Bottom: plain all around. (Faceplate is ALSO plain "eeee" again
+    # -- restored to its exact v1 blank, issue #20 iteration-3 FIX1 -- but
+    # since drawer_src now contains a SECOND "eeee" i.e. would make count==2
+    # coincidentally look unchanged from the old pre-iteration-2 assertion,
+    # this is intentionally re-derived from source rather than assumed.)
     assert drawer_src.count('"eeee"') == 2, "expected drawer Bottom + Faceplate both using \"eeee\""
