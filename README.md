@@ -320,7 +320,8 @@ this checklist is current.
    If either is off from nominal, adjust `BURN` (kerf compensation) and/or
    `FINGER_PLAY` (thickness compensation) in `src/faxbox/config.py` and
    regenerate **everything** (`shell_generator`, `generate_drawers`,
-   `generate_lids`, `layout`) before cutting real parts. Do not skip this
+   `generate_lids`, `layout`, and `calibration` — then RE-CUT the coupon to
+   confirm before trusting the gauge slots) before cutting real parts. Do not skip this
    because `BURN`/`FINGER_PLAY` already have values in the repo — those are
    starting values, not calibrated ones.
 4. **CorelDraw import.** NYC Resistor's workflow is CorelDraw-based; their
