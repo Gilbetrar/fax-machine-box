@@ -14,7 +14,6 @@ fax-machine-box/
 ├── tests/                # pytest dimension tests
 │   ├── conftest.py       # Config fixtures
 │   └── test_dimensions.py
-├── preview/              # 3D preview (Three.js)
 ├── output/               # Generated SVGs (gitignored)
 └── assets/fonts/         # Press Start 2P font
 ```
@@ -51,13 +50,6 @@ self.rectangularWall(x, h, "Ffef", callback=[add_hole, None, None, None])
 ```python
 self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 ```
-
-## 3D Preview (preview/)
-
-- Three.js via ES module importmaps (no bundler needed)
-- OrbitControls for camera rotation/zoom
-- Raycasting for part selection
-- Open `preview/index.html` in browser
 
 ## Dependencies
 
