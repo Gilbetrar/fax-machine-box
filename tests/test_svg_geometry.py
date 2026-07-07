@@ -53,7 +53,6 @@ LIDS_SVG = OUTPUT_DIR / "lids.svg"
 
 T = c.MATERIAL_THICKNESS
 
-XF17 = "broken generator, rebuilt in #17"
 XF18 = "broken generator, rebuilt in #18"
 
 
@@ -97,7 +96,6 @@ def _cut_holes_matching(piece, width, height, tol=1.0):
 # gone; #17 explicitly moves the top panel into outer_shell.svg and leaves
 # lids.svg with only the sliding lid panel).
 
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: no top panel piece yet (shell has 7, needs 8)")
 def test_shell_piece_count():
     assert len(su.design_pieces(SHELL_SVG)) == 8
 
@@ -107,11 +105,6 @@ def test_drawer_piece_count():
     assert len(su.design_pieces(DRAWER_SVG)) == 6
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason=f"{XF17}: lids.svg still emits the old flat/tabbed lid (8 pieces); "
-    "should emit only the sliding lid (1 piece) once the fixed top panel moves to the shell",
-)
 def test_lids_piece_count():
     assert len(su.design_pieces(LIDS_SVG)) == 1
 
@@ -134,11 +127,6 @@ def _assert_no_piece_overlaps(svg_path):
     assert not offenders, f"overlapping piece bboxes in {svg_path.name}: {offenders}"
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason=f"{XF17}: 'Bottom' piece's bbox fully contains 'Front Wall' and 'Back Wall' "
-    "on the current canvas layout (missing/short move= between them)",
-)
 def test_shell_pieces_do_not_overlap():
     _assert_no_piece_overlaps(SHELL_SVG)
 
@@ -180,7 +168,6 @@ def test_bottom_panel_blank_size():
 # + rear edge jointed "full height" -> 2 jointed edges. Z-axis: bottom edge
 # straight (panel hole line is a cutout, doesn't extend the blank) + top
 # edge finger-jointed to top panel over the bay (partial) -> 1 jointed.
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: uses legacy SHELL dict; wrong dims and missing dado slots")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_blank_size(side):
     piece = _piece(SHELL_SVG, side)
@@ -191,7 +178,6 @@ def test_side_wall_blank_size(side):
 # DESIGN.md #3 (amended): nominal 158.75 (Y) x 118.025 (Z), running from
 # Z=0. Y-axis: both vertical edges finger-joint to side walls -> 2. Z-axis:
 # bottom straight (hole line only), top plain (lid slides over it) -> 0.
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: front wall currently gets the rear wall's openings/engraving instead")
 def test_front_wall_blank_size():
     piece = _piece(SHELL_SVG, "front wall")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
@@ -201,7 +187,6 @@ def test_front_wall_blank_size():
 # DESIGN.md #4 (amended): nominal 158.75 (Y) x 127.0 (Z), full height.
 # Y-axis: sides -> side walls -> 2. Z-axis: bottom straight (hole line
 # only), top -> top panel -> 1.
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: labeled 'Back Wall' but has no drawer openings at all currently")
 def test_rear_wall_blank_size():
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
@@ -236,7 +221,6 @@ def test_divider_blank_size_z():
 # DESIGN.md #6: nominal 219.075 (X) x 158.75 (Y). X-axis: front edge jointed
 # into divider, rear edge "plain, butting the rear wall" -> 1. Y-axis: "Side
 # edges finger into side-wall hole lines" (both) -> 2.
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: uses legacy dims, not BAY_LENGTH x INTERIOR_WIDTH")
 def test_shelf_blank_size():
     piece = _piece(SHELL_SVG, "horizontal shelf", "shelf")
     _assert_band(piece, "X", piece.bbox.width, c.BAY_LENGTH, jointed_edges=1)
@@ -247,7 +231,6 @@ def test_shelf_blank_size():
 # cover strip), Y = 158.75. X-axis: front edge explicitly "plain", rear edge
 # finger-joints into rear wall top edge -> 1. Y-axis: "Side... edges finger-
 # joint into the side... wall top edges" -> 2.
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: top panel piece does not exist yet")
 def test_top_panel_blank_size():
     piece = _piece(SHELL_SVG, "top panel")
     nominal_x = c.BAY_X1 - c.DIVIDER_X0  # 222.25
@@ -296,7 +279,6 @@ def test_faceplate_blank_size():
 
 # --- Sliding lid ---------------------------------------------------------------
 # DESIGN.md #8: "Blank: 79.0 (X) x 163.6 (Y), plain edges, plus a grip slot."
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: sliding lid uses old paper-compartment-width sizing, not SLIDING_LID")
 def test_sliding_lid_blank_size():
     piece = _piece(LIDS_SVG, "sliding lid")
     _assert_band(piece, "X", piece.bbox.width, c.SLIDING_LID["length"], jointed_edges=0)
@@ -309,10 +291,6 @@ def test_sliding_lid_blank_size():
 
 # --- Rear wall: exactly 2 drawer openings, 152.4 x 55.0 (OPENING_WIDTH x
 # OPENING_HEIGHT) --------------------------------------------------------------
-@pytest.mark.xfail(
-    strict=False,
-    reason=f"{XF17}: openings are on the wrong wall ('Front Wall') and sized from the legacy DRAWER dict",
-)
 def test_rear_wall_has_two_drawer_openings():
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     matches = _cut_holes_matching(piece, c.OPENING_WIDTH, c.OPENING_HEIGHT)
@@ -343,7 +321,6 @@ DIVIDER_LINE_NOMINAL = c.DIVIDER_HEIGHT                          # 120.65 (verti
 SHELF_LINE_NOMINAL = c.BAY_LENGTH                                # 219.075 (horizontal)
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_lid_slot(side):
     piece = _piece(SHELL_SVG, side)
@@ -358,7 +335,6 @@ def _blue_holes(piece):
     return [h for h in piece.holes if su.normalize_color(h.stroke) == "blue"]
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_divider_hole_line(side):
     piece = _piece(SHELL_SVG, side)
@@ -370,7 +346,6 @@ def test_side_wall_has_divider_hole_line(side):
     )
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF17}: side walls have only the old single lid groove, not the DESIGN.md slot/dado set")
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_shelf_hole_line(side):
     piece = _piece(SHELL_SVG, side)

@@ -1,8 +1,13 @@
-"""Generate lids for the fax machine box.
+"""Generate the sliding lid for the fax machine box.
 
-Two lids:
-1. Sliding lid for paper compartment - slides front-to-back in grooves
-2. Flat tabbed lid for drawer bay - sits on top with alignment tabs
+DESIGN.md #8: a single flat panel that rides in the through-slots cut into
+both side walls (see shell_generator.py), inserted from the front over the
+front wall's top edge. The old flat/tabbed drawer-bay lid is gone -- that bay
+is now covered by the fixed Top Panel built in shell_generator.py
+(DESIGN.md's "Decisions" section: "Fixed top panel over the drawer bay (not
+a removable lid)").
+
+Output: 1 piece in output/lids.svg -- Sliding Lid.
 """
 
 from pathlib import Path
@@ -12,144 +17,44 @@ from boxes import edges
 
 from faxbox.config import (
     BURN,
-    DRAWER_MATERIAL_THICKNESS,
-    LID_GROOVE_DEPTH,
-    LID_GROOVE_WIDTH,
+    CUT_COLOR,
+    LID_GRIP_SLOT,
+    MATERIAL_THICKNESS,
     OUTPUT_DIR,
-    PAPER_COMPARTMENT_DEPTH,
-    SHELL,
+    SLIDING_LID,
 )
 
 
 class LidGenerator(Boxes):
-    """Generate sliding and flat lids for the fax machine box."""
+    """Generate the sliding lid panel for the fax machine box."""
 
     def __init__(self) -> None:
         Boxes.__init__(self)
-        self.buildArgParser("outside")
         self.addSettingsArgs(edges.FingerJointSettings)
 
     def render(self) -> None:
-        """Render both lid pieces."""
-        # Set default cut color to blue for Ponoko compatibility (#0000FF)
-        self.set_source_color([0.0, 0.0, 1.0])
+        """Render the sliding lid piece."""
+        self.set_source_color(CUT_COLOR)
 
-        t = self.thickness
+        length = SLIDING_LID["length"]
+        width = SLIDING_LID["width"]
 
-        # Calculate internal dimensions from external shell
-        internal_width = SHELL["width"] - 2 * t
-        internal_depth = SHELL["depth"] - 2 * t
-
-        # Paper compartment dimensions
-        paper_width = PAPER_COMPARTMENT_DEPTH - t  # Account for divider
-
-        # Drawer bay dimensions
-        drawer_bay_width = internal_width - paper_width - t
-
-        # === SLIDING LID (Paper Compartment) ===
-        # Slides front-to-back in grooves on side walls
-        # Width: paper compartment width minus clearance for groove fit
-        # Depth: full internal depth to slide through
-
-        # Lid tabs fit in grooves: width = LID_GROOVE_WIDTH with clearance
-        lid_clearance = 0.5  # mm clearance for smooth sliding
-        sliding_lid_width = paper_width - lid_clearance
-        sliding_lid_depth = internal_depth - lid_clearance
-
-        # Tab dimensions (extend into grooves)
-        tab_depth = LID_GROOVE_DEPTH - 1  # Slightly less than groove depth
-
-        def add_sliding_lid_tabs():
-            """Add tabs on left and right edges for groove engagement."""
-            # Left tab (rectangular extension)
+        def add_grip_slot() -> None:
+            slot = LID_GRIP_SLOT
             self.rectangularHole(
-                -tab_depth / 2,  # Extends past left edge
-                sliding_lid_depth / 2,  # Center along depth
-                tab_depth,
-                sliding_lid_depth - 2 * t,  # Leave clearance at ends
-                r=0
-            )
-            # Right tab
-            self.rectangularHole(
-                sliding_lid_width + tab_depth / 2,  # Extends past right edge
-                sliding_lid_depth / 2,
-                tab_depth,
-                sliding_lid_depth - 2 * t,
-                r=0
+                slot["center_from_front"], width / 2,
+                slot["width"], slot["height"], r=slot["radius"],
             )
 
-        # Main sliding lid panel
         self.rectangularWall(
-            sliding_lid_width,
-            sliding_lid_depth,
-            "eeee",  # Plain edges - tabs added separately
-            move="right",
-            label="Sliding Lid (Paper)"
+            length, width, "eeee",
+            callback=[add_grip_slot, None, None, None],
+            move="right", label="Sliding Lid",
         )
-
-        # Add separate tab pieces that attach to sliding lid edges
-        # Left tab strip
-        self.rectangularWall(
-            tab_depth,
-            sliding_lid_depth - 4 * t,  # Slightly shorter to clear ends
-            "eeee",
-            move="right",
-            label="Sliding Lid - Left Tab"
-        )
-
-        # Right tab strip
-        self.rectangularWall(
-            tab_depth,
-            sliding_lid_depth - 4 * t,
-            "eeee",
-            move="up",
-            label="Sliding Lid - Right Tab"
-        )
-
-        # === FLAT TABBED LID (Drawer Bay) ===
-        # Sits on top of drawer bay, tabs slot into wall tops
-        flat_lid_width = drawer_bay_width - lid_clearance
-        flat_lid_depth = internal_depth - lid_clearance
-
-        # Alignment tabs on underside (small rectangles at edges)
-        tab_size = t  # Tabs are material-thickness sized
-        tab_inset = 10  # mm from corners
-
-        def add_alignment_tab_holes():
-            """Add holes to show where alignment tabs should be glued."""
-            # Corner alignment tabs (4 total)
-            corners = [
-                (tab_inset, tab_inset),  # Front-left
-                (flat_lid_width - tab_inset, tab_inset),  # Front-right
-                (tab_inset, flat_lid_depth - tab_inset),  # Back-left
-                (flat_lid_width - tab_inset, flat_lid_depth - tab_inset),  # Back-right
-            ]
-            for cx, cy in corners:
-                # Small square marks for tab placement
-                self.rectangularHole(cx, cy, tab_size * 2, tab_size * 2, r=0)
-
-        self.rectangularWall(
-            flat_lid_width,
-            flat_lid_depth,
-            "eeee",
-            callback=[add_alignment_tab_holes, None, None, None],
-            move="right",
-            label="Flat Lid (Drawer Bay)"
-        )
-
-        # Alignment tabs (small squares to glue under lid)
-        for i in range(4):
-            self.rectangularWall(
-                tab_size * 2,
-                tab_size * 2,
-                "eeee",
-                move="right" if i < 3 else "up",
-                label=f"Alignment Tab {i + 1}"
-            )
 
 
 def generate_lids() -> Path:
-    """Generate lids SVG file.
+    """Generate the lids SVG file.
 
     Returns:
         Path to the generated SVG file.
@@ -162,8 +67,9 @@ def generate_lids() -> Path:
     lids = LidGenerator()
     lids.parseArgs([
         "--output", str(output_file),
-        "--thickness", str(DRAWER_MATERIAL_THICKNESS),
+        "--thickness", str(MATERIAL_THICKNESS),
         "--burn", str(BURN),
+        "--reference", "0",
     ])
 
     lids.open()
@@ -173,18 +79,9 @@ def generate_lids() -> Path:
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
 
-    # Calculate dimensions for output
-    t = DRAWER_MATERIAL_THICKNESS
-    internal_width = SHELL["width"] - 2 * t
-    internal_depth = SHELL["depth"] - 2 * t
-    paper_width = PAPER_COMPARTMENT_DEPTH - t
-    drawer_bay_width = internal_width - paper_width - t
-
     print(f"Generated lids SVG: {output_file.absolute()}")
-    print(f"  Sliding lid (paper): ~{paper_width:.1f}mm x {internal_depth:.1f}mm")
-    print(f"  Flat lid (drawer bay): ~{drawer_bay_width:.1f}mm x {internal_depth:.1f}mm")
-    print(f"  Groove width: {LID_GROOVE_WIDTH}mm, depth: {LID_GROOVE_DEPTH}mm")
-    print(f"  Material thickness: {DRAWER_MATERIAL_THICKNESS}mm")
+    print(f"  Sliding lid: {SLIDING_LID['length']}mm x {SLIDING_LID['width']}mm")
+    print(f"  Material thickness: {MATERIAL_THICKNESS}mm")
     return output_file
 
 

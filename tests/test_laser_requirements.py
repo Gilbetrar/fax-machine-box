@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.usefixtures("regenerate_svgs")]
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 ALL_SVGS = [OUTPUT_DIR / "outer_shell.svg", OUTPUT_DIR / "drawer.svg", OUTPUT_DIR / "lids.svg"]
 
-XF = "broken generator (missing --reference 0), rebuilt in #17/#18"
+XF18_REFERENCE = "broken generator (missing --reference 0), rebuilt in #18"
 
 
 # =============================================================================
@@ -46,11 +46,26 @@ def test_svg_dimensions_are_in_mm(svg_path):
 
 # Strict, whole-file version: every single stroke in the document, including
 # Boxes.py's own calibration rectangle. This is the check that must be green
-# for the generators to be laser-submission-ready; it fails today purely
-# because of the un-configured reference mark (a real, if minor, defect --
-# not a geometry issue).
-@pytest.mark.xfail(strict=False, reason=f"{XF}: reference/calibration rectangle is drawn with a black stroke")
-@pytest.mark.parametrize("svg_path", ALL_SVGS, ids=lambda p: p.name)
+# for the generators to be laser-submission-ready. shell_generator.py and
+# generate_lids.py now pass --reference 0 (#17), so outer_shell.svg and
+# lids.svg are real, unmarked passes; generate_drawers.py does not yet (#18),
+# so drawer.svg's instance is still expected to fail on the un-configured
+# reference mark (a real, if minor, defect -- not a geometry issue).
+@pytest.mark.parametrize(
+    "svg_path",
+    [
+        OUTPUT_DIR / "outer_shell.svg",
+        pytest.param(
+            OUTPUT_DIR / "drawer.svg",
+            marks=pytest.mark.xfail(
+                strict=False,
+                reason=f"{XF18_REFERENCE}: reference/calibration rectangle is drawn with a black stroke",
+            ),
+        ),
+        OUTPUT_DIR / "lids.svg",
+    ],
+    ids=lambda p: p.name,
+)
 def test_zero_black_strokes_strict(svg_path):
     assert su.any_black_strokes(svg_path) == []
 
@@ -111,10 +126,6 @@ def _pieces_with_red(svg_path):
     }
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason="broken generator, rebuilt in #17: engraving is currently on 'Front Wall', not 'Right Wall'",
-)
 def test_shell_engrave_only_on_right_wall():
     assert _pieces_with_red(OUTPUT_DIR / "outer_shell.svg") == {"Right Wall"}
 
