@@ -53,8 +53,6 @@ LIDS_SVG = OUTPUT_DIR / "lids.svg"
 
 T = c.MATERIAL_THICKNESS
 
-XF18 = "broken generator, rebuilt in #18"
-
 
 def _piece(svg_path, *synonyms):
     pieces = su.design_pieces(svg_path)
@@ -100,7 +98,6 @@ def test_shell_piece_count():
     assert len(su.design_pieces(SHELL_SVG)) == 8
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: faceplate piece missing (drawer has 5, needs 6)")
 def test_drawer_piece_count():
     assert len(su.design_pieces(DRAWER_SVG)) == 6
 
@@ -131,10 +128,6 @@ def test_shell_pieces_do_not_overlap():
     _assert_no_piece_overlaps(SHELL_SVG)
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason=f"{XF18}: 'Right Side' and 'Bottom' piece bboxes overlap on the current canvas layout",
-)
 def test_drawer_pieces_do_not_overlap():
     _assert_no_piece_overlaps(DRAWER_SVG)
 
@@ -250,7 +243,6 @@ def test_top_panel_blank_size():
 # for the open-top box). Side panels span X x Z (both X edges finger-joint
 # to front/back -> 2; same Z treatment -> 1). Bottom spans X x Y, captive
 # (holes only, doesn't extend) -> 0 jointed both axes.
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: uses legacy DRAWER dict (150x210x53), not DESIGN.md 149x218x53.5")
 @pytest.mark.parametrize("side", ["front", "back"])
 def test_drawer_front_back_blank_size(side):
     piece = _piece(DRAWER_SVG, side)
@@ -258,7 +250,6 @@ def test_drawer_front_back_blank_size(side):
     _assert_band(piece, "Z", piece.bbox.height, c.DRAWER_BODY["height"], jointed_edges=1)
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: uses legacy DRAWER dict (150x210x53), not DESIGN.md 149x218x53.5")
 @pytest.mark.parametrize("side", ["left side", "right side"])
 def test_drawer_left_right_blank_size(side):
     piece = _piece(DRAWER_SVG, side)
@@ -266,7 +257,6 @@ def test_drawer_left_right_blank_size(side):
     _assert_band(piece, "Z", piece.bbox.height, c.DRAWER_BODY["height"], jointed_edges=1)
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: uses legacy DRAWER dict (150x210x53), not DESIGN.md 149x218x53.5")
 def test_drawer_bottom_blank_size():
     piece = _piece(DRAWER_SVG, "bottom")
     _assert_band(piece, "X", piece.bbox.width, c.DRAWER_BODY["length"], jointed_edges=0)
@@ -275,7 +265,6 @@ def test_drawer_bottom_blank_size():
 
 # DESIGN.md #9 faceplate: "glued to the body front" (not finger-jointed) ->
 # 0 jointed edges both axes.
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: faceplate piece does not exist yet")
 def test_faceplate_blank_size():
     piece = _piece(DRAWER_SVG, "faceplate")
     _assert_band(piece, "Y", piece.bbox.width, c.FACEPLATE["width"], jointed_edges=0)
@@ -384,7 +373,6 @@ def test_rear_wall_has_top_panel_hole_line():
 GRIP_SLOT_SIZE = (c.DRAWER_GRIP_SLOT["width"], c.DRAWER_GRIP_SLOT["height"])  # 30 x 15
 
 
-@pytest.mark.xfail(strict=False, reason=f"{XF18}: faceplate piece does not exist yet")
 def test_faceplate_has_grip_slot():
     piece = _piece(DRAWER_SVG, "faceplate")
     matches = _cut_holes_matching(piece, *GRIP_SLOT_SIZE, tol=1.0)

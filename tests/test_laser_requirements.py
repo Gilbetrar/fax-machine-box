@@ -26,8 +26,6 @@ pytestmark = [pytest.mark.usefixtures("regenerate_svgs")]
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 ALL_SVGS = [OUTPUT_DIR / "outer_shell.svg", OUTPUT_DIR / "drawer.svg", OUTPUT_DIR / "lids.svg"]
 
-XF18_REFERENCE = "broken generator (missing --reference 0), rebuilt in #18"
-
 
 # =============================================================================
 # Dimensions in mm
@@ -55,13 +53,7 @@ def test_svg_dimensions_are_in_mm(svg_path):
     "svg_path",
     [
         OUTPUT_DIR / "outer_shell.svg",
-        pytest.param(
-            OUTPUT_DIR / "drawer.svg",
-            marks=pytest.mark.xfail(
-                strict=False,
-                reason=f"{XF18_REFERENCE}: reference/calibration rectangle is drawn with a black stroke",
-            ),
-        ),
+        OUTPUT_DIR / "drawer.svg",
         OUTPUT_DIR / "lids.svg",
     ],
     ids=lambda p: p.name,
@@ -130,7 +122,6 @@ def test_shell_engrave_only_on_right_wall():
     assert _pieces_with_red(OUTPUT_DIR / "outer_shell.svg") == {"Right Wall"}
 
 
-@pytest.mark.xfail(strict=False, reason="faceplate (and its registration engraving) does not exist yet (#18)")
 def test_drawer_engrave_only_on_faceplate():
     assert _pieces_with_red(OUTPUT_DIR / "drawer.svg") == {"Faceplate"}
 
