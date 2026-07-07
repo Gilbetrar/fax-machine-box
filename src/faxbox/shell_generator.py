@@ -45,6 +45,10 @@ from faxbox.config import (
     LID_SLOT_BOTTOM,
     LID_SLOT_HEIGHT,
     LID_SLOT_X_END,
+    MAGNET_BOTTOM_DRAWER_Z,
+    MAGNET_BOX_Y,
+    MAGNET_HOLE_DIA,
+    MAGNET_TOP_DRAWER_Z,
     MATERIAL_THICKNESS,
     OPENING_HEIGHT,
     OPENING_WIDTH,
@@ -53,6 +57,9 @@ from faxbox.config import (
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
     TOP_PANEL_HOLE_Z,
+    TURN_BUTTON,
+    TURN_BUTTON_PIVOT_X,
+    TURN_BUTTON_PIVOT_Z,
     WALL_HEIGHT,
 )
 
@@ -255,6 +262,15 @@ class OuterShell(Boxes):
                 top_x0 = mirror_start(top_x0, BAY_LENGTH)
             self.fingerHolesAt(top_x0, TOP_PANEL_HOLE_Z, BAY_LENGTH, angle=0)
 
+            # Turn-button pivot hole (DESIGN.md "Retention (iteration 2)"):
+            # a single M3-clearance hole on the wall's exterior face, just
+            # below/behind the lid slot mouth. Mirrored like every other
+            # per-wall feature above.
+            pivot_x = TURN_BUTTON_PIVOT_X - T
+            if mirror:
+                pivot_x = mirror_point(pivot_x)
+            self.hole(pivot_x, TURN_BUTTON_PIVOT_Z, d=TURN_BUTTON["pivot_hole_dia"])
+
             if engrave:
                 self._engrave_fax_machine()
 
@@ -304,11 +320,21 @@ class OuterShell(Boxes):
         """Vertical divider: INTERIOR_WIDTH (local X = box Y) x
         DIVIDER_HEIGHT (local Y = box Z - FLOOR_TOP), fully captive on all
         four edges (DESIGN.md #5). Callback adds the shelf's front-edge
-        finger-hole line (DESIGN.md #6)."""
+        finger-hole line (DESIGN.md #6) plus the two drawer-magnet holes
+        (DESIGN.md "Retention (iteration 2)"): one per drawer, coaxial with
+        that drawer's Back-wall magnet hole at the drawer's fully-closed
+        position. Both share the same local X (MAGNET_BOX_Y - T, box Y is
+        the same for both drawers by design); Z differs per drawer since
+        the bottom drawer rests on the bay floor and the top drawer rests
+        on the shelf."""
 
         def callback() -> None:
             shelf_mid_local_y = SHELF_MID_Z - FLOOR_TOP
             self.fingerHolesAt(0, shelf_mid_local_y, INTERIOR_WIDTH, angle=0)
+
+            magnet_local_x = MAGNET_BOX_Y - T
+            self.hole(magnet_local_x, MAGNET_BOTTOM_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
+            self.hole(magnet_local_x, MAGNET_TOP_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
 
         self.rectangularWall(
             INTERIOR_WIDTH, DIVIDER_HEIGHT, "ffff",
