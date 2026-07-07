@@ -444,3 +444,8 @@ Suite: 91 passed, 31 xfailed after amendment (one former xfail now passes legiti
 - Subagent rebuilt shell_generator.py (8 pieces, mirrored side walls, CompoundEdge front edges, fingerHolesAt joinery, --reference 0) and generate_lids.py (single sliding lid). 14 xfail markers removed.
 - Review caught a real defect the band tests missed: wall top edges used protruding finger joints ('F' protrudes too!), putting finger tips 3.2mm above the 127mm top plane and colliding with the top panel's fingers. Fixed by joining the top panel through fingerHolesAt lines (walls' top edges now plain); side/rear wall Z bands tightened to 0 jointed edges so this class of defect fails tests in future. Added rear-wall top-row test; shelf-row test now expects 2 bay-length rows.
 - Landmark verification: walls 127.16 tall (127+burn), slot 5.12 below top plane, slot mouth at nominal front edge behind protruding corner fingers.
+
+## 2026-07-07 — Issue #18: drawer rebuild (delegated, reviewed)
+
+- generate_drawers.py rewritten: 6 pieces (open-top body + faceplate), grip slots aligned 8.0mm below top edges of Front and Faceplate, red registration outline on faceplate (drawn as 4 gapped segments to avoid HOLE_AREA_RATIO misclassification), --reference 0.
+- All remaining xfail markers removed. Suite: 120 passed, 0 xfail — the generator gate is fully green for the first time.
