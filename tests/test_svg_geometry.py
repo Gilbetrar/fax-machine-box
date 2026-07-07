@@ -165,14 +165,16 @@ def test_bottom_panel_blank_size():
 
 # DESIGN.md #2 (amended): nominal 298.45 (X) x 127.0 (Z), full height.
 # X-axis: front edge jointed "only up to Z=118.025" (partial, still counts)
-# + rear edge jointed "full height" -> 2 jointed edges. Z-axis: bottom edge
-# straight (panel hole line is a cutout, doesn't extend the blank) + top
-# edge finger-jointed to top panel over the bay (partial) -> 1 jointed.
+# + rear edge jointed "full height" -> 2 jointed edges. Z-axis: bottom AND
+# top edges are straight (panel joints are interior hole lines, which are
+# cutouts and don't extend the blank) -> 0 jointed. This tight Z band is
+# deliberate: an edge-jointed top would protrude past the 127mm top plane
+# (the defect caught in #17 review) and must fail here.
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_blank_size(side):
     piece = _piece(SHELL_SVG, side)
     _assert_band(piece, "X", piece.bbox.width, c.INTERIOR_LENGTH, jointed_edges=2)
-    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=1)
+    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=0)
 
 
 # DESIGN.md #3 (amended): nominal 158.75 (Y) x 118.025 (Z), running from
@@ -190,7 +192,10 @@ def test_front_wall_blank_size():
 def test_rear_wall_blank_size():
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
-    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=1)
+    # Z jointed_edges=0 for the same reason as the side walls: top-panel and
+    # bottom-panel joints are interior hole lines, so nothing may extend the
+    # blank past the 127mm top plane.
+    _assert_band(piece, "Z", piece.bbox.height, c.WALL_HEIGHT, jointed_edges=0)
 
 
 # DESIGN.md #5: nominal 158.75 (Y) x 120.65 (Z). Both axes fully captive
@@ -347,14 +352,29 @@ def test_side_wall_has_divider_hole_line(side):
 
 
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
-def test_side_wall_has_shelf_hole_line(side):
+def test_side_wall_has_shelf_and_top_panel_hole_lines(side):
+    """Each side wall carries TWO horizontal bay-length hole rows: the shelf
+    line (mid-height) and the top-panel line (just below the top edge). Both
+    span ~BAY_LENGTH; the near-full-width bottom-panel row is longer and must
+    not land in this band."""
     piece = _piece(SHELL_SVG, side)
     spans = su.hole_line_spans(_blue_holes(piece), T, axis="x")
     hits = [s for s in spans if 0.75 * SHELF_LINE_NOMINAL <= s <= SHELF_LINE_NOMINAL + 1.0]
-    assert len(hits) == 1, (
-        f"expected 1 horizontal shelf finger-hole row spanning ~{SHELF_LINE_NOMINAL}mm "
-        f"in {side}; horizontal row spans found: {[round(s, 1) for s in spans]} "
-        "(the near-full-width bottom-panel row is longer and must not land in this band)"
+    assert len(hits) == 2, (
+        f"expected 2 horizontal bay-length finger-hole rows (shelf + top panel) "
+        f"in {side}; horizontal row spans found: {[round(s, 1) for s in spans]}"
+    )
+
+
+def test_rear_wall_has_top_panel_hole_line():
+    """Rear wall carries two full-interior-width horizontal rows: bottom
+    panel (near bottom edge) and top panel (near top edge)."""
+    piece = _piece(SHELL_SVG, "rear wall", "back wall")
+    spans = su.hole_line_spans(_blue_holes(piece), T, axis="x")
+    hits = [s for s in spans if 0.7 * c.INTERIOR_WIDTH <= s <= c.INTERIOR_WIDTH + 1.0]
+    assert len(hits) == 2, (
+        f"expected 2 horizontal interior-width finger-hole rows (bottom + top panel) "
+        f"in rear wall; spans found: {[round(s, 1) for s in spans]}"
     )
 
 

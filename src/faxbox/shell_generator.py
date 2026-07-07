@@ -51,6 +51,7 @@ from faxbox.config import (
     SHELF_Z0,
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
+    TOP_PANEL_HOLE_Z,
     WALL_HEIGHT,
 )
 
@@ -196,21 +197,17 @@ class OuterShell(Boxes):
             self, ["f", "e"], [FRONT_WALL_TOP, front_plain_z])
         rear_edge = self.edges["f"]  # full height, mates rear wall
 
-        # Top-edge compound: plain over the paper compartment, finger-joint
-        # counterpart over the bay (mates the fixed top panel). The plain
-        # portion's local-X length is BAY_X0 - T (== DIVIDER_X0): the span
-        # from the wall's front edge to where the bay begins.
-        front_plain_len = BAY_X0 - T
+        # Top edge: plain at full height for its whole length. The fixed top
+        # panel joins through a fingerHolesAt line just below the top edge
+        # (see callback) -- an edge-to-edge finger joint here would either
+        # stand proud of the 127mm top plane or need per-segment baseline
+        # offsets that CompoundEdge can't express.
         if not mirror:
             left_edge = front_edge_top_to_bottom   # index3: travels top->bottom
             right_edge = rear_edge                  # index1: travels bottom->top
-            top_edge = edges.CompoundEdge(
-                self, ["F", "e"], [BAY_LENGTH, front_plain_len])
         else:
             left_edge = rear_edge
             right_edge = front_edge_bottom_to_top
-            top_edge = edges.CompoundEdge(
-                self, ["e", "F"], [front_plain_len, BAY_LENGTH])
 
         def callback() -> None:
             # Bottom-panel finger-hole line (straight edge, hole line only).
@@ -238,12 +235,19 @@ class OuterShell(Boxes):
                 shelf_x0 = mirror_start(shelf_x0, BAY_LENGTH)
             self.fingerHolesAt(shelf_x0, SHELF_MID_Z, BAY_LENGTH, angle=0)
 
+            # Top-panel finger-hole line (horizontal, just below the top
+            # edge; panel finger tips end flush with the exterior face).
+            top_x0 = BAY_X0 - T
+            if mirror:
+                top_x0 = mirror_start(top_x0, BAY_LENGTH)
+            self.fingerHolesAt(top_x0, TOP_PANEL_HOLE_Z, BAY_LENGTH, angle=0)
+
             if engrave:
                 self._engrave_fax_machine()
 
         self.rectangularWall(
             INTERIOR_LENGTH, WALL_HEIGHT,
-            [self.edges["e"], right_edge, top_edge, left_edge],
+            [self.edges["e"], right_edge, self.edges["e"], left_edge],
             callback=[callback, None, None, None],
             move="right", label=label,
         )
@@ -268,6 +272,8 @@ class OuterShell(Boxes):
 
         def callback() -> None:
             self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
+            # Top-panel finger-hole line (rear edge of the panel).
+            self.fingerHolesAt(0, TOP_PANEL_HOLE_Z, INTERIOR_WIDTH, angle=0)
 
             opening_cx = INTERIOR_WIDTH / 2
             bottom_cz = (BOTTOM_OPENING_Z0 + BOTTOM_OPENING_Z1) / 2
@@ -276,7 +282,7 @@ class OuterShell(Boxes):
             self.rectangularHole(opening_cx, top_cz, OPENING_WIDTH, OPENING_HEIGHT, r=0)
 
         self.rectangularWall(
-            INTERIOR_WIDTH, WALL_HEIGHT, "eFFF",
+            INTERIOR_WIDTH, WALL_HEIGHT, "eFeF",
             callback=[callback, None, None, None],
             move="right", label="Rear Wall",
         )

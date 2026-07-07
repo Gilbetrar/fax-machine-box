@@ -110,8 +110,10 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
   wall (full height).
 - Bottom edge: straight, with a through-hole line just above it (midplane
   Z = 1.5875) receiving the bottom panel's edge fingers.
-- Top edge: plain over the paper compartment/rail; finger-jointed to the top
-  panel over the bay (X = 82.55 → 301.625).
+- Top edge: plain, full height, entire length. The top panel joins through a
+  **finger-hole line** below the top edge (midplane Z = 125.4125, X = 82.55 →
+  301.625) — an edge-to-edge finger joint here would stand proud of the 127mm
+  top plane (defect caught in #17 review).
 - **Lid through-slot**: X = 3.175 → 79.375 within the wall, **open at the
   wall's front edge** (the lid could never be inserted otherwise),
   Z = 118.025 → 122.0. Construction: drawn as a closed rectangular hole whose
@@ -138,7 +140,7 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 
 - Nominal: **158.75 (Y) × 127.0 (Z)**, full height.
 - Bottom-panel hole line near the bottom edge; sides → side walls; top edge
-  → top panel.
+  plain, with a top-panel finger-hole line at midplane Z = 125.4125.
 - **Two drawer openings**, each **152.4 wide (= W_INT − 2T) × 55.0 tall**,
   centered in Y (0.875mm inside each interior corner joint; visible frame from
   outside ≈ 6.35mm per side):
@@ -167,12 +169,13 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 
 ### 7. Top panel (drawer bay) — 1×
 
-- Nominal: **219.075 (X) × 158.75 (Y)** at Z = 123.825 → 127.
-- Side and rear edges finger-joint into the side/rear wall top edges; front
-  region has a finger-hole line receiving the divider's top-edge fingers, with
-  the panel's plain front edge extending flush over the divider to X = 79.375
-  (so its X extent is 79.375 → 301.625 = 222.25 nominal including the divider
-  cover strip).
+- Nominal: **222.25 (X, spanning 79.375 → 301.625 including the divider
+  cover strip) × 158.75 (Y)** at Z = 123.825 → 127.
+- Side and rear edges carry fingers that pass **through hole lines** in the
+  side/rear walls (midplane Z = 125.4125), tips flush with the exterior
+  faces — same joint style as the shelf and divider. Front edge plain,
+  extending flush over the divider, with a finger-hole line receiving the
+  divider's top-edge fingers at the divider midplane.
 
 ### 8. Sliding lid — 1×
 

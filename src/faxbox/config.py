@@ -64,6 +64,7 @@ FRONT_WALL_HEIGHT = FRONT_WALL_TOP - WALL_Z0     # 118.025
 
 # Fixed top panel over the drawer bay
 TOP_PANEL_Z0 = SHELL_EXT["height"] - T           # 123.825
+TOP_PANEL_HOLE_Z = TOP_PANEL_Z0 + T / 2          # 125.4125, hole-line midplane in walls
 DIVIDER_TOP = TOP_PANEL_Z0                       # divider supports the top panel
 DIVIDER_HEIGHT = DIVIDER_TOP - FLOOR_TOP         # 120.65
 
