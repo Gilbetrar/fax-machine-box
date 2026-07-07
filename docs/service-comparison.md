@@ -1,5 +1,15 @@
 # Laser Cutting Service Comparison
 
+> **⚠ Superseded, kept for reference only.** Everything from here down to
+> the "NYC Resistor cutting constraints (verified 2026-07-07)" section below
+> predates the 2026-07-07 rebuild and is stale: it still says "2 lids"
+> (current design has 1 sliding lid + a fixed top panel), "Black lines for
+> cuts" and "Kerf: 0.1mm configured" (both superseded — see current color
+> coding and `FINGER_PLAY`/`BURN` in `src/faxbox/config.py`), and frames
+> Ponoko/SendCutSend/Laser-CutZ options that are no longer under
+> consideration — the project committed to NYC Resistor. Do not use this
+> section to plan a cut; use the verified section below it instead.
+
 Comparison of services for cutting 1/8" (3.175mm) plywood parts for the fax machine box validation cut.
 
 ## Project Requirements
@@ -191,11 +201,18 @@ not trust either disputed figure** and instead plans against:
 > 609.6mm).** `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in that file are the
 > single place to update once the real bed is confirmed in person.
 
-This fallback is smaller than the disputed 32in figure in both directions
-and smaller than the 20in figure in one direction, so it should be safe to
-plan against without visiting first -- but **verify the actual bed in person
-before cut day**, since neither on-site figure has been independently
-confirmed.
+**18in x 24in is NOT conservative against the disputed 12in x 24in figure.**
+It is smaller than the undisputed 32in x 20in figure in both directions, but
+if the 12in x 24in comment turns out to be correct, an 18in-deep sheet does
+not fit a 12in-deep bed at all. Checked against the three sheets
+`faxbox.layout` currently produces (~21.8in x 14.0in, 21.6in x 17.1in, and
+21.6in x 9.8in): all three fit an 18in x 24in (equivalently 24in x 18in)
+bed, but **two of the three do not fit a 12in-deep bed** in either
+orientation. Do not treat "18x24" as a safety margin against the 12x24
+figure — it isn't one. **Verify the actual bed size in person before buying
+material or cutting**, and if it turns out to be 12in deep, re-nest
+(`SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in `layout.py`, then rerun
+`faxbox.layout`) before cut day.
 
 ### Accepted file formats / color convention
 
@@ -269,7 +286,10 @@ https://wiki.nycresistor.com/wiki/Laser (verified directly).
 ### What we could NOT verify
 
 - The real cuttable bed size (32in x 20in stated vs. 12in x 24in disputed in
-  a page comment) -- this project uses the conservative 18in x 24in fallback
-  instead of trusting either figure.
+  a page comment) -- this project plans against an 18in x 24in fallback
+  instead of trusting either figure, but that fallback is only conservative
+  against the 32in x 20in figure, NOT against the disputed 12in x 24in one
+  (two of the three current sheets do not fit a 12in-deep bed) -- verify in
+  person before buying material.
 - Any official red/blue cut/engrave color convention.
 - Any MDF-specific or plywood-glue-specific material restriction.
