@@ -68,7 +68,6 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 - File names must match acceptance criteria commands exactly
 - No CI workflows configured - can push directly
 - Check `git status` for uncommitted work from previous agents
-- Sliding lids need grooves on BOTH sides
 - `--outside 0` means dimensions are internal; external = internal + 2×thickness
 - ~~Config coordinate naming differs from spec~~ — fixed in #15: DESIGN.md defines the canonical X/Y/Z convention; config.py follows it. The legacy `SHELL`/`DRAWER` dicts are DEPRECATED aliases only.
 - **Boxes.py draws a black 100×10mm calibration rectangle** in every output unless the generator passes `--reference 0`. Rebuilt generators (#17/#18) must pass `--reference 0` so files are laser-clean; the test harness detects it geometrically meanwhile.
@@ -77,3 +76,4 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 - Test policy (Ben, issues #7/#10): tests are never weakened to pass. Broken-generator expectations are `xfail(strict=False)` with the rebuild issue cited in the reason; rebuilds remove the markers.
 - **Boxes.py 'f' AND 'F' edges both protrude** by one thickness (they're phase complements for corner joints). For a panel inset flush with wall tops, edge-to-edge joints are wrong — join via `fingerHolesAt` lines inside the wall instead (panel finger tips end flush with the exterior). Caught in #17 review via landmark measurement; the blank-size band that would have masked it is now tightened (walls' Z axis = 0 jointed edges).
 - `edges.CompoundEdge(self, types, lengths)` works for mixed finger/plain edges but all segments share one baseline — it cannot express per-segment height offsets.
+- `layout.py` (#19) nests parts onto laser-bed-sized sheets with a deterministic shelf/row packer: sort pieces tallest-first, place each into the shortest existing shelf (row) with both enough height and enough remaining width, opening a new shelf (same sheet if there's vertical room, else a new sheet) when none fits. No rotation, no splitting — each piece is one rigid rectangle read straight from a source SVG's per-part `<g>` (Boxes.py's own grouping), translated into its sheet position by re-serializing each `<path>`'s `d` via `svgpathtools` (`Path.translated()` + `.d()`) rather than relying on nested SVG `transform`s some laser software handles inconsistently.

@@ -25,13 +25,18 @@ conservatively treat every jointed edge as potentially tab-bearing -- this
 can only make the upper bound looser, never tighter, so it can't mask a
 genuine oversize defect while still ruling out "hand-waved" huge tolerances.
 
-Generators are known-broken pre-#17/#18 (wrong wall assignments, wrong sizes
+Generators were known-broken pre-#17/#18 (wrong wall assignments, wrong sizes
 inherited from the DEPRECATED legacy SHELL/DRAWER constants, missing top
-panel, missing faceplate). Every check below that fails against *current*
-output is marked `xfail(strict=False)` with a reason citing the specific
-defect and the rebuild issue; checks that already hold today are left as
-ordinary (non-xfail) assertions on purpose, so this suite still catches a
-regression in what already works.
+panel, missing faceplate). During that period every check below that failed
+against the not-yet-rebuilt output was marked `xfail(strict=False)` with a
+reason citing the specific defect and the rebuild issue, while checks that
+already held were left as ordinary (non-xfail) assertions on purpose, so the
+suite would still catch a regression in what already worked. #17 (shell +
+sliding lid) and #18 (drawers) are now closed and every check below holds
+against current output for real; the xfail markers were removed once each
+rebuild landed, and the comments on individual checks below (e.g. "NOT
+xfail: ...") are kept as historical context for *why* a given check was
+never marked xfail even during the pre-rebuild period.
 """
 
 from __future__ import annotations
@@ -145,11 +150,13 @@ def test_lids_pieces_do_not_overlap():
 # --- Shell parts -------------------------------------------------------------
 # DESIGN.md #1 (as amended 2026-07-07): bottom panel is INSET between
 # full-height walls, nominal INTERIOR_LENGTH x INTERIOR_WIDTH with edge
-# fingers on all four edges -> 2 jointed edges per axis. NOT xfail: the
-# legacy generator's full-footprint Bottom (304.8 x 165.1) sits exactly at
-# nominal + 2T on both axes, which is this band's upper bound -- a real
-# (maximal) pass under the DESIGN.md tolerance rule, same situation as the
-# divider tests below.
+# fingers on all four edges -> 2 jointed edges per axis. Historically NOT
+# xfail (pre-#17 rebuild): the pre-rebuild generator's full-footprint Bottom
+# (304.8 x 165.1) sat exactly at nominal + 2T on both axes, which is this
+# band's upper bound -- a real (maximal) pass under the DESIGN.md tolerance
+# rule, same situation as the divider tests below. The rebuilt generator's
+# inset Bottom passes the same band for the ordinary reason (it's built to
+# nominal, extended by real edge fingers).
 def test_bottom_panel_blank_size():
     piece = _piece(SHELL_SVG, "bottom")
     _assert_band(piece, "X", piece.bbox.width, c.INTERIOR_LENGTH, jointed_edges=2)
@@ -193,14 +200,17 @@ def test_rear_wall_blank_size():
 
 # DESIGN.md #5: nominal 158.75 (Y) x 120.65 (Z). Both axes fully captive
 # ("Fully captive on 4 edges") -> 2 jointed edges each.
-# Split into two assertions because the two axes currently disagree:
-# NOT xfail on Y: current code passes the *full exterior* Y (165.1mm, from
-# the legacy SHELL dict) straight through, uncorrected for joints. But
-# nominal(158.75) + 2*T == SHELL_EXT["width"] exactly (algebra: INTERIOR_WIDTH
-# is defined as SHELL_EXT width - 2T), so a full-exterior-width blank sits
-# right at this axis's max-jointed-edges upper bound and passes under the
-# DESIGN.md-prescribed tolerance -- a real (if maximal) pass, not a
-# coincidence worth hiding behind xfail.
+# Kept as two assertions because the two axes had different pre-rebuild
+# histories worth documenting separately:
+# Historically NOT xfail on Y (pre-#17 rebuild): the pre-rebuild generator
+# passed the *full exterior* Y (165.1mm, from the legacy SHELL dict) straight
+# through, uncorrected for joints. But nominal(158.75) + 2*T ==
+# SHELL_EXT["width"] exactly (algebra: INTERIOR_WIDTH is defined as
+# SHELL_EXT width - 2T), so a full-exterior-width blank sat right at this
+# axis's max-jointed-edges upper bound and passed under the DESIGN.md-
+# prescribed tolerance -- a real (if maximal) pass, not a coincidence worth
+# hiding behind xfail. The rebuilt generator passes the same band for the
+# ordinary reason.
 def test_divider_blank_size_y():
     piece = _piece(SHELL_SVG, "vertical divider", "divider")
     _assert_band(piece, "Y", piece.bbox.width, c.INTERIOR_WIDTH, jointed_edges=2)
@@ -208,9 +218,10 @@ def test_divider_blank_size_y():
 
 # Z: same story as Y above. DIVIDER_HEIGHT(120.65) + 2*T == SHELL_EXT height
 # (127.0) exactly (DIVIDER_HEIGHT is TOP_PANEL_Z0 - WALL_Z0 == 127 - 2T), so
-# the legacy generator's full-127mm divider height also lands exactly on
-# this axis's max-jointed-edges upper bound. A real pass under the
-# DESIGN.md-prescribed [nominal, nominal + 2T] band, not weakened to fit.
+# the pre-rebuild generator's full-127mm divider height also landed exactly
+# on this axis's max-jointed-edges upper bound: a real pass under the
+# DESIGN.md-prescribed [nominal, nominal + 2T] band even then, not weakened
+# to fit.
 def test_divider_blank_size_z():
     piece = _piece(SHELL_SVG, "vertical divider", "divider")
     _assert_band(piece, "Z", piece.bbox.height, c.DIVIDER_HEIGHT, jointed_edges=2)
@@ -379,10 +390,11 @@ def test_faceplate_has_grip_slot():
     assert len(matches) == 1
 
 
-# NOT xfail: the legacy generator's "notch" is implemented as a rounded
-# 30x15 rectangularHole in the body Front -- dimensionally identical to the
-# DESIGN.md grip slot (position differs, which this size-based check doesn't
-# see). Passes today for real; #18 keeps it passing.
+# Historically NOT xfail: even the pre-#18-rebuild generator's "notch" was
+# implemented as a rounded 30x15 rectangularHole in the body Front --
+# dimensionally identical to the DESIGN.md grip slot (position differs,
+# which this size-based check doesn't see), so this passed for real before
+# the rebuild too. #18 (now closed) kept it passing.
 def test_drawer_body_front_has_matching_grip_slot():
     piece = _piece(DRAWER_SVG, "front")
     blue = _blue_holes(piece)
