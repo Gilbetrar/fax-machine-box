@@ -293,3 +293,22 @@ https://wiki.nycresistor.com/wiki/Laser (verified directly).
   person before buying material.
 - Any official red/blue cut/engrave color convention.
 - Any MDF-specific or plywood-glue-specific material restriction.
+
+## Bed-size ambiguity: RESOLVED (2026-07-07 web research)
+
+The disputed "12×24" figure came from a **2013 comment** by Justin
+Lieberknecht on the /laser/ page, which describes an "Epilog 35 watt" with a
+12×24 work area — that is NYC Resistor's **previous** laser (their wiki's
+Purchasing_A_Laser page documents buying an "Epilog Mini 24 x 12, 35 watt"
+in ~May 2008). The current machine is an **Epilog Fusion 32 60W**:
+
+- wiki.nycresistor.com/wiki/Laser (edited 2026-07-07): "Epilog Fusion 32 60W"
+- nycresistor.com/laser/ body text: "The laser bed size is 32" x 20""
+- 2025–2026 class listings consistently say "Epilog 60 Watt Laser"
+- epiloglaser.com Fusion 32 spec: work area 32" × 20" (812 × 508 mm)
+
+Confidence: medium-high (couldn't pin the exact Mini→Fusion upgrade date;
+Wayback Machine unreachable from this environment). All three cut sheets fit
+the 812×508mm bed with large margins; the 609.6×457.2 packing bound is kept
+because it matches commonly available 24×18" Baltic birch stock. Verify with
+a glance at the machine on cut day.

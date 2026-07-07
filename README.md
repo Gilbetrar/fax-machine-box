@@ -293,19 +293,19 @@ See `docs/service-comparison.md` → "NYC Resistor cutting constraints
 where the pre-2026-07-07 service comparison lives — it's marked superseded;
 this checklist is current.
 
-1. **Confirm the actual laser bed size FIRST — do this before anything
-   else.** NYC Resistor's own pages disagree with each other: the laser
-   page and wiki both say **32"×20"**, but a comment on that same laser page
-   disputes it and claims the real cuttable area is **12"×24"**. Nobody has
-   reconciled the two. This project's three sheets currently measure
-   approximately **21.8"×14.0"**, **21.6"×17.1"**, and **21.6"×9.8"** — all
-   three fit within a 24"×18" bed, but **two of the three do not fit** a
-   12"-deep bed. If the bed turns out to be 12" deep, the layout must be
-   re-nested before cutting: change `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in
-   `src/faxbox/layout.py` to match the confirmed bed, then rerun
-   `.venv/bin/python -m faxbox.layout` and re-check the printed sheet count
-   and dimensions. Do not assume the current 3-sheet nesting is safe — there
-   is no "well under the limit" margin against the 12"×24" figure.
+1. **Bed size: resolved (2026-07-07 research), verify with a glance at the
+   machine.** The "12"×24"" claim was a stale 2013 page comment describing
+   NYC Resistor's previous laser (their 2008 Epilog Mini 24, 35W). The
+   current machine is an **Epilog Fusion 32 60W — 32"×20" (812×508mm) work
+   area**, confirmed by their wiki (edited 2026), 2025–26 class listings,
+   and Epilog's spec sheet for that exact model (sources in
+   docs/service-comparison.md). This project's three sheets measure
+   ~**21.8"×14.0"**, **21.6"×17.1"**, and **21.6"×9.8"** — all fit with
+   room to spare. A five-second look at the machine confirms it (the
+   Fusion 32 bed is visibly ~2.5ft wide). If it somehow isn't that machine,
+   re-nest: change `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in
+   `src/faxbox/layout.py`, rerun `.venv/bin/python -m faxbox.layout`, and
+   re-check the printed sheet dimensions.
 2. **Material.** Bring **Baltic Birch specifically**, not generic/cheap
    plywood — cheap ply's interior voids can blow out this design's thinnest
    features (the 3.175mm webs in the rear-wall drawer openings and the

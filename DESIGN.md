@@ -14,6 +14,11 @@ the ply runs thick (nominal 3.175 stock commonly measures 3.0–3.4); this makes
 edge-adjacent hole rows break through their part edge by ≤ play/2, which is
 sub-kerf and hidden inside joints.
 
+**Contents fit:** the SPEC envelope and compartment dimensions come from
+Ben's fully functional cardboard prototype of this exact box (confirmed
+2026-07-07) — the game's components are known to fit these interior volumes.
+No separate component-dimension check is needed.
+
 ## Decisions this design implements (Ben, 2026-07-07)
 
 - Drawers open from the **rear** 6.5"×5" end face (SPEC "Rear Drawer Housing").
