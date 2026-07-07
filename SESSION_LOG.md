@@ -415,3 +415,10 @@ strict tests that fail, and created Issue #10 to track the config fix.
 - All piece paths have different start coordinates (no overlaps)
 - Visual inspection in browser confirms all pieces are separate
 - Layout dimensions: 1290.7mm x 826.3mm
+
+## 2026-07-07 — Issue #15: geometry redesign (Claude Fable 5)
+
+- Wrote DESIGN.md: canonical coordinate convention (X=length/12", Y=width/6.5", Z=height/5", origin front-left-bottom exterior) and full parts list with derived numbers.
+- Rewrote config.py: single MATERIAL_THICKNESS (3.175), all dims derived; legacy aliases kept (marked DEPRECATED) so old generators run until #17/#18.
+- Replaced tests/test_dimensions.py with tests/test_assembly_fit.py (26 tests, every DESIGN.md mating pair). Negative control verified: breaking drawer width fails 2 tests, restore goes green.
+- Key design points: sill-free drawer openings (opening floor == slot floor), drawer guided by its opening (~4.9mm/side bay slop accepted, max skew 1.3°), lid slot vertical clearance 0.8mm (documented deviation from spec's 1.5mm sliding play), divider full-height to top panel = lid stop.
