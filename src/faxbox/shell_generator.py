@@ -113,6 +113,13 @@ class OuterShell(Boxes):
     # -- pixel-font engraving (ctx.fill() is not implemented by Boxes.py;
     # engrave by stroking closed pixel-square paths in ENGRAVE_COLOR) -------
 
+    # Hatch-fill spacing for solid pixel engraving (DESIGN.md: pixel cell is
+    # pixel_size*0.85 ~= 3.4mm at ENGRAVE_PIXEL_SIZE; ~0.4mm between lines
+    # gives ~9 lines/pixel including the top and bottom edges -- close
+    # enough for the laser to read as a solid-filled square rather than a
+    # wireframe outline, since Boxes.py/cairo has no ctx.fill() here).
+    HATCH_SPACING_MM = 0.4
+
     def draw_pixel_char(self, char: str, x: float, y: float, pixel_size: float) -> float:
         """Draw a single character using the pixel font. Returns advance width."""
         if char not in PIXEL_FONT:
@@ -121,15 +128,20 @@ class OuterShell(Boxes):
         if not pixels:
             return pixel_size * 5 + ENGRAVE_FONT_SPACING
         pixel_cell = pixel_size * 0.85
+        # Evenly spaced horizontal hatch lines spanning the full cell height,
+        # inclusive of the top (offset 0) and bottom (offset pixel_cell)
+        # edges -- solid-fill engraving instead of a hollow stroked outline
+        # (a wireframe box would leave "FAX MACHINE" un-engraved inside each
+        # pixel).
+        n_lines = max(2, round(pixel_cell / self.HATCH_SPACING_MM) + 1)
         for col, row in pixels:
             px = x + col * pixel_size + (pixel_size - pixel_cell) / 2
             py = y + (6 - row) * pixel_size + (pixel_size - pixel_cell) / 2
-            self.ctx.move_to(px, py)
-            self.ctx.line_to(px + pixel_cell, py)
-            self.ctx.line_to(px + pixel_cell, py + pixel_cell)
-            self.ctx.line_to(px, py + pixel_cell)
-            self.ctx.line_to(px, py)
-            self.ctx.stroke()
+            for i in range(n_lines):
+                line_y = py + pixel_cell * i / (n_lines - 1)
+                self.ctx.move_to(px, line_y)
+                self.ctx.line_to(px + pixel_cell, line_y)
+                self.ctx.stroke()
         return pixel_size * 5 + ENGRAVE_FONT_SPACING
 
     def draw_pixel_text(self, text: str, x: float, y: float, pixel_size: float = ENGRAVE_PIXEL_SIZE) -> None:

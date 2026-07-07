@@ -215,6 +215,19 @@ def _round_numbers(text: str, precision: int = 3) -> str:
 
 _MATRIX_RE = re.compile(r"matrix\(\s*([^)]+)\)")
 
+# NYC Resistor's workflow wants hairline cut lines (0.216pt = 0.0762mm) so
+# CorelDraw doesn't rasterize the paths instead of vector-cutting them; the
+# Boxes.py source SVGs carry a thicker 0.16mm stroke-width, so every
+# re-serialized path is forced to this value regardless of what it inherited.
+HAIRLINE_STROKE_WIDTH_MM = "0.0762"
+
+# Part-name labels (Boxes.py's own `Color.ANNOTATIONS`, which renders as
+# red -- identical to ENGRAVE_COLOR) must read as reference-only text, never
+# as a red engrave path. Re-colored to gray and flagged with a
+# data-purpose attribute here, at the point each label is re-serialized.
+_LABEL_FILL_RE = re.compile(r"fill:\s*rgb\(255,\s*0,\s*0\)")
+LABEL_FILL_GRAY = "fill: rgb(128,128,128)"
+
 
 def _shift_transform(transform: str, dx: float, dy: float) -> str:
     """Add (dx, dy) to an existing 'matrix(...)' transform's translation
@@ -244,11 +257,16 @@ def _emit_piece_group(piece: Piece, target_x: float, target_y: float, group_id: 
     lines = [f"<g id={quoteattr(group_id)} data-part={quoteattr(label_full)} style={quoteattr(piece.group_style)}>"]
     for sp in piece.svg_paths:
         new_d = _round_numbers(svgpathtools.parse_path(sp.d).translated(offset).d())
-        attr_str = " ".join(f"{k}={quoteattr(v)}" for k, v in sp.attrib.items())
+        attrib = dict(sp.attrib)
+        attrib["stroke-width"] = HAIRLINE_STROKE_WIDTH_MM
+        attr_str = " ".join(f"{k}={quoteattr(v)}" for k, v in attrib.items())
         lines.append(f"<path {attr_str} d={quoteattr(new_d)} />")
     if piece.text_attrib is not None:
         attrs = dict(piece.text_attrib)
         attrs["transform"] = _shift_transform(attrs.get("transform", ""), dx, dy)
+        if "style" in attrs:
+            attrs["style"] = _LABEL_FILL_RE.sub(LABEL_FILL_GRAY, attrs["style"])
+        attrs["data-purpose"] = "reference-label"
         attr_str = " ".join(f"{k}={quoteattr(v)}" for k, v in attrs.items())
         lines.append(f"<text {attr_str}>{escape(label_full)}</text>")
     lines.append("</g>")
@@ -274,7 +292,11 @@ Fax Machine Box - Sheet {sheet_number} of {total_sheets}. Ready for laser
 cutting (NYC Resistor or any service with an equal or larger bed).
 Material: 3.175mm (1/8 inch) plywood.
 
-Color coding: Blue (#0000FF) = cut, Red (#FF0000) = engrave.
+Color coding: Blue (#0000FF) = cut, Red (#FF0000) = engrave. The gray
+(rgb(128,128,128)) part-name text on each piece is reference-only, purely to
+identify the part for a human; it carries data-purpose="reference-label" on
+its <text> element and must NOT be mapped to any cut or engrave operation in
+the laser driver.
 Margins: {MARGIN_MM:.0f}mm from sheet edge; {SPACING_MM:.0f}mm between parts.
 -->
 <title>Fax Machine Box - Sheet {sheet_number} of {total_sheets}</title>
