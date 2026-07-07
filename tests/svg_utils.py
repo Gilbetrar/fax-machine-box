@@ -284,8 +284,16 @@ def is_reference_mark(piece: Piece, tol: float = 0.5) -> bool:
     """True if `piece` is Boxes.py's auto-generated calibration rectangle.
 
     See REFERENCE_MARK_SIZE_MM for why this is safe to key off size alone.
+    Boxes.py always draws this rectangle with a black stroke (it is never a
+    cut-blue or engrave-red part), so a real 100x10mm design part -- e.g. a
+    blue drawer side panel that happens to land near that size -- must NOT be
+    swallowed by this check and vanish from `design_pieces`. Requiring black
+    keeps the two cases apart without needing a size fudge-factor tight
+    enough to risk missing the real (slightly kerf-shifted) reference mark.
     """
     if piece.holes:
+        return False
+    if normalize_color(piece.outer.stroke) != "black":
         return False
     return piece.bbox.dims_match(*REFERENCE_MARK_SIZE_MM, tol=tol)
 
@@ -318,6 +326,62 @@ def non_cut_engrave_strokes(svg_path: str | Path) -> list[PathInfo]:
     return [p for p in iter_paths(svg_path) if normalize_color(p.stroke) not in ("blue", "red")]
 
 
+@dataclass(frozen=True)
+class HoleRow:
+    """One dashed finger-hole row (Boxes.py `fingerHolesAt` output).
+
+    `span` is the row's extent along its own (dashed) axis; `center` is its
+    position on the CROSS axis (the coordinate that's constant, up to
+    dash-to-dash jitter, along the whole row) -- e.g. for a horizontal row
+    (axis='x') this is the row's Y/Z plane; for a vertical row (axis='y')
+    this is the row's X position. `lo`/`hi` are the row-axis extremes (same
+    values `span = hi - lo` is computed from), kept for callers that want the
+    raw endpoints rather than just the length.
+    """
+
+    span: float
+    center: float
+    lo: float
+    hi: float
+
+
+def hole_line_rows(
+    holes: list[PathInfo],
+    thickness: float,
+    axis: str,
+    thickness_tol: float = 0.5,
+    group_tol: float = 1.5,
+    min_holes: int = 2,
+) -> list[HoleRow]:
+    """Group dashed finger-hole rows and return each row's span AND
+    cross-axis center (see HoleRow). See `hole_line_spans` (below, now a thin
+    wrapper over this) for the row-detection rules.
+    """
+    if axis not in ("x", "y"):
+        raise ValueError(f"axis must be 'x' or 'y', got {axis!r}")
+    groups: dict[int, list[BBox]] = {}
+    for h in holes:
+        cross = h.bbox.height if axis == "x" else h.bbox.width
+        if abs(cross - thickness) > thickness_tol:
+            continue
+        center = (
+            (h.bbox.ymin + h.bbox.ymax) / 2 if axis == "x" else (h.bbox.xmin + h.bbox.xmax) / 2
+        )
+        groups.setdefault(round(center / group_tol), []).append(h.bbox)
+    rows = []
+    for boxes in groups.values():
+        if len(boxes) < min_holes:
+            continue
+        if axis == "x":
+            lo, hi = min(b.xmin for b in boxes), max(b.xmax for b in boxes)
+            cross_center = sum((b.ymin + b.ymax) / 2 for b in boxes) / len(boxes)
+        else:
+            lo, hi = min(b.ymin for b in boxes), max(b.ymax for b in boxes)
+            cross_center = sum((b.xmin + b.xmax) / 2 for b in boxes) / len(boxes)
+        rows.append(HoleRow(span=hi - lo, center=cross_center, lo=lo, hi=hi))
+    return rows
+
+
 def hole_line_spans(
     holes: list[PathInfo],
     thickness: float,
@@ -335,26 +399,80 @@ def hole_line_spans(
     Rows are grouped by cross-axis center; groups with fewer than `min_holes`
     holes are ignored (a single T-sized hole is not a row).
     """
-    if axis not in ("x", "y"):
-        raise ValueError(f"axis must be 'x' or 'y', got {axis!r}")
-    groups: dict[int, list[BBox]] = {}
-    for h in holes:
-        cross = h.bbox.height if axis == "x" else h.bbox.width
-        if abs(cross - thickness) > thickness_tol:
-            continue
-        center = (
-            (h.bbox.ymin + h.bbox.ymax) / 2 if axis == "x" else (h.bbox.xmin + h.bbox.xmax) / 2
+    return [
+        row.span
+        for row in hole_line_rows(
+            holes, thickness, axis,
+            thickness_tol=thickness_tol, group_tol=group_tol, min_holes=min_holes,
         )
-        groups.setdefault(round(center / group_tol), []).append(h.bbox)
-    spans = []
-    for boxes in groups.values():
-        if len(boxes) < min_holes:
+    ]
+
+
+# Finger-tip ("tooth") segment length band: Boxes.py finger widths on this
+# project's parts run close to `thickness` (T ~= 3.175mm, holes widened to
+# T+FINGER_PLAY ~= 3.275mm); 3..10mm comfortably covers a single tooth/gap
+# segment (with burn/play slop) while excluding both tiny corner-rounding
+# fragments and long straight edge runs that aren't finger tips at all.
+TOOTH_LENGTH_MIN = 3.0
+TOOTH_LENGTH_MAX = 10.0
+
+# How close (mm) a segment's constant coordinate must sit to the piece
+# bbox's extreme on that side to count as lying "on" that edge, rather than
+# on some interior notch (e.g. a grip slot) that happens to have a
+# similarly-sized straight run.
+EDGE_PROXIMITY_TOL = 0.05
+
+
+def edge_teeth_centers(piece: Piece, edge: str) -> list[float]:
+    """Centers of finger-tip segments on `piece`'s OUTER path along one bbox
+    edge ('top'/'bottom'/'left'/'right', SVG y-down: 'top' = bbox.ymin,
+    'bottom' = bbox.ymax, 'left' = bbox.xmin, 'right' = bbox.xmax).
+
+    Walks the outer boundary path's line segments (via svgpathtools) and
+    keeps the ones that are: axis-aligned (constant x for a 'left'/'right'
+    edge, constant y for 'top'/'bottom'), within EDGE_PROXIMITY_TOL of the
+    requested bbox extreme, and TOOTH_LENGTH_MIN..TOOTH_LENGTH_MAX mm long --
+    i.e. a single finger tip or the notch beside one, not a full straight
+    edge run or an unrelated interior cutout. Returns the segment's midpoint
+    coordinate along the edge (X for top/bottom, Y for left/right), so
+    results can be compared directly against `HoleRow.center` values (or
+    other tooth centers) mapped into the same coordinate frame.
+
+    Curved segments (e.g. a rounded grip-slot corner, which never lies on
+    the outer path anyway) are skipped, not misread as teeth.
+    """
+    if edge not in ("top", "bottom", "left", "right"):
+        raise ValueError(f"edge must be one of top/bottom/left/right, got {edge!r}")
+    bbox = piece.bbox
+    target = {"top": bbox.ymin, "bottom": bbox.ymax, "left": bbox.xmin, "right": bbox.xmax}[edge]
+    horizontal_edge = edge in ("top", "bottom")
+
+    path = svgpathtools.parse_path(piece.outer.d)
+    centers: list[float] = []
+    for seg in path:
+        if not isinstance(seg, svgpathtools.Line):
             continue
-        if axis == "x":
-            spans.append(max(b.xmax for b in boxes) - min(b.xmin for b in boxes))
+        x0, y0 = seg.start.real, seg.start.imag
+        x1, y1 = seg.end.real, seg.end.imag
+        if horizontal_edge:
+            if abs(y1 - y0) > 1e-6:
+                continue  # not horizontal
+            if abs(y0 - target) > EDGE_PROXIMITY_TOL:
+                continue
+            length = abs(x1 - x0)
+            if not (TOOTH_LENGTH_MIN <= length <= TOOTH_LENGTH_MAX):
+                continue
+            centers.append((x0 + x1) / 2)
         else:
-            spans.append(max(b.ymax for b in boxes) - min(b.ymin for b in boxes))
-    return spans
+            if abs(x1 - x0) > 1e-6:
+                continue  # not vertical
+            if abs(x0 - target) > EDGE_PROXIMITY_TOL:
+                continue
+            length = abs(y1 - y0)
+            if not (TOOTH_LENGTH_MIN <= length <= TOOTH_LENGTH_MAX):
+                continue
+            centers.append((y0 + y1) / 2)
+    return centers
 
 
 def expected_band(nominal: float, jointed_edges: int, thickness: float, slack: float = 0.5) -> tuple[float, float]:
