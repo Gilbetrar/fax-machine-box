@@ -36,13 +36,15 @@ from faxbox.config import (
     DETENT_ROOT_FILLET,
     DETENT_SEVER_WIDTH,
     DRAWER_BODY,
-    DRAWER_DETENT_PROTRUDE,
-    DRAWER_DETENT_ROOT_Z,
-    DRAWER_DETENT_TIP_Z,
+    DRAWER_DETENT_ENGAGE,
+    DRAWER_DETENT_NUB_X,
+    DRAWER_DETENT_PLAIN_HI,
+    DRAWER_DETENT_PLAIN_LO,
+    DRAWER_DETENT_ROOT_X,
+    DRAWER_DETENT_TIP_X,
     DRAWER_GRIP_SLOT,
     ENGRAVE_COLOR,
     FACEPLATE,
-    FACEPLATE_DRAWN_WIDTH,
     MATERIAL_THICKNESS,
     OUTPUT_DIR,
 )
@@ -50,12 +52,45 @@ from faxbox.detent import edge_nub_detour, release_cut_rects
 
 T = MATERIAL_THICKNESS
 
-# Body interior (DESIGN.md #9: "Body interior: 142.65 x 211.65 x 50.325").
+# Body interior (DESIGN.md #9: "Body interior: 142.65 x 212.25 x 50.325").
 # Width/length lose a thickness on each of their two jointed (vertical
 # corner) edges; height only loses the bottom -- the top is open.
-BODY_INTERIOR_LENGTH = DRAWER_BODY["length"] - 2 * T   # 211.65, X
+BODY_INTERIOR_LENGTH = DRAWER_BODY["length"] - 2 * T   # 212.25, X
 BODY_INTERIOR_WIDTH = DRAWER_BODY["width"] - 2 * T     # 142.65, Y
 BODY_INTERIOR_HEIGHT = DRAWER_BODY["height"] - T       # 50.325, Z (floor -> open top)
+
+
+class _DrawerFlexureNubEdge(edges.Edge):
+    """A straight edge (drop-in for Boxes.py's plain "e") that additionally
+    draws a single ramped, DOWNWARD-protruding flexure nub at a fixed
+    position along its own length.
+
+    Used as the middle segment of a CompoundEdge standing in for the drawer
+    side wall's normally fully finger-jointed bottom edge, over the
+    flexure's plain zone (mechanism B, iteration 3, issue #20 red-team):
+    Boxes.py's edge classes draw one continuous run with no way to inject a
+    local protrusion (the same limitation the removed iteration-2 faceplate
+    detent hit), so this is a purpose-built Edge subclass instead of a
+    callback -- it participates in the same finger-joint-length-matching
+    CompoundEdge convention already used elsewhere in this project
+    (shell_generator.py's front-edge and top-panel CompoundEdges).
+    """
+
+    def __init__(self, boxes, nub_center_local: float, peak_depth: float) -> None:
+        super().__init__(boxes, None)
+        self.nub_center_local = nub_center_local
+        self.peak_depth = peak_depth
+
+    def __call__(self, length, **kw):
+        detour = edge_nub_detour(
+            self.nub_center_local - 1.0, self.nub_center_local + 1.0,
+            0.0, -self.peak_depth, burn=self.burn,
+        )
+        self.ctx.move_to(0, 0)
+        for x, y in detour:
+            self.ctx.line_to(x, y)
+        self.ctx.line_to(length, 0)
+        self.ctx.translate(*self.ctx.get_current_point())
 
 GRIP_SLOT_W = DRAWER_GRIP_SLOT["width"]
 GRIP_SLOT_H = DRAWER_GRIP_SLOT["height"]
@@ -82,16 +117,6 @@ class DrawerBox(Boxes):
     def _grip_slot_center_y(self, panel_height: float) -> float:
         slot_top = panel_height - GRIP_SLOT_TOP_BELOW_EDGE
         return slot_top - GRIP_SLOT_H / 2
-
-    def _draw_closed_polygon(self, points: list[tuple[float, float]]) -> None:
-        """Stroke a closed polygon -- see faxbox.detent module docstring;
-        duplicated per-generator like generate_lids.py's copy since Boxes.py
-        generators don't share a common mixin base."""
-        self.ctx.move_to(*points[0])
-        for pt in points[1:]:
-            self.ctx.line_to(*pt)
-        self.ctx.line_to(*points[0])
-        self.ctx.stroke()
 
     def _draw_engraved_rect_outline(self, cx: float, cy: float, width: float, height: float) -> None:
         """Red-engraved rectangle outline, drawn as 4 disjoint line segments
@@ -154,10 +179,63 @@ class DrawerBox(Boxes):
     def _build_side(self, label: str) -> None:
         """Side wall: BODY_INTERIOR_LENGTH (local X = box X) x
         BODY_INTERIOR_HEIGHT (local Y = box Z). Front/back-mating edges
-        finger-joint (both ends), bottom finger-joints the Bottom panel, top
-        open."""
+        finger-joint (both ends), top open.
+
+        Bottom edge: finger-jointed to the Bottom panel EXCEPT a short
+        PLAIN zone (DRAWER_DETENT_PLAIN_LO -> DRAWER_DETENT_PLAIN_HI) near
+        the FRONT (x=0, faceplate) end, carrying a cantilever spring-detent
+        flexure (mechanism B, iteration 3, issue #20 red-team replacement
+        for the geometrically-impossible faceplate detent -- see DESIGN.md
+        "Retention"). Convention (this project's own choice; both ends
+        finger-joint identically otherwise, so nothing else distinguishes
+        them): local x=0 mates the Front panel (the faceplate end); this is
+        a NEW assembly constraint -- both side panels must go in with their
+        flexure end toward Front, not Back. A finger-jointed edge can't
+        locally express the nub's protrusion (same reason the old faceplate
+        needed a hand-drawn boundary), so the plain zone uses a purpose-
+        built Edge (_DrawerFlexureNubEdge) via CompoundEdge instead of a
+        plain 'e' -- the Bottom panel's matching finger-hole row is split to
+        skip this same X-range (see _build_bottom)."""
+        seg1_len = DRAWER_DETENT_PLAIN_LO
+        seg2_len = DRAWER_DETENT_PLAIN_HI - DRAWER_DETENT_PLAIN_LO
+        seg3_len = BODY_INTERIOR_LENGTH - DRAWER_DETENT_PLAIN_HI
+        nub_center_local = DRAWER_DETENT_NUB_X - DRAWER_DETENT_PLAIN_LO
+        # The plain zone's local y=0 is the wall's NOMINAL (pre-tab) bottom
+        # reference; the "f" edges either side of it already protrude T
+        # beyond that (their finger tabs reach the drawer's TRUE exterior
+        # bottom). DRAWER_DETENT_ENGAGE is defined relative to that true
+        # exterior bottom (DESIGN.md), so the nub's drawn depth from y=0 is
+        # T + DRAWER_DETENT_ENGAGE, not DRAWER_DETENT_ENGAGE alone -- else
+        # the nub falls short of even the neighboring tabs' own reach.
+        nub_edge = _DrawerFlexureNubEdge(self, nub_center_local, T + DRAWER_DETENT_ENGAGE)
+        bottom_edge = edges.CompoundEdge(
+            self, ["f", nub_edge, "f"], [seg1_len, seg2_len, seg3_len])
+
+        def callback() -> None:
+            # Cantilever release cut: frees the beam on 3 sides (a clearance
+            # cavity above it, into the panel's own solid material, and a
+            # severing slot at its free/tip end) while leaving the root end
+            # (deeper into the wall, toward the Back panel) solid -- same
+            # L-shape logic as the wall's lid detent (faxbox.detent.
+            # release_cut_rects), just transposed: "along" is X, "across"
+            # is local Y, "floor" is the plain zone's own baseline (local
+            # y=0), and the beam sits ABOVE it (local y increasing, into
+            # the panel) rather than below, since the nub protrudes DOWN
+            # past y=0 while the panel's own bulk is above it.
+            beam_top = DETENT_BEAM_WIDTH
+            cavity_top = DETENT_BEAM_WIDTH + DETENT_CLEARANCE
+            cavity, sever = release_cut_rects(
+                tip=DRAWER_DETENT_TIP_X, root=DRAWER_DETENT_ROOT_X,
+                beam_bottom=beam_top, cavity_bottom=cavity_top,
+                sever_width=DETENT_SEVER_WIDTH, floor=0.0,
+            )
+            self.rectangularHole(*cavity, r=DETENT_ROOT_FILLET)
+            self.rectangularHole(*sever, r=DETENT_ROOT_FILLET)
+
         self.rectangularWall(
-            BODY_INTERIOR_LENGTH, BODY_INTERIOR_HEIGHT, "ffef",
+            BODY_INTERIOR_LENGTH, BODY_INTERIOR_HEIGHT,
+            [bottom_edge, self.edges["f"], self.edges["e"], self.edges["f"]],
+            callback=[callback, None, None, None],
             move="right", label=label,
         )
 
@@ -166,18 +244,29 @@ class DrawerBox(Boxes):
         it sits flush with the walls' true outside faces, not inset between
         them, and its own edges stay plain (captive: DESIGN.md "walls'
         bottom edges may extend downward" while the bottom does not). The
-        4 finger-hole rows below receive the walls' downward-protruding
+        finger-hole rows below receive the walls' downward-protruding
         bottom-edge tabs, one per wall, each row's length matching that
-        wall's own interior nominal so the finger pitch lines up."""
+        wall's own interior nominal so the finger pitch lines up.
+
+        The left/right (side-wall) rows are each SPLIT into two segments
+        skipping DRAWER_DETENT_PLAIN_LO -> DRAWER_DETENT_PLAIN_HI, matching
+        the side walls' own CompoundEdge plain zone there (mechanism B) --
+        without this split, that row would carry finger holes with no
+        tab to plug them (the side wall has no tab in that zone either)."""
 
         def callback() -> None:
             length, width = DRAWER_BODY["length"], DRAWER_BODY["width"]
             # Front/back rows: vertical, near the X=0 / X=length edges.
             self.fingerHolesAt(T / 2, T, BODY_INTERIOR_WIDTH, angle=90)
             self.fingerHolesAt(length - T / 2, T, BODY_INTERIOR_WIDTH, angle=90)
-            # Left/right rows: horizontal, near the Y=0 / Y=width edges.
-            self.fingerHolesAt(T, T / 2, BODY_INTERIOR_LENGTH, angle=0)
-            self.fingerHolesAt(T, width - T / 2, BODY_INTERIOR_LENGTH, angle=0)
+            # Left/right rows: horizontal, near the Y=0 / Y=width edges,
+            # split around the flexure's plain zone (both side walls carry
+            # the SAME zone, so both rows split the same way).
+            seg2_start = T + DRAWER_DETENT_PLAIN_HI
+            seg2_len = BODY_INTERIOR_LENGTH - DRAWER_DETENT_PLAIN_HI
+            for y in (T / 2, width - T / 2):
+                self.fingerHolesAt(T, y, DRAWER_DETENT_PLAIN_LO, angle=0)
+                self.fingerHolesAt(seg2_start, y, seg2_len, angle=0)
 
         self.rectangularWall(
             DRAWER_BODY["length"], DRAWER_BODY["width"], "eeee",
@@ -187,94 +276,32 @@ class DrawerBox(Boxes):
 
     def _build_faceplate(self) -> None:
         """Faceplate: FACEPLATE width x height (DESIGN.md #9), plain edges
-        (glued, not finger-jointed), plus a cantilever spring detent near
-        EACH Y side edge (retention iteration 2, issue #20): a ramped nub
-        protrudes DRAWER_DETENT_PROTRUDE beyond the nominal edge on both
-        sides, so it can snap past the rear-wall opening's side edge on
-        close. Grip slot and the glue-up registration outline are unchanged
-        in size, just re-centered for the drawing offset below.
+        (glued, not finger-jointed). Grip slot aligned with the body
+        Front's, plus a red-engraved registration outline of the body's
+        front cross-section (DRAWER_BODY width x height, centered).
 
-        Boxes.py's rectangularWall can't inject a local protrusion into a
-        plain "e" edge's path (an edge class draws one continuous straight
-        run for its whole length), so the outer boundary is hand-drawn here
-        instead -- see faxbox.detent's module docstring. This deliberately
-        makes the Faceplate's drawn/measured footprint
-        FACEPLATE_DRAWN_WIDTH (150.9 + 2*DRAWER_DETENT_PROTRUDE) rather than
-        the plain FACEPLATE["width"] -- see DESIGN.md "Retention (iteration
-        2)" and the flagged test_faceplate_blank_size deviation in
-        tests/test_svg_geometry.py for why that's an intentional, minimal,
-        and unavoidable consequence of this being a REAL protruding
-        interference feature (there's no way to add real retention without
-        the physical part becoming physically bigger at the nub).
-        """
-        offset = DRAWER_DETENT_PROTRUDE  # true drawn x=0 is the LEFT nub's tip
-        width, height = FACEPLATE["width"], FACEPLATE["height"]
+        Reverted to the exact v1 (pre-iteration-2) blank (issue #20
+        red-team FIX1): the iteration-2 faceplate detent was geometrically
+        impossible (the faceplate is a Y-Z plate; the drawer travels along
+        X, normal to that plate, so a Z-ramped nub can never be swept by the
+        drawer's own motion -- it would only ever meet the rear-wall opening
+        as a square 0.45mm interference, not a cam). Retention now lives
+        entirely in the drawer SIDE walls instead -- see _build_side and
+        DESIGN.md's "Retention" section."""
 
-        def body_x(x: float) -> float:
-            return x + offset
-
-        left_rest, right_rest = body_x(0.0), body_x(width)
-        left_peak, right_peak = left_rest - DRAWER_DETENT_PROTRUDE, right_rest + DRAWER_DETENT_PROTRUDE
-
-        # edge_nub_detour returns (along=Z, across=drawn-x) pairs in
-        # increasing-Z order; swap to (x, y) for the polygon point list.
-        right_detour = [(x, y) for y, x in edge_nub_detour(
-            DRAWER_DETENT_ROOT_Z, DRAWER_DETENT_TIP_Z, right_rest, right_peak)]
-        left_detour = [(x, y) for y, x in edge_nub_detour(
-            DRAWER_DETENT_ROOT_Z, DRAWER_DETENT_TIP_Z, left_rest, left_peak)]
-
-        outline = [
-            (left_rest, 0.0),
-            (right_rest, 0.0),
-            (right_rest, DRAWER_DETENT_ROOT_Z),
-            *right_detour,
-            (right_rest, height),
-            (left_rest, height),
-            (left_rest, DRAWER_DETENT_TIP_Z),
-            *reversed(left_detour),
-        ]
-
-        # Bypass rectangularWall's automatic straight-edge drawing: its "e"
-        # edge class draws one continuous run for the whole edge length with
-        # no way to inject the nub detour above, and calling it anyway (even
-        # sized to FACEPLATE_DRAWN_WIDTH) would additionally stroke a plain
-        # rectangle overlapping/conflicting with the hand-drawn outline. Use
-        # the same before/after self.move() bookkeeping rectangularWall uses
-        # internally (its own sanctioned public API for this exact purpose,
-        # per its docstring) so this piece still lands correctly in the
-        # move="right" row of parts, without also drawing the plain edges.
-        if self.move(FACEPLATE_DRAWN_WIDTH, height, "right", before=True):
-            return
-        self.moveTo(0, 0)
-
-        self.set_source_color(CUT_COLOR)
-        self._draw_closed_polygon(outline)
-
-        cy = self._grip_slot_center_y(height)
-        self.rectangularHole(body_x(width / 2), cy, GRIP_SLOT_W, GRIP_SLOT_H, r=GRIP_SLOT_R)
-        self._draw_engraved_rect_outline(
-            body_x(width / 2), height / 2,
-            DRAWER_BODY["width"], DRAWER_BODY["height"],
-        )
-
-        # Cantilever release cuts (both sides): free the beam on 3 sides
-        # while leaving its root end solid, same L-shape logic as the wall's
-        # lid detent (faxbox.detent.release_cut_rects), just transposed --
-        # "along" here is Z (root/tip), "across" is drawn-x, so the returned
-        # (cx, cy, dx, dy) tuples need their x/y swapped before calling
-        # rectangularHole(x, y, dx, dy).
-        for edge_rest, sign in ((left_rest, 1.0), (right_rest, -1.0)):
-            beam_bottom = edge_rest + sign * DETENT_BEAM_WIDTH
-            cavity_bottom = edge_rest + sign * (DETENT_BEAM_WIDTH + DETENT_CLEARANCE)
-            cavity, sever = release_cut_rects(
-                tip=DRAWER_DETENT_TIP_Z, root=DRAWER_DETENT_ROOT_Z,
-                beam_bottom=beam_bottom, cavity_bottom=cavity_bottom,
-                sever_width=DETENT_SEVER_WIDTH, floor=edge_rest,
+        def callback() -> None:
+            cy = self._grip_slot_center_y(FACEPLATE["height"])
+            self.rectangularHole(FACEPLATE["width"] / 2, cy, GRIP_SLOT_W, GRIP_SLOT_H, r=GRIP_SLOT_R)
+            self._draw_engraved_rect_outline(
+                FACEPLATE["width"] / 2, FACEPLATE["height"] / 2,
+                DRAWER_BODY["width"], DRAWER_BODY["height"],
             )
-            for cx, cy, dx, dy in (cavity, sever):
-                self.rectangularHole(cy, cx, dy, dx, r=DETENT_ROOT_FILLET)
 
-        self.move(FACEPLATE_DRAWN_WIDTH, height, "right", label="Faceplate")
+        self.rectangularWall(
+            FACEPLATE["width"], FACEPLATE["height"], "eeee",
+            callback=[callback, None, None, None],
+            move="right", label="Faceplate",
+        )
 
     def render(self) -> None:
         """Render all 6 pieces, laid out in a single row (move='right'

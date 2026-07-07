@@ -28,6 +28,13 @@ from faxbox.config import (
     BOTTOM_OPENING_Z0,
     BOTTOM_OPENING_Z1,
     BURN,
+    CATCH_HOLE_LEFT_Y,
+    CATCH_HOLE_RIGHT_Y,
+    CATCH_HOLE_X,
+    CATCH_HOLE_X_LENGTH,
+    CATCH_HOLE_X_PLAIN_HI,
+    CATCH_HOLE_X_PLAIN_LO,
+    CATCH_HOLE_Y_WIDTH,
     CUT_COLOR,
     DETENT_ROOT_FILLET,
     DETENT_SEVER_WIDTH,
@@ -190,15 +197,42 @@ class OuterShell(Boxes):
     # -- pieces ---------------------------------------------------------
 
     def _build_bottom(self) -> None:
-        """Bottom panel: INTERIOR_LENGTH x INTERIOR_WIDTH, 'f' all around,
-        plus a fingerHolesAt line receiving the divider's bottom-edge
-        fingers (DESIGN.md #1)."""
+        """Bottom panel: INTERIOR_LENGTH x INTERIOR_WIDTH, 'f' all around
+        EXCEPT a short PLAIN zone on the two side-wall-facing edges at the
+        catch holes' own X range, plus a fingerHolesAt line receiving the
+        divider's bottom-edge fingers (DESIGN.md #1), plus two CATCH HOLES
+        for the bottom drawer's side-wall flexure nubs (mechanism B,
+        iteration 3, issue #20 -- DESIGN.md "Retention"). Visible from the
+        box underside when empty (cosmetic, accepted per that section).
+
+        The plain zone exists because the catch holes need real margin at
+        the drawer's worst-case lateral extreme, where the nub's own
+        footprint already reaches exactly to the bay wall's interior face
+        -- without it, the hole clips 1-2 of this edge's own finger teeth
+        (verified by rendering) instead of missing them cleanly. See
+        CATCH_HOLE_X_PLAIN_LO/HI in config.py."""
+
+        # Edge index travel (same as _build_top_panel's own note): bottom
+        # (index0) runs local x 0->max, top (index2) runs back max->0, so
+        # the compound segment order flips for index2 -- otherwise its
+        # plain zone lands mirrored to the wrong X range (caught by
+        # test_shelf_teeth_align_with_wall_shelf_rows's drawer-adjacent
+        # analog on this panel during this fix).
+        plain_lo = CATCH_HOLE_X_PLAIN_LO - T
+        plain_hi = CATCH_HOLE_X_PLAIN_HI - T
+        seg1, seg2, seg3 = plain_lo, plain_hi - plain_lo, INTERIOR_LENGTH - plain_hi
+        side_edge_left = edges.CompoundEdge(self, ["f", "e", "f"], [seg1, seg2, seg3])
+        side_edge_right = edges.CompoundEdge(self, ["f", "e", "f"], [seg3, seg2, seg1])
 
         def callback() -> None:
             self.fingerHolesAt(DIVIDER_MID_LOCAL_X, 0, INTERIOR_WIDTH, angle=90)
+            catch_x = CATCH_HOLE_X - T
+            for catch_y in (CATCH_HOLE_LEFT_Y - T, CATCH_HOLE_RIGHT_Y - T):
+                self.rectangularHole(catch_x, catch_y, CATCH_HOLE_X_LENGTH, CATCH_HOLE_Y_WIDTH, r=0)
 
         self.rectangularWall(
-            INTERIOR_LENGTH, INTERIOR_WIDTH, "ffff",
+            INTERIOR_LENGTH, INTERIOR_WIDTH,
+            [side_edge_left, self.edges["f"], side_edge_right, self.edges["f"]],
             callback=[callback, None, None, None],
             move="right", label="Bottom",
         )
@@ -244,8 +278,20 @@ class OuterShell(Boxes):
             right_edge = front_edge_bottom_to_top
 
         def callback() -> None:
-            # Bottom-panel finger-hole line (straight edge, hole line only).
-            self.fingerHolesAt(0, T / 2, INTERIOR_LENGTH, angle=0)
+            # Bottom-panel finger-hole line (straight edge, hole line only),
+            # split around the catch-hole plain zone (mechanism B, iteration
+            # 3, issue #20) so this row doesn't carry holes with no tab to
+            # plug them, matching the Bottom panel's own CompoundEdge plain
+            # zone there (see shell_generator._build_bottom). Local x = box
+            # X - T when unmirrored; the plain zone's two X bounds are each
+            # individually mirror_point'd (then reordered) for the left
+            # wall, same convention as the divider/lid-slot single points.
+            plain_lo = CATCH_HOLE_X_PLAIN_LO - T
+            plain_hi = CATCH_HOLE_X_PLAIN_HI - T
+            if mirror:
+                plain_lo, plain_hi = mirror_point(plain_hi), mirror_point(plain_lo)
+            self.fingerHolesAt(0, T / 2, plain_lo, angle=0)
+            self.fingerHolesAt(plain_hi, T / 2, INTERIOR_LENGTH - plain_hi, angle=0)
 
             # Lid through-slot: closed hole whose front boundary coincides
             # with the blank's front edge -- both lines get cut, opening the
@@ -261,6 +307,7 @@ class OuterShell(Boxes):
             points = lid_slot_with_nub_points(
                 u0=0, u1=slot_length, z0=LID_SLOT_BOTTOM, z1=LID_SLOT_TOP,
                 nub_center=u_nub, nub_top_z=LID_DETENT_NUB_TOP_Z,
+                burn=self.burn,
             )
             if mirror:
                 points = [(mirror_point(u), z) for u, z in points]
@@ -290,11 +337,26 @@ class OuterShell(Boxes):
                 divider_x = mirror_point(divider_x)
             self.fingerHolesAt(divider_x, FLOOR_TOP, DIVIDER_HEIGHT, angle=90)
 
-            # Shelf finger-hole line (horizontal).
+            # Shelf finger-hole line (horizontal), split around the catch-
+            # hole plain zone (mechanism B, iteration 3, issue #20) to
+            # match the Shelf's own CompoundEdge plain zone there (see
+            # shell_generator._build_shelf). Row-relative coordinates (0 at
+            # shelf_x0): unmirrored, row-relative-x runs the same direction
+            # as box X (offset by BAY_X0), so the zone is simply the plain
+            # bounds shifted by BAY_X0; mirrored, row-relative-x runs
+            # OPPOSITE box X (row-relative 0 = box X BAY_X1, per the
+            # mirror_start convention), so the zone is BAY_X1 minus each
+            # bound, reordered.
             shelf_x0 = BAY_X0 - T
-            if mirror:
+            if not mirror:
+                zone_lo_rel = CATCH_HOLE_X_PLAIN_LO - BAY_X0
+                zone_hi_rel = CATCH_HOLE_X_PLAIN_HI - BAY_X0
+            else:
                 shelf_x0 = mirror_start(shelf_x0, BAY_LENGTH)
-            self.fingerHolesAt(shelf_x0, SHELF_MID_Z, BAY_LENGTH, angle=0)
+                zone_lo_rel = BAY_X1 - CATCH_HOLE_X_PLAIN_HI
+                zone_hi_rel = BAY_X1 - CATCH_HOLE_X_PLAIN_LO
+            self.fingerHolesAt(shelf_x0, SHELF_MID_Z, zone_lo_rel, angle=0)
+            self.fingerHolesAt(shelf_x0 + zone_hi_rel, SHELF_MID_Z, BAY_LENGTH - zone_hi_rel, angle=0)
 
             # Top-panel finger-hole line (horizontal, just below the top
             # edge; panel finger tips end flush with the exterior face).
@@ -366,10 +428,32 @@ class OuterShell(Boxes):
 
     def _build_shelf(self) -> None:
         """Horizontal shelf: BAY_LENGTH (local X = box X - BAY_X0) x
-        INTERIOR_WIDTH (local Y = box Y), side edges into the side walls,
-        front edge into the divider, rear edge plain (DESIGN.md #6)."""
+        INTERIOR_WIDTH (local Y = box Y), side edges into the side walls
+        EXCEPT a short PLAIN zone at the catch holes' own X range (see
+        _build_bottom for why), front edge into the divider, rear edge
+        plain (DESIGN.md #6), plus two CATCH HOLES for the top drawer's
+        side-wall flexure nubs (mechanism B, iteration 3, issue #20 --
+        DESIGN.md "Retention") -- the shelf is this drawer's own "floor",
+        same role the bottom panel plays for the bottom drawer."""
+
+        # Edge index travel: bottom (index0) runs local x 0->max, top
+        # (index2) runs back max->0 (same note as _build_bottom/
+        # _build_top_panel), so index2's compound segment order is reversed.
+        plain_lo = CATCH_HOLE_X_PLAIN_LO - BAY_X0
+        plain_hi = CATCH_HOLE_X_PLAIN_HI - BAY_X0
+        seg1, seg2, seg3 = plain_lo, plain_hi - plain_lo, BAY_LENGTH - plain_hi
+        side_edge_left = edges.CompoundEdge(self, ["f", "e", "f"], [seg1, seg2, seg3])
+        side_edge_right = edges.CompoundEdge(self, ["f", "e", "f"], [seg3, seg2, seg1])
+
+        def callback() -> None:
+            catch_x = CATCH_HOLE_X - BAY_X0
+            for catch_y in (CATCH_HOLE_LEFT_Y - T, CATCH_HOLE_RIGHT_Y - T):
+                self.rectangularHole(catch_x, catch_y, CATCH_HOLE_X_LENGTH, CATCH_HOLE_Y_WIDTH, r=0)
+
         self.rectangularWall(
-            BAY_LENGTH, INTERIOR_WIDTH, ["f", "e", "f", "f"],
+            BAY_LENGTH, INTERIOR_WIDTH,
+            [side_edge_left, self.edges["e"], side_edge_right, self.edges["f"]],
+            callback=[callback, None, None, None],
             move="right", label="Horizontal Shelf",
         )
 

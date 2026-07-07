@@ -11,14 +11,46 @@ lid-slot code in shell_generator.py mirrors `slot_cx`.
 
 Every shape drawn from these points is closed via the caller doing
 `ctx.move_to(*pts[0]); for p in pts[1:]: ctx.line_to(*p); ctx.close_path();
-ctx.stroke()` -- burn-neutral (raw ctx path, no Boxes.py burn compensation),
-matching this project's existing convention for exact/non-rectangular
-features (calibration.py's kerf-test square, shell_generator.py's pixel-font
-engraving). The two interference values these shapes encode
-(LID_DETENT_ENGAGE, DRAWER_DETENT_PROTRUDE) are explicitly meant to be tuned
-against the retention coupon before cutting real parts, so drawing them
-burn-neutral is a deliberate simplification, not an oversight -- see
-DESIGN.md's "Retention (iteration 2)" section.
+ctx.stroke()`.
+
+BURN (FIX3, iteration-3 red-team): unlike the kerf-test square in
+calibration.py (which must stay burn-NEUTRAL by project rule -- it is
+measuring the real kerf, not compensating for it), these detent shapes are
+real interference features and now carry a `burn: float = 0.0` parameter so
+their drawn geometry can be compensated the same way the rest of the box is,
+via a simple, explicit, documented model (not a byte-for-byte replica of
+Boxes.py's own corner()-arc burn mechanism, which only applies at rounded
+corners and is awkward to replicate for arbitrary ramp angles):
+
+- Boxes.py's own `rectangularHole`/`rectangularWall` only apply burn
+  compensation AT CORNERS (each corner's rounding radius is offset by
+  `burn`) -- long straight runs between corners are drawn at literal
+  nominal size, relying on distant corners to absorb the kerf for the whole
+  edge. These hand-drawn shapes have no such distant corner for their one
+  genuinely LOCAL feature (the nub/notch itself), so ONLY that feature
+  moves; the surrounding flat baseline (u0/u1/z0 away from the nub, an
+  edge's rest_level, a notch's edge_level) stays at literal nominal, same
+  as an ordinary Boxes.py straight run.
+- HOLE shapes (`lid_slot_with_nub_points`, `notch_points`): the nub/notch
+  feature -- a local intrusion of material into the hole, or the hole's own
+  depth/width -- moves FURTHER INTO the hole's interior by `burn`, so its
+  AS-CUT size (measured from the uncompensated, literal baseline) matches
+  the nominal design value.
+- OUTER-BOUNDARY protrusions (`edge_nub_detour`, used where a nub sticks out
+  past a part's own nominal edge): only the peak (nub tip) moves FURTHER
+  OUTWARD (away from the flat baseline) by `burn`, so its AS-CUT protrusion
+  past the (literal, uncompensated) baseline matches nominal.
+
+Because the mating feature on the OTHER part (e.g. a drawer nub's own
+catch hole, cut via plain `rectangularHole` in a different generator/file)
+gets its OWN correct (hole-shrinks) compensation independently, the
+AS-CUT interference between the two independently-compensated parts still
+matches the DESIGN (unburned) interference -- which is the actual point of
+FIX3: pre-iteration-3, the nub geometry was burn-neutral while
+`rectangularHole`-based release cuts nearby WERE compensated, so drawn
+interference silently drifted from as-cut interference as BURN changed;
+now every detent feature (nub, notch, release cut, catch hole) tracks BURN
+consistently.
 """
 
 from __future__ import annotations
@@ -61,6 +93,7 @@ def bump_profile(center: float, base_half: float, top_half: float,
 def lid_slot_with_nub_points(
     u0: float, u1: float, z0: float, z1: float,
     nub_center: float, nub_top_z: float,
+    burn: float = 0.0,
 ) -> list[tuple[float, float]]:
     """Closed polygon for the wall's lid-through-slot hole, with a ramped
     nub bump built into its bottom (z0) boundary at `nub_center`.
@@ -71,7 +104,19 @@ def lid_slot_with_nub_points(
     counterclockwise starting bottom-left; caller mirrors every point's u
     coordinate for the mirrored (left) wall, same convention as the existing
     plain-rectangle slot code.
+
+    `burn` (FIX3): matches Boxes.py's own `rectangularHole` model -- long
+    straight runs (u0/u1/z0 away from the nub, z1) are drawn at literal
+    nominal (Boxes.py itself only compensates AT corners, not mid-edge); the
+    nub is the one genuinely LOCAL, isolated feature with no distant corner
+    to absorb kerf for it, so it alone is drawn taller (nub_top_z moves
+    further from z0, into the hole's interior) by `burn`, so its AS-CUT
+    rise above the (uncompensated, literal) floor matches the nominal
+    LID_DETENT_ENGAGE. See module docstring for the full model.
     """
+    z_sign = 1.0 if z1 >= z0 else -1.0
+    nub_top_z = nub_top_z + z_sign * burn
+
     rise = nub_top_z - z0
     half_base = nub_base_width(rise) / 2
     half_top = DETENT_NUB_TOP_WIDTH / 2
@@ -87,16 +132,28 @@ def lid_slot_with_nub_points(
 
 def edge_nub_detour(
     along_lo: float, along_hi: float, rest_level: float, peak_level: float,
+    burn: float = 0.0,
 ) -> list[tuple[float, float]]:
     """The ramped detour a piece's OUTER boundary takes at one edge nub: a
     small run of points to splice into an otherwise-straight edge, going
     rest_level -> peak_level -> rest_level as `along` increases through
-    [along_lo, along_hi]. Returns (along, across) pairs; the faceplate nub
-    (drawer_detent_outline below) is the one caller today.
+    [along_lo, along_hi]. Returns (along, across) pairs; the drawer side
+    wall's flexure nub (generate_drawers.py) is the caller today.
+
+    `burn` (FIX3): `rest_level` is the same flat baseline as the rest of
+    this edge (compensated, if at all, by the part's own distant corners,
+    not locally); the nub's peak is the local, isolated protrusion with no
+    corner to absorb kerf for it, so only `peak_level` moves further
+    outward (away from rest_level) by `burn`, so its AS-CUT protrusion past
+    the (uncompensated, literal) baseline matches nominal. See module
+    docstring for the full model.
     """
-    rise = abs(peak_level - rest_level)
+    rise = peak_level - rest_level
+    sign = 1.0 if rise >= 0 else -1.0
+    peak_level = peak_level + sign * burn
+
     center = (along_lo + along_hi) / 2
-    half_base = nub_base_width(rise) / 2
+    half_base = nub_base_width(abs(peak_level - rest_level)) / 2
     half_top = DETENT_NUB_TOP_WIDTH / 2
     return bump_profile(center, half_base, half_top, rest_level, peak_level)
 
@@ -148,6 +205,7 @@ def release_cut_rects(
 def notch_points(
     center: float, width: float, depth: float, chamfer: float,
     edge_level: float, inward_sign: float,
+    burn: float = 0.0,
 ) -> list[tuple[float, float]]:
     """Closed polygon for an edge-open notch (used for the lid's mating
     notch): a recess cut INTO a straight edge at `edge_level`, `width` wide
@@ -162,9 +220,16 @@ def notch_points(
     this polygon so its along-edge_level boundary coincides with the part's
     own outer edge, exactly like the existing lid-slot-mouth precedent in
     shell_generator.py -- the laser cuts both lines and the notch opens).
+
+    `burn` (FIX3): `edge_level` is the notch's own mouth, coincident with
+    the lid's true outer edge (compensated, if at all, by the lid's own
+    "eeee" edges elsewhere, not here); the notch's width and depth are the
+    real hole dimensions, so both shrink toward edge_level by `burn` (the
+    same direction Boxes.py's `rectangularHole` shrinks a plain hole), so
+    the AS-CUT notch matches nominal width/depth exactly.
     """
-    half = width / 2
-    floor = edge_level + inward_sign * depth
+    half = width / 2 - burn
+    floor = edge_level + inward_sign * (depth - burn)
     chamfer_floor = edge_level + inward_sign * chamfer
     return [
         (center - half, edge_level),

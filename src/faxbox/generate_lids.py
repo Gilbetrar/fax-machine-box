@@ -73,11 +73,13 @@ class LidGenerator(Boxes):
             bottom_edge = notch_points(
                 center=LID_NOTCH_X, width=LID_NOTCH_WIDTH, depth=LID_NOTCH_DEPTH,
                 chamfer=LID_NOTCH_CHAMFER, edge_level=0.0, inward_sign=1.0,
+                burn=self.burn,
             )
             self._draw_closed_polygon(bottom_edge)
             top_edge = notch_points(
                 center=LID_NOTCH_X, width=LID_NOTCH_WIDTH, depth=LID_NOTCH_DEPTH,
                 chamfer=LID_NOTCH_CHAMFER, edge_level=width, inward_sign=-1.0,
+                burn=self.burn,
             )
             self._draw_closed_polygon(top_edge)
 
