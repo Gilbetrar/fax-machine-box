@@ -3,6 +3,7 @@
 Tests import faxbox.config directly; DESIGN.md is the geometry authority.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,26 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC_DIR = str(REPO_ROOT / "src")
+
+# Force THIS repo's src/ onto every subprocess's import path (issue #20
+# iteration-3 red-team FIX4): faxbox is normally installed editable
+# (`pip install -e .`), which points at wherever the venv was created, not
+# necessarily this checkout. In a git WORKTREE (a second checkout of the
+# same repo on a different branch/path), that editable install still
+# resolves to the ORIGINAL checkout's src/ -- meaning `python -m
+# faxbox.<generator>` subprocess calls (here AND in test_layout.py /
+# test_retention.py's own regeneration fixtures) would silently regenerate
+# SVGs from the WRONG tree's code, and every test in the suite would then
+# measure geometry the diff under review never touched.
+#
+# Mutating os.environ directly (rather than building a local env dict some
+# call sites would have to remember to pass) makes this a session-wide fix:
+# every `subprocess.run(...)` anywhere in this test session that does NOT
+# pass its own `env=` (which is all of them, in this suite) inherits
+# os.environ by default, so THIS checkout's src/ takes precedence
+# everywhere, not just in the fixture below.
+os.environ["PYTHONPATH"] = SRC_DIR + os.pathsep + os.environ.get("PYTHONPATH", "")
 
 # The three generator entry points (issue #16 verification procedure). Run in
 # this order via `sys.executable -m <module>` -- same as a human would from

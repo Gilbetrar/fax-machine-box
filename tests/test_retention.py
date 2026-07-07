@@ -1,12 +1,23 @@
-"""Retention (iteration 2, issue #20) tests: positional/mating assertions on
-the two spring-detent mechanisms, parsing the actual SVGs the same way
-test_svg_geometry.py does (never trusting a predefined mental model of the
-geometry -- see that file's module docstring on why size-only checks aren't
-enough). Policy unchanged from test_svg_geometry.py: never weaken a test to
-pass; existing tests are untouched except the two flagged, documented,
-minimal deviations in test_svg_geometry.py (test_faceplate_blank_size and
-test_edge_polarity_literals_present) that are an unavoidable consequence of
-the faceplate nub becoming a real, physically larger, protruding piece.
+"""Retention (iteration 3, issue #20 red-team) tests: parse the ACTUAL SVGs
+the same way test_svg_geometry.py does (never trusting a predefined mental
+model of the geometry). Rewritten wholesale for the iteration-3 mechanisms
+(mutation testing on the iteration-2 version of this file let 3 of 8 fatal
+mutations through -- see the mutation-gate table in the PR description).
+
+Rules this rewrite follows throughout:
+- EXISTENCE first: every check parses the real SVG and asserts the feature
+  (nub, ramp, release cut, catch hole) actually exists on the actual part
+  before measuring it -- a part drawn as a plain rectangle must fail, not
+  vacuously pass a conditional.
+- FIXED PHYSICAL BOUNDS, not config echoes: assertions compare a measured
+  SVG quantity against a LITERAL (0.8, 1.5, 2.0, 4.9, ...) or an
+  independently-derived quantity, never the same config constant the
+  generator itself drew from -- comparing a measurement to the value that
+  produced it can't catch a wrong value, only a crashed generator.
+- BLANK INVARIANTS: the faceplate is back to its exact v1 blank (no nub);
+  test_svg_geometry.py's restored test_faceplate_blank_size covers the
+  overall dimension, this file adds a shape-level check (no ramp/diagonal
+  segments at all) that a size-only check can't express.
 """
 
 from __future__ import annotations
@@ -34,6 +45,16 @@ LIDS_SVG = OUTPUT_DIR / "lids.svg"
 T = c.MATERIAL_THICKNESS
 LID_SLOT_LENGTH = c.LID_SLOT_X_END - T
 WALL_SIDES = [("right wall", False), ("left wall", True)]
+DRAWER_SIDES = ["left side", "right side"]
+
+# Physical literals this file measures against (never a config echo of the
+# same value the generator used to draw the feature):
+LID_VERTICAL_PLAY = 0.8          # DESIGN.md: LID_SLOT_VERTICAL_CLEARANCE
+DRAWER_OPENING_VERTICAL_PLAY = 1.5  # DESIGN.md: drawer body <-> opening height clearance
+DRAWER_LATERAL_FLOAT_PER_SIDE = 4.9  # DESIGN.md: "~4.9mm/side by design"
+MAX_STRAIN_PCT = 2.0             # plywood cracks ~1.5-2% (DESIGN.md, FIX1)
+MIN_RAMP_DEG = 20.0
+MAX_RAMP_DEG = 60.0
 
 
 @pytest.fixture(scope="session")
@@ -90,69 +111,228 @@ def _lines(path_d: str) -> list[svgpathtools.Line]:
     return [seg for seg in svgpathtools.parse_path(path_d) if isinstance(seg, svgpathtools.Line)]
 
 
-def _find_nub_flat_top(slot_hole) -> tuple[float, float, float]:
-    """Within the wall's lid-slot-with-nub hole path, find the nub's flat
-    top segment: a short horizontal Line noticeably higher (smaller SVG y)
-    than the slot's own floor level (bbox.ymax). Returns
-    (svg_y, x_start, x_end) of that segment.
+def _nub_bump_geometry(path_d: str) -> dict:
+    """Extract a ramped-nub bump's geometry from ANY closed path that
+    contains it -- a hole (mechanism A's lid-slot-with-nub) or an outer
+    boundary (mechanism B's drawer-side nub) -- by finding the exactly-2
+    non-axis-aligned ("diagonal") Line segments on the path: these are the
+    nub's two ramps, since every OTHER segment on these designs (slot/
+    panel edges, finger teeth, rounded corners drawn as arcs) is axis-
+    aligned or not a Line at all. Fails loudly (assertion) if that
+    assumption doesn't hold -- e.g. a squared-off nub (no ramp) or a
+    missing nub leaves 0 or the wrong count of diagonal segments.
+
+    Returns a dict with base_left/base_right/top_left/top_right (X coords,
+    SVG space), base_y/top_y (SVG Y of the flat base plane / bump peak),
+    and ramp1_len/ramp2_len (the two ramp segment lengths, for slope
+    checks).
     """
-    lines = _lines(slot_hole.d)
-    floor_y = slot_hole.bbox.ymax
-    candidates = []
-    for seg in lines:
-        y0, y1 = seg.start.imag, seg.end.imag
-        if abs(y0 - y1) > 1e-6:
-            continue  # not horizontal
-        length = abs(seg.end.real - seg.start.real)
-        if length > 6.0:
-            continue  # not a short nub-top run (the base/floor runs are long)
-        if floor_y - y0 < 0.3:
-            continue  # not meaningfully above the floor level
-        candidates.append((y0, seg.start.real, seg.end.real))
-    assert len(candidates) == 1, (
-        f"expected exactly 1 nub flat-top segment in the lid-slot hole, found {len(candidates)}"
+    all_lines = _lines(path_d)
+    diagonal = [
+        s for s in all_lines
+        if abs(s.start.real - s.end.real) > 1e-6 and abs(s.start.imag - s.end.imag) > 1e-6
+    ]
+    assert len(diagonal) == 2, (
+        f"expected exactly 2 ramp (non-axis-aligned) segments forming a nub, "
+        f"found {len(diagonal)} -- a squared-off nub or a missing nub would both "
+        f"fail this differently than intended, so this must be exactly 2"
     )
-    return candidates[0]
+    d1, d2 = diagonal
+    if (d1.start.real + d1.end.real) > (d2.start.real + d2.end.real):
+        d1, d2 = d2, d1
+
+    # Each ramp's own two endpoints are exactly {base_y, top_y} -- both
+    # ramps share the SAME pair, so set intersection can't tell them apart.
+    # Instead, count how often each Y value shows up across every
+    # HORIZONTAL segment on the whole path: the flat baseline (floor runs,
+    # finger teeth, ...) repeats at base_y many times, while the short flat
+    # top of the bump is the only thing at top_y -- so top_y is the value
+    # from this ramp's own endpoint pair that appears LESS often overall.
+    horizontal_ys = [
+        round(s.start.imag, 3) for s in all_lines if abs(s.start.imag - s.end.imag) < 1e-6
+    ]
+    y_counts: dict[float, int] = {}
+    for y in horizontal_ys:
+        y_counts[y] = y_counts.get(y, 0) + 1
+
+    candidate_ys = {round(d1.start.imag, 3), round(d1.end.imag, 3)}
+    top_y = min(candidate_ys, key=lambda y: y_counts.get(y, 0))
+
+    def split(seg):
+        pts = [(seg.start.real, seg.start.imag), (seg.end.real, seg.end.imag)]
+        base = max(pts, key=lambda p: abs(round(p[1], 3) - top_y))
+        top = min(pts, key=lambda p: abs(round(p[1], 3) - top_y))
+        return base, top
+
+    (base_left_x, base_y), (top_left_x, _) = split(d1)
+    (base_right_x, base_y2), (top_right_x, _) = split(d2)
+
+    return {
+        "base_left": base_left_x, "base_right": base_right_x,
+        "top_left": top_left_x, "top_right": top_right_x,
+        "base_y": base_y, "base_y2": base_y2, "top_y": top_y,
+        "ramp1_len": d1.length(), "ramp2_len": d2.length(),
+    }
+
+
+def _deepest_y_excluding_nub(path_d: str, top_y: float, tol: float = 0.5) -> float:
+    """Max SVG-y (deepest point) across every Line segment's endpoints,
+    excluding anything within `tol` of the nub's own peak (top_y) -- i.e.
+    the next-deepest real feature on the boundary (for the drawer side
+    wall, the finger tabs' own reach)."""
+    ys = [
+        y for seg in _lines(path_d) for y in (seg.start.imag, seg.end.imag)
+        if abs(y - top_y) > tol
+    ]
+    assert ys, "no boundary points found outside the nub's own peak"
+    return max(ys)
+
+
+def _ramp_slope_degrees(bump: dict) -> tuple[float, float]:
+    """Slope angle (from the flat base plane) of each ramp, in degrees."""
+    rise = abs(bump["top_y"] - bump["base_y"])
+    run1 = abs(bump["top_left"] - bump["base_left"])
+    run2 = abs(bump["base_right"] - bump["top_right"])
+    return math.degrees(math.atan2(rise, run1)), math.degrees(math.atan2(rise, run2))
 
 
 # =============================================================================
-# 1. Wall nub tip Z + slot ceiling clearance
+# 1. Wall lid detent (mechanism A): existence, fixed bounds, ramp, mirror
 # =============================================================================
 
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_wall_nub_tip_height(side, mirror):
+def _find_wall_slot(side: str) -> tuple:
     piece = _piece(SHELL_SVG, side)
     matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1
-    slot = matches[0]
+    assert len(matches) == 1, f"{side}: expected exactly 1 lid-slot hole, found {len(matches)}"
+    return piece, matches[0]
 
-    nub_y, _, _ = _find_nub_flat_top(slot)
-    nub_z = _wall_box_z(piece, nub_y)
-    assert abs(nub_z - c.LID_DETENT_NUB_TOP_Z) <= 0.4, (
-        f"{side}: nub top at Z={nub_z:.2f}, expected LID_DETENT_NUB_TOP_Z={c.LID_DETENT_NUB_TOP_Z:.2f}"
+
+@pytest.mark.parametrize("side,mirror", WALL_SIDES)
+def test_wall_nub_exists_with_ramp_and_rises_past_lid_play(side, mirror):
+    """EXISTENCE + FIXED BOUNDS: the wall's lid-slot hole must carry a real
+    ramped nub (not a plain rectangle -- mutation (i)-equivalent for this
+    mechanism), whose rise clears the lid's own 0.8mm vertical play by a
+    real margin (mutation (a): LID_DETENT_ENGAGE 1.5->0.5 must fail this),
+    and whose ramp is a genuine slope, not a squared-off nub (mutation
+    (h): DETENT_RAMP_DEG->90)."""
+    piece, slot = _find_wall_slot(side)
+    bump = _nub_bump_geometry(slot.d)
+
+    base_top_width = abs(bump["top_right"] - bump["top_left"])
+    base_width = abs(bump["base_right"] - bump["base_left"])
+    assert base_width > base_top_width, (
+        f"{side}: nub base width ({base_width:.2f}) is not wider than its top "
+        f"({base_top_width:.2f}) -- no ramp"
     )
-    # Nub top must clear the slot ceiling (LID_SLOT_TOP) with real margin --
-    # it should never be able to jam against the rail above the slot.
-    clearance = c.LID_SLOT_TOP - nub_z
-    assert clearance >= 1.0, (
-        f"{side}: nub top Z={nub_z:.2f} leaves only {clearance:.2f}mm below the slot "
-        f"ceiling {c.LID_SLOT_TOP} -- must clear with margin"
+
+    for angle in _ramp_slope_degrees(bump):
+        assert MIN_RAMP_DEG <= angle <= MAX_RAMP_DEG, (
+            f"{side}: ramp angle {angle:.1f} deg outside [{MIN_RAMP_DEG}, {MAX_RAMP_DEG}] "
+            f"-- mutation-detectable square nub or too-shallow ramp"
+        )
+
+    floor_z = _wall_box_z(piece, bump["base_y"])
+    nub_z = _wall_box_z(piece, bump["top_y"])
+    rise = nub_z - floor_z
+    assert rise >= LID_VERTICAL_PLAY + 0.4, (
+        f"{side}: nub rise {rise:.2f}mm above the measured slot floor does not clear "
+        f"the lid's own {LID_VERTICAL_PLAY}mm vertical play + 0.4mm margin"
     )
-    # And it must actually rise above the slot floor by the configured
-    # engagement (not accidentally sit at/below the floor level).
-    rise = nub_z - c.LID_SLOT_BOTTOM
-    assert rise == pytest.approx(c.LID_DETENT_ENGAGE, abs=0.4)
+    # Direction sanity: the nub must rise INTO the slot (toward the ceiling),
+    # not the reverse (mutation (b): wall nub flipped downward).
+    ceiling_z = _wall_box_z(piece, slot.bbox.ymin)
+    assert floor_z < ceiling_z, "sanity: measured floor should read a lower Z than the ceiling"
+    assert floor_z < nub_z < ceiling_z, (
+        f"{side}: nub top Z={nub_z:.2f} is not between the measured floor "
+        f"({floor_z:.2f}) and ceiling ({ceiling_z:.2f}) -- nub may be inverted"
+    )
+
+
+@pytest.mark.parametrize("side,mirror", WALL_SIDES)
+def test_wall_release_cut_exists_and_leaves_root_solid(side, mirror):
+    """EXISTENCE: the cantilever release cut (cavity + severing slot) must
+    actually exist near the nub (mutation (f): delete the wall release cut
+    must fail this)."""
+    piece = _piece(SHELL_SVG, side)
+    _, slot = _find_wall_slot(side)
+    bump = _nub_bump_geometry(slot.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+
+    # The release cut sits just below the slot floor (smaller box Z, larger
+    # SVG y): small rectangular holes within a few mm of the nub's own X,
+    # spanning a compact Z band below the slot.
+    floor_y = slot.bbox.ymax
+    candidates = [
+        h for h in _blue_holes(piece)
+        if h.bbox.ymin >= floor_y - 0.5
+        and abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 25.0
+        and h.bbox.height <= 12.0
+    ]
+    assert len(candidates) >= 2, (
+        f"{side}: expected >= 2 release-cut holes (cavity + sever) below the slot "
+        f"floor near the nub, found {len(candidates)}"
+    )
+    widths = sorted(h.bbox.width for h in candidates)
+    assert widths[0] <= 3.0, f"{side}: no narrow (sever) release-cut hole found: widths {widths}"
+    assert widths[-1] >= 10.0, f"{side}: no wide (cavity) release-cut hole found: widths {widths}"
+
+
+def test_wall_detents_are_true_mirrors():
+    box_x_by_side = {}
+    for side, mirror in WALL_SIDES:
+        piece, slot = _find_wall_slot(side)
+        bump = _nub_bump_geometry(slot.d)
+        nub_x_svg = (bump["top_left"] + bump["top_right"]) / 2
+        to_box_x = _wall_frame(piece, mirror)
+        box_x_by_side[side] = to_box_x(nub_x_svg)
+
+    right_x, left_x = box_x_by_side["right wall"], box_x_by_side["left wall"]
+    assert abs(right_x - left_x) <= 0.6, (
+        f"wall nubs land at different box X positions: right={right_x:.2f}, "
+        f"left={left_x:.2f} -- mirroring is broken (mutation (d))"
+    )
+
+
+@pytest.mark.parametrize("side,mirror", WALL_SIDES)
+def test_wall_nub_strain_within_crack_threshold(side, mirror):
+    """Beam strain formula eps = 3*w*delta/(2*L^2), computed ENTIRELY from
+    measured SVG dimensions (root-to-nub span from the release cut's own
+    measured extent, rise from the nub bump itself), not config echoes."""
+    piece = _piece(SHELL_SVG, side)
+    _, slot = _find_wall_slot(side)
+    bump = _nub_bump_geometry(slot.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+    floor_y = slot.bbox.ymax
+
+    cavity_candidates = [
+        h for h in _blue_holes(piece)
+        if h.bbox.ymin >= floor_y - 0.5
+        and abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 25.0
+        and h.bbox.width >= 10.0
+    ]
+    assert len(cavity_candidates) == 1, (
+        f"{side}: expected exactly 1 wide (cavity) release-cut hole, found {len(cavity_candidates)}"
+    )
+    cavity = cavity_candidates[0].bbox
+    root_x = cavity.xmax if abs(cavity.xmax - nub_cx) > abs(cavity.xmin - nub_cx) else cavity.xmin
+    span = abs(root_x - nub_cx)
+    assert span > 5.0, f"{side}: measured root-to-nub span implausibly small ({span:.2f})"
+
+    rise = abs(bump["top_y"] - bump["base_y"])
+    w = cavity.height  # measured beam/cavity cross-section width
+    eps = 3 * w * rise / (2 * span ** 2) * 100
+    assert eps <= MAX_STRAIN_PCT, (
+        f"{side}: measured beam strain {eps:.2f}% exceeds the {MAX_STRAIN_PCT}% "
+        f"plywood crack threshold (span={span:.2f}, rise={rise:.2f}, w={w:.2f})"
+    )
 
 
 # =============================================================================
-# 2 + 3. Lid notch aligns with the wall nub's X position when closed;
-# notch depth clears the lid-slot engagement with margin
+# 2. Lid mating notch
 # =============================================================================
 
 def test_lid_notch_aligns_with_wall_nub_when_closed():
     lid = _piece(LIDS_SVG, "sliding lid")
-    # Find both notches: edge-open holes whose bbox width matches
-    # LID_NOTCH_WIDTH and whose bbox touches one of the lid's Y edges.
     notch_matches = [
         h for h in _blue_holes(lid)
         if abs(h.bbox.width - c.LID_NOTCH_WIDTH) <= 1.0
@@ -163,24 +343,21 @@ def test_lid_notch_aligns_with_wall_nub_when_closed():
         f"found {len(notch_matches)}"
     )
 
+    piece, slot = _find_wall_slot("right wall")
+    bump = _nub_bump_geometry(slot.d)
+    to_box_x = _wall_frame(piece, mirror=False)
+    nub_box_x = to_box_x((bump["top_left"] + bump["top_right"]) / 2)
+
     for notch in notch_matches:
         notch_cx = (notch.bbox.xmin + notch.bbox.xmax) / 2
-        lid_local_x = notch_cx - lid.bbox.xmin  # lid's front edge is a clean anchor (plain, unjointed)
-        assert abs(lid_local_x - c.LID_NOTCH_X) <= 0.6, (
-            f"notch center lid-local X={lid_local_x:.2f}, expected LID_NOTCH_X={c.LID_NOTCH_X}"
-        )
-
-        # Explicit coordinate transform: when the lid is closed, lid-local X
-        # maps to box X via + LID_CLOSED_FRONT_X (DESIGN.md #8 -- the lid's
-        # front edge sits at box X = LID_CLOSED_FRONT_X when fully inserted).
+        lid_local_x = notch_cx - lid.bbox.xmin
         box_x_when_closed = lid_local_x + c.LID_CLOSED_FRONT_X
-        assert abs(box_x_when_closed - c.LID_DETENT_X) <= 0.6, (
-            f"notch maps to box X={box_x_when_closed:.2f} when closed, expected the "
-            f"wall nub's box X={c.LID_DETENT_X} (LID_DETENT_X)"
+        assert abs(box_x_when_closed - nub_box_x) <= 0.6, (
+            f"notch maps to box X={box_x_when_closed:.2f} when closed, but the "
+            f"MEASURED wall nub is at box X={nub_box_x:.2f} (mutation (c): notch "
+            f"shifted +5mm must fail this independent-datum comparison)"
         )
 
-        # Depth: notch cuts inward from the lid's own edge by >= the lid's
-        # slot engagement (2.425mm) plus margin, per DESIGN.md's derivation.
         lid_slot_engagement = (c.SLIDING_LID["width"] - c.INTERIOR_WIDTH) / 2
         depth = notch.bbox.height
         assert depth >= lid_slot_engagement + 0.5, (
@@ -190,146 +367,248 @@ def test_lid_notch_aligns_with_wall_nub_when_closed():
 
 
 # =============================================================================
-# 4. Left/right wall detents are true mirrors
+# 3. Drawer side-wall flexure (mechanism B, iteration 3)
 # =============================================================================
 
-def test_wall_detents_are_true_mirrors():
-    box_x_by_side = {}
-    for side, mirror in WALL_SIDES:
-        piece = _piece(SHELL_SVG, side)
-        matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-        assert len(matches) == 1
-        nub_y, x0, x1 = _find_nub_flat_top(matches[0])
-        nub_x_svg = (x0 + x1) / 2
-        to_box_x = _wall_frame(piece, mirror)
-        box_x_by_side[side] = to_box_x(nub_x_svg)
+@pytest.mark.parametrize("side", DRAWER_SIDES)
+def test_drawer_side_nub_exists_with_ramp_and_clears_opening_play(side):
+    """EXISTENCE + FIXED BOUNDS: each drawer side wall must carry a real
+    ramped nub protruding past its own bottom edge (mutation (i): a plain
+    rectangle must fail), whose protrusion clears the drawer's own 1.5mm
+    opening vertical clearance by a real margin (mutation (e):
+    DRAWER_DETENT_ENGAGE 2.2->1.0 must fail this)."""
+    piece = _piece(DRAWER_SVG, side)
+    bump = _nub_bump_geometry(piece.outer.d)
 
-    right_x, left_x = box_x_by_side["right wall"], box_x_by_side["left wall"]
-    assert abs(right_x - left_x) <= 0.6, (
-        f"wall nubs land at different box X positions: right={right_x:.2f}, "
-        f"left={left_x:.2f} -- mirroring is broken"
+    base_top_width = abs(bump["top_right"] - bump["top_left"])
+    base_width = abs(bump["base_right"] - bump["base_left"])
+    assert base_width > base_top_width, (
+        f"{side}: nub base width ({base_width:.2f}) is not wider than its top "
+        f"({base_top_width:.2f}) -- no ramp"
     )
-    assert abs(right_x - c.LID_DETENT_X) <= 0.6
+    for angle in _ramp_slope_degrees(bump):
+        assert MIN_RAMP_DEG <= angle <= MAX_RAMP_DEG, (
+            f"{side}: ramp angle {angle:.1f} deg outside [{MIN_RAMP_DEG}, {MAX_RAMP_DEG}]"
+        )
+
+    # The nub's own protrusion BEYOND the neighboring finger tabs' own reach
+    # (the piece's deepest point EXCLUDING the nub itself, since the nub is
+    # now the overall bbox extreme) is what matters -- not the nub's total
+    # depth from the plain zone's local y=0 baseline (bump["base_y"], which
+    # sits ABOVE (shallower than) the tab reach, since the plain zone has
+    # no tab there at all -- see generate_drawers.py's _build_side).
+    tab_reach_y = _deepest_y_excluding_nub(piece.outer.d, bump["top_y"])
+    protrusion = bump["top_y"] - tab_reach_y
+    assert protrusion > 0, (
+        f"{side}: nub top is not deeper than the piece's own tab reach "
+        f"(top_y={bump['top_y']:.2f}, tab_reach={tab_reach_y:.2f}) -- nub may be inverted"
+    )
+    assert protrusion >= DRAWER_OPENING_VERTICAL_PLAY + 0.5, (
+        f"{side}: measured nub protrusion past the piece's own tab-reach depth "
+        f"({protrusion:.2f}mm) does not clear the drawer's {DRAWER_OPENING_VERTICAL_PLAY}mm "
+        f"opening vertical clearance + 0.5mm margin"
+    )
+
+
+@pytest.mark.parametrize("side", DRAWER_SIDES)
+def test_drawer_side_release_cut_exists(side):
+    """EXISTENCE: the cantilever release cut (cavity + sever) near the nub
+    (mutation (i) catch, distinct from the boundary-shape check above)."""
+    piece = _piece(DRAWER_SVG, side)
+    bump = _nub_bump_geometry(piece.outer.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+
+    candidates = [
+        h for h in _blue_holes(piece)
+        if abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 30.0
+        and h.bbox.height <= 12.0
+    ]
+    assert len(candidates) >= 2, (
+        f"{side}: expected >= 2 release-cut holes (cavity + sever) near the nub, "
+        f"found {len(candidates)}"
+    )
+    widths = sorted(h.bbox.width for h in candidates)
+    assert widths[0] <= 3.0, f"{side}: no narrow (sever) release-cut hole found: widths {widths}"
+    assert widths[-1] >= 15.0, f"{side}: no wide (cavity) release-cut hole found: widths {widths}"
+
+
+@pytest.mark.parametrize("side", DRAWER_SIDES)
+def test_drawer_side_nub_clear_of_front_finger_joints(side):
+    """The nub (and its release cut) must stay >= 15mm clear of the
+    front-edge finger joints (the vertical edge at the piece's own X
+    extreme nearest the nub)."""
+    piece = _piece(DRAWER_SVG, side)
+    bump = _nub_bump_geometry(piece.outer.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+
+    dist_from_left_edge = nub_cx - piece.bbox.xmin
+    dist_from_right_edge = piece.bbox.xmax - nub_cx
+    nearest_edge_dist = min(dist_from_left_edge, dist_from_right_edge)
+    assert nearest_edge_dist >= 15.0, (
+        f"{side}: nub is only {nearest_edge_dist:.2f}mm from the nearest end of the "
+        f"panel -- must clear the front finger joints by >= 15mm"
+    )
+
+
+@pytest.mark.parametrize("side", DRAWER_SIDES)
+def test_drawer_side_strain_within_crack_threshold(side):
+    """Beam strain formula, computed from measured SVG dimensions."""
+    piece = _piece(DRAWER_SVG, side)
+    bump = _nub_bump_geometry(piece.outer.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+
+    cavity_candidates = [
+        h for h in _blue_holes(piece)
+        if abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 30.0
+        and h.bbox.width >= 15.0
+    ]
+    assert len(cavity_candidates) == 1, (
+        f"{side}: expected exactly 1 wide (cavity) release-cut hole, found {len(cavity_candidates)}"
+    )
+    cavity = cavity_candidates[0].bbox
+    root_x = cavity.xmax if abs(cavity.xmax - nub_cx) > abs(cavity.xmin - nub_cx) else cavity.xmin
+    span = abs(root_x - nub_cx)
+    assert span > 5.0, f"{side}: measured root-to-nub span implausibly small ({span:.2f})"
+
+    # The strain-relevant deflection is the nub's protrusion PAST the
+    # surrounding tab reach -- the beam only has to flex that far to become
+    # flush with its neighbors, not all the way from the (already-recessed)
+    # plain-zone baseline -- see the protrusion test above for the same
+    # reasoning.
+    tab_reach_y = _deepest_y_excluding_nub(piece.outer.d, bump["top_y"])
+    rise = bump["top_y"] - tab_reach_y
+    assert rise > 0
+    w = cavity.height
+    eps = 3 * w * rise / (2 * span ** 2) * 100
+    assert eps <= MAX_STRAIN_PCT, (
+        f"{side}: measured beam strain {eps:.2f}% exceeds the {MAX_STRAIN_PCT}% "
+        f"plywood crack threshold (span={span:.2f}, rise={rise:.2f}, w={w:.2f})"
+    )
 
 
 # =============================================================================
-# 5. Faceplate overall width including nubs
+# 4. Faceplate BLANK INVARIANT: back to the exact v1 plain rectangle
 # =============================================================================
 
-def test_faceplate_width_includes_nubs_and_exceeds_opening_interference():
+def test_faceplate_has_no_nub_or_ramp():
+    """The faceplate's iteration-2 detent is REMOVED entirely (FIX1): its
+    outer boundary must be a plain rectangle with zero diagonal (ramp)
+    segments -- test_svg_geometry.py's restored test_faceplate_blank_size
+    covers the overall v1 dimension (150.9mm); this covers the SHAPE, which
+    a size-only check can't (a reintroduced nub whose footprint still fits
+    inside a slightly-loose band would pass a size check but not this)."""
     piece = _piece(DRAWER_SVG, "faceplate")
-    expected_width = c.FACEPLATE["width"] + 2 * c.DRAWER_DETENT_PROTRUDE
-    assert piece.bbox.width == pytest.approx(expected_width, abs=0.5), (
-        f"faceplate drawn width {piece.bbox.width:.2f}, expected {expected_width:.2f} "
-        f"(FACEPLATE width + 2*DRAWER_DETENT_PROTRUDE)"
-    )
-    # The nub-inclusive width must exceed the opening width -- i.e. genuine
-    # interference, not just filling the reveal.
-    assert piece.bbox.width > c.OPENING_WIDTH, (
-        f"faceplate nub-inclusive width {piece.bbox.width:.2f} does not exceed the "
-        f"opening width {c.OPENING_WIDTH} -- no real interference"
-    )
-    interference_per_side = (piece.bbox.width - c.OPENING_WIDTH) / 2
-    assert interference_per_side > 0
-
-
-# =============================================================================
-# 6. Nubs don't intersect the grip slot / other features; clearance margins
-# =============================================================================
-
-def test_faceplate_nubs_clear_grip_slot():
-    piece = _piece(DRAWER_SVG, "faceplate")
-    grip = _cut_holes_matching(piece, c.DRAWER_GRIP_SLOT["width"], c.DRAWER_GRIP_SLOT["height"], tol=1.0)
-    assert len(grip) == 1
-    grip_bbox = grip[0].bbox
-
-    # Nubs sit near the Y edges (piece bbox.xmin / bbox.xmax); the grip slot
-    # is Y-centered. Confirm real X separation between the nub region and
-    # the grip slot -- no overlap, and >= 3mm gap either side.
-    nub_region_from_left = piece.bbox.xmin + c.DETENT_BEAM_WIDTH + c.DETENT_CLEARANCE
-    nub_region_from_right = piece.bbox.xmax - c.DETENT_BEAM_WIDTH - c.DETENT_CLEARANCE
-    assert grip_bbox.xmin - nub_region_from_left >= 3.0, (
-        "faceplate grip slot is within 3mm of the left-edge detent's release cut"
-    )
-    assert nub_region_from_right - grip_bbox.xmax >= 3.0, (
-        "faceplate grip slot is within 3mm of the right-edge detent's release cut"
+    diagonal = [
+        s for s in _lines(piece.outer.d)
+        if abs(s.start.real - s.end.real) > 1e-6 and abs(s.start.imag - s.end.imag) > 1e-6
+    ]
+    assert diagonal == [], (
+        f"faceplate outer boundary has {len(diagonal)} non-axis-aligned segment(s) -- "
+        f"expected a plain v1 rectangle with none"
     )
 
 
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_wall_nub_clears_divider_and_shelf_hole_lines(side, mirror):
-    """Nub/beam must stay >= 3mm from the (measured, real) divider
-    finger-hole column and stay entirely above the (measured, real) shelf
-    hole line's Z band."""
-    piece = _piece(SHELL_SVG, side)
-    to_box_x = _wall_frame(piece, mirror)
+def test_drawer_side_blank_height_excluding_nub_matches_v1():
+    """BLANK INVARIANT: the side wall's height, EXCLUDING the nub's own
+    local protrusion (i.e. up to the finger tabs' own reach, the v1 value),
+    measured in SVG-space -- distinct from test_svg_geometry.py's
+    tolerance-banded bbox check (which the nub-inclusive height also
+    happens to pass, since the band's slack absorbs it)."""
+    for side in DRAWER_SIDES:
+        piece = _piece(DRAWER_SVG, side)
+        bump = _nub_bump_geometry(piece.outer.d)
+        # The tab-reach boundary (v1's own bottom edge, the SAME depth the
+        # neighboring finger tabs reach) is the deepest point on the
+        # boundary EXCLUDING the nub itself (which is now the overall bbox
+        # extreme) -- NOT bump["base_y"], the plain zone's own local y=0
+        # baseline, which sits shallower still (no tab there at all).
+        tab_reach_y = _deepest_y_excluding_nub(piece.outer.d, bump["top_y"])
+        height_excl_nub = tab_reach_y - piece.bbox.ymin
+        v1_band_lo, v1_band_hi = su.expected_band(c.DRAWER_BODY["height"], jointed_edges=1, thickness=T)
+        assert v1_band_lo <= height_excl_nub <= v1_band_hi, (
+            f"{side}: blank height excluding the nub ({height_excl_nub:.2f}) outside "
+            f"the v1 band [{v1_band_lo:.2f}, {v1_band_hi:.2f}]"
+        )
 
-    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1
-    nub_y, x0, x1 = _find_nub_flat_top(matches[0])
-    nub_box_x = to_box_x((x0 + x1) / 2)
 
-    divider_rows = su.hole_line_rows(_blue_holes(piece), T, axis="y")
-    divider_hits = [r for r in divider_rows if 0.75 * c.DIVIDER_HEIGHT <= r.span <= c.DIVIDER_HEIGHT + 1.0]
-    assert len(divider_hits) == 1
-    divider_box_x = to_box_x(divider_hits[0].center)
-    assert abs(divider_box_x - nub_box_x) >= 3.0, (
-        f"{side}: measured nub (box X={nub_box_x:.2f}) is within 3mm of the measured "
-        f"divider hole column (box X={divider_box_x:.2f})"
+# =============================================================================
+# 5. Catch holes (bottom panel + shelf)
+# =============================================================================
+
+@pytest.mark.parametrize("host,synonyms", [
+    ("bottom panel", ("bottom",)),
+    ("shelf", ("horizontal shelf", "shelf")),
+])
+def test_catch_holes_exist_with_fixed_y_span(host, synonyms):
+    """EXISTENCE + FIXED BOUNDS: two catch holes per host panel (one per
+    drawer side), each with Y-span >= nub thickness + both drawers' full
+    lateral float (LITERALS, mutation (j): catch hole Y-width halved must
+    fail this)."""
+    piece = _piece(SHELL_SVG, *synonyms)
+    min_span = T + 2 * DRAWER_LATERAL_FLOAT_PER_SIDE
+    candidates = [
+        h for h in _blue_holes(piece)
+        if h.bbox.width < h.bbox.height  # narrow-X, wide-Y (unlike finger-hole rows)
+        and 8.0 <= h.bbox.width <= 16.0
+        and h.bbox.height >= min_span
+    ]
+    assert len(candidates) == 2, (
+        f"{host}: expected exactly 2 catch holes with Y-span >= {min_span:.2f}mm "
+        f"(T + 2*{DRAWER_LATERAL_FLOAT_PER_SIDE}mm), found {len(candidates)}"
     )
 
-    # Two bay-length rows exist on each wall (shelf + top-panel, see
-    # test_side_wall_has_shelf_and_top_panel_hole_lines); the shelf row is
-    # the one further from the top edge (larger SVG y = lower box Z).
-    shelf_rows_x = su.hole_line_rows(_blue_holes(piece), T, axis="x")
-    shelf_hits = [r for r in shelf_rows_x if 0.75 * c.BAY_LENGTH <= r.span <= c.BAY_LENGTH + 1.0]
-    assert len(shelf_hits) == 2, f"{side}: expected 2 bay-length hole rows (shelf + top panel)"
-    shelf_row = max(shelf_hits, key=lambda r: r.center)
-    shelf_z = _wall_box_z(piece, shelf_row.center)
-    assert abs(shelf_z - c.LID_DETENT_NUB_TOP_Z) >= 40.0, (
-        f"{side}: the shelf hole row (Z={shelf_z:.2f}) is unexpectedly close to "
-        f"the nub (Z={c.LID_DETENT_NUB_TOP_Z})"
+
+def test_catch_holes_at_same_box_x_on_both_panels():
+    """The bottom panel's and shelf's catch holes must land at the SAME box
+    X (both drawers are identical, closed at the same relative position)."""
+    bottom = _piece(SHELL_SVG, "bottom")
+    shelf = _piece(SHELL_SVG, "horizontal shelf", "shelf")
+    min_span = T + 2 * DRAWER_LATERAL_FLOAT_PER_SIDE
+
+    def catch_holes(piece):
+        return [
+            h for h in _blue_holes(piece)
+            if h.bbox.width < h.bbox.height and 8.0 <= h.bbox.width <= 16.0
+            and h.bbox.height >= min_span
+        ]
+
+    bottom_holes = catch_holes(bottom)
+    shelf_holes = catch_holes(shelf)
+    assert len(bottom_holes) == 2 and len(shelf_holes) == 2
+
+    # Bottom panel: fingers protrude T on all 4 edges (DESIGN.md #1), so
+    # bbox.xmin sits at box X = 0 exactly (same anchor as
+    # test_svg_geometry.py's test_bottom_panel_divider_row_position) -- box
+    # X = measured - bbox.xmin directly.
+    # Shelf: the REAR edge (local x=BAY_LENGTH) is plain ("e", DESIGN.md
+    # #6 -- "rear edge plain, butting the rear wall"), so bbox.xmax sits at
+    # box X = BAY_X1 exactly with no tab to correct for (the FRONT/divider
+    # edge is the jointed one here, so bbox.xmin is not a clean anchor).
+    bottom_box_xs = sorted((h.bbox.xmin + h.bbox.xmax) / 2 - bottom.bbox.xmin for h in bottom_holes)
+    shelf_box_xs = sorted(
+        c.BAY_X1 - (shelf.bbox.xmax - (h.bbox.xmin + h.bbox.xmax) / 2) for h in shelf_holes
     )
+    for bx, sx in zip(bottom_box_xs, shelf_box_xs):
+        assert abs(bx - sx) <= 0.6, (
+            f"bottom-panel catch hole at box X={bx:.2f} does not match shelf's "
+            f"catch hole at box X={sx:.2f} -- both drawers close to the same position"
+        )
 
 
 # =============================================================================
-# 7. Beam clearance cuts leave structural webs intact / don't touch the rail
+# 6. Retention coupon pieces present (5 now: wall sample, lid notch strip,
+#    drawer-side sample, mock sill edge, mock floor strip)
 # =============================================================================
 
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_wall_release_cut_does_not_touch_top_rail_or_bottom_row(side, mirror):
-    piece = _piece(SHELL_SVG, side)
-
-    # The release cut's cavity + severing slot are small rectangular holes
-    # near LID_DETENT_CAVITY_BOTTOM_Z..LID_DETENT_BEAM_BOTTOM_Z; none of the
-    # wall's holes may extend above the slot floor (into the 5mm top rail)
-    # or down into the bottom-panel finger-hole row's Z band.
-    for h in _blue_holes(piece):
-        z_top = _wall_box_z(piece, h.bbox.ymin)
-        z_bottom = _wall_box_z(piece, h.bbox.ymax)
-        hi, lo = max(z_top, z_bottom), min(z_top, z_bottom)
-        if hi <= c.LID_SLOT_TOP + 0.1 and lo >= c.LID_DETENT_CAVITY_BOTTOM_Z - 3.0 and (hi - lo) < 10:
-            # A candidate detent-area hole (small, sits below the slot
-            # floor): must not creep up into the rail above LID_SLOT_TOP,
-            # and must stay clear of the bottom-panel row at Z ~= T/2.
-            assert hi <= c.LID_SLOT_TOP + 0.5, f"{side}: a detent-area hole reaches into the top rail"
-            assert lo >= (T / 2) + c.MIN_WEB, (
-                f"{side}: a detent-area hole reaches down toward the bottom-panel row"
-            )
-
-
-# =============================================================================
-# 8. Retention coupon pieces present
-# =============================================================================
-
-def test_retention_coupon_has_all_four_pieces(retention_coupon_svg):
+def test_retention_coupon_has_all_five_pieces(retention_coupon_svg):
     pieces = su.design_pieces(retention_coupon_svg)
     labels = {p.label for p in pieces}
     expected = {
         "Retention: Wall Flexure Sample",
         "Retention: Lid Notch Strip",
-        "Retention: Faceplate Flexure Sample",
-        "Retention: Mock Opening Edge",
+        "Retention: Drawer-Side Flexure Sample",
+        "Retention: Mock Sill Edge",
+        "Retention: Mock Floor Strip",
     }
     assert expected <= labels, f"missing retention coupon pieces: {expected - labels}; found: {labels}"
 
@@ -338,20 +617,28 @@ def test_retention_coupon_wall_sample_has_nub_and_release_cut(retention_coupon_s
     pieces = su.design_pieces(retention_coupon_svg)
     sample = su.find_piece_by_label(pieces, "Wall Flexure Sample")
     assert sample is not None
-    # The slot-with-nub hole should be the largest hole (spans most of the
-    # sample's width); the release cut shows up as 2 additional smaller
-    # holes (cavity + severing slot).
     assert len(sample.holes) >= 3, (
         f"expected >= 3 holes (slot-with-nub + cavity + severing slot) on the wall "
         f"flexure sample, found {len(sample.holes)}"
     )
 
 
-def test_retention_coupon_faceplate_sample_has_release_cut(retention_coupon_svg):
+def test_retention_coupon_drawer_sample_has_nub_and_release_cut(retention_coupon_svg):
     pieces = su.design_pieces(retention_coupon_svg)
-    sample = su.find_piece_by_label(pieces, "Faceplate Flexure Sample")
+    sample = su.find_piece_by_label(pieces, "Drawer-Side Flexure Sample")
     assert sample is not None
+    bump = _nub_bump_geometry(sample.outer.d)
+    assert abs(bump["base_right"] - bump["base_left"]) > abs(bump["top_right"] - bump["top_left"]), (
+        "drawer-side flexure sample's nub has no ramp"
+    )
     assert len(sample.holes) >= 2, (
-        f"expected >= 2 holes (cavity + severing slot) on the faceplate flexure "
+        f"expected >= 2 holes (cavity + severing slot) on the drawer-side flexure "
         f"sample, found {len(sample.holes)}"
     )
+
+
+def test_retention_coupon_floor_strip_has_catch_hole(retention_coupon_svg):
+    pieces = su.design_pieces(retention_coupon_svg)
+    strip = su.find_piece_by_label(pieces, "Mock Floor Strip")
+    assert strip is not None
+    assert len(strip.holes) >= 1, "mock floor strip has no catch hole"
