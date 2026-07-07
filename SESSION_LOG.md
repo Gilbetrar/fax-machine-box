@@ -422,3 +422,9 @@ strict tests that fail, and created Issue #10 to track the config fix.
 - Rewrote config.py: single MATERIAL_THICKNESS (3.175), all dims derived; legacy aliases kept (marked DEPRECATED) so old generators run until #17/#18.
 - Replaced tests/test_dimensions.py with tests/test_assembly_fit.py (26 tests, every DESIGN.md mating pair). Negative control verified: breaking drawer width fails 2 tests, restore goes green.
 - Key design points: sill-free drawer openings (opening floor == slot floor), drawer guided by its opening (~4.9mm/side bay slop accepted, max skew 1.3°), lid slot vertical clearance 0.8mm (documented deviation from spec's 1.5mm sliding play), divider full-height to top panel = lid stop.
+
+## 2026-07-07 — Issue #16: SVG validation harness (delegated build, reviewed)
+
+- tests/svg_utils.py + 3 test files: 84 passed, 32 xfailed (each xfail cites #17 or #18).
+- Negative controls verified: dropped move= param -> overlap test FAILED; black stroke -> color test FAILED; both restored.
+- New findings: boxes.py black calibration rect (need --reference 0 in rebuilds); bbox-clustering hole/piece disambiguation via HOLE_AREA_RATIO=0.5; current shell/drawer layouts have real piece-nesting overlaps previously undetected.

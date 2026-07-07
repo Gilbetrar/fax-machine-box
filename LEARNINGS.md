@@ -70,4 +70,8 @@ self.ctx.set_source_color([1.0, 0.0, 0.0])  # RGB [0-1]
 - Check `git status` for uncommitted work from previous agents
 - Sliding lids need grooves on BOTH sides
 - `--outside 0` means dimensions are internal; external = internal + 2×thickness
-- Config coordinate naming differs from spec: config "width"=12" is spec "length", config "depth"=6.5" is spec "width"
+- ~~Config coordinate naming differs from spec~~ — fixed in #15: DESIGN.md defines the canonical X/Y/Z convention; config.py follows it. The legacy `SHELL`/`DRAWER` dicts are DEPRECATED aliases only.
+- **Boxes.py draws a black 100×10mm calibration rectangle** in every output unless the generator passes `--reference 0`. Rebuilt generators (#17/#18) must pass `--reference 0` so files are laser-clean; the test harness detects it geometrically meanwhile.
+- Boxes.py SVG structure: a piece's outer boundary and its finger teeth are one continuous `<path>`, but holes are sometimes separate sibling paths — count pieces by bbox containment clustering (see `tests/svg_utils.py`), never by raw path count or `<g>` grouping.
+- The harness treats a contained path as a *hole* only if < 50% of its container's area (`HOLE_AREA_RATIO`) — otherwise a mispositioned full-size piece nested inside another's bbox would be silently swallowed instead of flagged as overlap.
+- Test policy (Ben, issues #7/#10): tests are never weakened to pass. Broken-generator expectations are `xfail(strict=False)` with the rebuild issue cited in the reason; rebuilds remove the markers.
