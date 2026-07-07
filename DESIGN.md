@@ -8,7 +8,11 @@ change numbers.
 
 Everything is in **millimeters**. Material is uniform **3.175mm (1/8") plywood**
 (`T` below). Laser kerf is handled by Boxes.py's `burn` parameter (0.08mm
-starting value — calibrate with a test cut before the real run).
+starting value — calibrate with a test cut before the real run). Finger holes
+and slots are widened by `FINGER_PLAY` (0.1mm) so joints still assemble when
+the ply runs thick (nominal 3.175 stock commonly measures 3.0–3.4); this makes
+edge-adjacent hole rows break through their part edge by ≤ play/2, which is
+sub-kerf and hidden inside joints.
 
 ## Decisions this design implements (Ben, 2026-07-07)
 
@@ -186,17 +190,24 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Length 79.0 stops against the divider with the front edge ~0.4mm shy of the
   front face. Travel: slides in from the front, over the front wall top edge.
 - Grip: rounded through-slot **30 × 10, r = 5**, centered in Y, slot center
-  15mm from the front edge.
+  25mm from the front edge (10mm ligament to the edge; at 15mm the ligament
+  was ~0.2mm and would have broken into a notch — red-team finding).
+- No retention along the travel axis: the divider stops rearward motion but
+  nothing stops the lid sliding out the front when the box tips forward.
+  Accepted cost of the front-insert decision; carry the box level.
 
 ### 9. Drawers — 2× identical, 6 pieces each
 
 Body = open-top finger-jointed box, captive bottom:
 
-- Body external: **149.0 (Y) × 218.0 (X) × 53.5 (Z)**.
-- Body interior: 142.65 × 211.65 × 50.325.
+- Body external: **149.0 (Y) × 218.6 (X) × 53.5 (Z)**.
+- Body interior: 142.65 × 212.25 × 50.325.
 - Fit checks: passes its opening with ≥1.5mm on every edge (152.4−149.0 = 3.4
   across width; 55.0−53.5 = 1.5 in height); slides in a 58.7375 slot
-  (5.24 headroom); bay length gap when closed ≈ 1.1.
+  (5.24 headroom); bay length gap when closed ≈ 0.475 — **the divider is the
+  drawer's in-stop** (the inset faceplate never bears on the rear-wall frame,
+  so the body must bottom out at flush; red-team finding). There is no
+  out-retention: a drawer slides free if the box is tipped rear-down.
 - Lateral play in the bay is ~4.9mm/side by design — the drawer is guided by
   its opening, not the bay walls; max skew ≈ 1.3°, acceptable for a first cut.
 

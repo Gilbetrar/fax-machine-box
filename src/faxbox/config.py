@@ -17,6 +17,11 @@ T = MATERIAL_THICKNESS
 # laser; calibrate with a test cut at NYC Resistor before the real run.
 BURN = 0.08
 
+# Boxes.py FingerJointSettings play: widens finger holes/slots so joints
+# still assemble when the ply runs thick (nominal 3.175 stock commonly
+# measures 3.0-3.4). Calibrate together with BURN via the kerf coupon.
+FINGER_PLAY = 0.1
+
 # --- Fit policy (DESIGN.md "Clearance summary") -----------------------------
 
 SLIDE_CLEARANCE = 1.5        # SPEC: min 1/16" play on sliding interfaces
@@ -88,7 +93,9 @@ TOP_OPENING_Z1 = TOP_OPENING_Z0 + OPENING_HEIGHT          # 120.0875
 
 DRAWER_BODY = {   # external
     "width": 149.0,    # Y
-    "length": 218.0,   # X (pull direction)
+    "length": 218.6,   # X (pull direction); bay gap 0.475 -- the divider is
+                       # the drawer's flush in-stop (red-team finding: the
+                       # inset faceplate can't stop against the rear wall)
     "height": 53.5,    # Z
 }
 
@@ -109,7 +116,9 @@ SLIDING_LID = {
     "width": SHELL_EXT["width"] - SLIDE_CLEARANCE,    # 163.6 (rides in through-slots)
 }
 LID_GRIP_SLOT = {"width": 30.0, "height": 10.0, "radius": 5.0,
-                 "center_from_front": 15.0}
+                 # 25.0 keeps a 10mm ligament between slot and front edge
+                 # (15.0 left ~0.2mm -- it would have broken into a notch)
+                 "center_from_front": 25.0}
 
 # --- Engraving ---------------------------------------------------------------
 
@@ -123,25 +132,3 @@ ENGRAVE_CENTER = {"x": SHELL_EXT["length"] / 2, "z": 63.5}  # right wall exterio
 # --- Output ------------------------------------------------------------------
 
 OUTPUT_DIR = "output"
-
-# --- DEPRECATED legacy aliases ----------------------------------------------
-# Kept only so the not-yet-rebuilt generators keep running until issues #17
-# and #18 replace them. Do not use in new code; removed with the rebuilds.
-
-DRAWER_MATERIAL_THICKNESS = MATERIAL_THICKNESS  # single thickness everywhere
-KERF = BURN
-FINGER_NOTCH_RADIUS = 15.0  # old notch pull; superseded by DRAWER_GRIP_SLOT
-DRAWER_CLEARANCE = SLIDE_CLEARANCE
-PAPER_COMPARTMENT_DEPTH = PAPER_COMPARTMENT_LENGTH
-SHELL = {"width": SHELL_EXT["length"], "depth": SHELL_EXT["width"],
-         "height": SHELL_EXT["height"]}
-DRAWER = {"width": 150.0, "depth": 210.0, "height": 53.0}  # old, wrong; see DESIGN.md
-LID_GROOVE_WIDTH = LID_SLOT_HEIGHT
-LID_GROOVE_DEPTH = LID_RAIL_HEIGHT
-LID_TAB_CLEARANCE = 0.3
-SLIDING_LID_TAB_DEPTH = LID_GROOVE_DEPTH - 1.0
-FLAT_LID_TAB_WIDTH = 10.0
-FLAT_LID_TAB_DEPTH = 5.0
-ENGRAVE_FONT_SIZE = 8.0
-ENGRAVE_LINE_WIDTH = 0.5
-DEFAULT_BOX = {"width": 100.0, "height": 60.0, "depth": 80.0}

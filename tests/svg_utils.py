@@ -212,6 +212,12 @@ def iter_paths(svg_path: str | Path) -> list[PathInfo]:
 
 
 
+# Finger holes widened by FingerJointSettings play may break through an
+# adjacent part edge by up to play/2 (e.g. the walls' bottom-panel hole rows).
+# Containment during clustering tolerates that much overhang; kept well below
+# part spacing so a path can never be claimed by a neighboring piece.
+CONTAINMENT_TOL = 0.2
+
 # A path is only treated as a *hole* of a larger containing path -- rather
 # than a separate piece in its own right -- if it's meaningfully smaller than
 # its container. Real DESIGN.md cutouts (finger-joint hole lines, drawer
@@ -241,7 +247,9 @@ def cluster_pieces(paths: list[PathInfo]) -> list[Piece]:
     n = len(paths)
 
     def properly_contains(a: BBox, b: BBox) -> bool:
-        return a.contains(b) and a.area > b.area + 1e-6 and b.area <= HOLE_AREA_RATIO * a.area
+        return (a.contains(b, tol=CONTAINMENT_TOL)
+                and a.area > b.area + 1e-6
+                and b.area <= HOLE_AREA_RATIO * a.area)
 
     is_outer = [
         not any(i != j and properly_contains(paths[j].bbox, paths[i].bbox) for j in range(n))
@@ -253,7 +261,8 @@ def cluster_pieces(paths: list[PathInfo]) -> list[Piece]:
     for i in range(n):
         if is_outer[i]:
             continue
-        candidates = [oi for oi in outer_indices if paths[oi].bbox.contains(paths[i].bbox)]
+        candidates = [oi for oi in outer_indices
+                      if paths[oi].bbox.contains(paths[i].bbox, tol=CONTAINMENT_TOL)]
         if not candidates:
             # Not contained by anything (shouldn't happen for valid laser
             # output) -- surface it as its own piece rather than silently

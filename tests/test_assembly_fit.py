@@ -23,9 +23,10 @@ SPEC_MIN_SLIDE_PLAY = 1.5  # 1/16"
 # --- Material ----------------------------------------------------------------
 
 def test_uniform_material_thickness():
-    """SPEC: uniform thickness for all parts. Legacy alias must not diverge."""
+    """SPEC: uniform thickness for all parts — exactly one thickness constant."""
     assert c.MATERIAL_THICKNESS == pytest.approx(3.175, **APPROX)
-    assert c.DRAWER_MATERIAL_THICKNESS == c.MATERIAL_THICKNESS
+    thickness_names = [n for n in dir(c) if "THICKNESS" in n]
+    assert thickness_names == ["MATERIAL_THICKNESS"], thickness_names
 
 
 def test_external_envelope_matches_spec():

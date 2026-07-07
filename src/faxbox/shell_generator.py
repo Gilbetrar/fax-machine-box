@@ -21,6 +21,7 @@ from boxes import Boxes
 from boxes import edges
 
 from faxbox.config import (
+    FINGER_PLAY,
     BAY_LENGTH,
     BAY_X0,
     BAY_X1,
@@ -317,14 +318,28 @@ class OuterShell(Boxes):
         DIVIDER_X0 (local X = box X - DIVIDER_X0) x INTERIOR_WIDTH (local
         Y = box Y). Side/rear edges finger-joint the walls; front edge is
         plain, with an interior finger-hole line receiving the divider's
-        top-edge fingers (DESIGN.md #7)."""
+        top-edge fingers (DESIGN.md #7).
+
+        The side edges are COMPOUND: plain over the divider cover strip
+        (local X 0..T), fingers only over the bay span (T..T+BAY_LENGTH).
+        The walls' top-panel hole rows are generated for BAY_LENGTH starting
+        at BAY_X0, and Boxes.py lays fingers out per-segment -- fingering
+        the full 222.25mm edge would produce 17 fingers misaligned with the
+        16 wall holes by up to ~8mm (assembly-impossible; caught in red-team
+        review)."""
         nominal_x = BAY_X1 - DIVIDER_X0
+
+        # Edge index travel: bottom (index0) runs local x 0->max, top
+        # (index2) runs back max->0, so the compound segment order flips.
+        side_edge_fwd = edges.CompoundEdge(self, ["e", "f"], [T, BAY_LENGTH])
+        side_edge_rev = edges.CompoundEdge(self, ["f", "e"], [BAY_LENGTH, T])
 
         def callback() -> None:
             self.fingerHolesAt(T / 2, 0, INTERIOR_WIDTH, angle=90)
 
         self.rectangularWall(
-            nominal_x, INTERIOR_WIDTH, ["f", "f", "f", "e"],
+            nominal_x, INTERIOR_WIDTH,
+            [side_edge_fwd, self.edges["f"], side_edge_rev, self.edges["e"]],
             callback=[callback, None, None, None],
             move="right", label="Top Panel",
         )
@@ -356,6 +371,7 @@ def generate_shell() -> Path:
         "--thickness", str(MATERIAL_THICKNESS),
         "--burn", str(BURN),
         "--reference", "0",
+        "--FingerJoint_play", str(FINGER_PLAY),
     ])
 
     shell.open()
