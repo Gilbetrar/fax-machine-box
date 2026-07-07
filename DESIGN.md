@@ -205,9 +205,11 @@ Body = open-top finger-jointed box, captive bottom:
 - Fit checks: passes its opening with ≥1.5mm on every edge (152.4−149.0 = 3.4
   across width; 55.0−53.5 = 1.5 in height); slides in a 58.7375 slot
   (5.24 headroom); bay length gap when closed ≈ 0.475 — **the divider is the
-  drawer's in-stop** (the inset faceplate never bears on the rear-wall frame,
-  so the body must bottom out at flush; red-team finding). There is no
-  out-retention: a drawer slides free if the box is tipped rear-down.
+  drawer's in-stop** (the inset faceplate never bears on the rear-wall frame;
+  red-team finding). Closed, the faceplate sits recessed by the 0.475 slide
+  gap — near-flush, since true flush and slide clearance are mutually
+  exclusive. There is no out-retention: a drawer slides free if the box is
+  tipped rear-down.
 - Lateral play in the bay is ~4.9mm/side by design — the drawer is guided by
   its opening, not the bay walls; max skew ≈ 1.3°, acceptable for a first cut.
 

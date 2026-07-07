@@ -13,10 +13,11 @@ on scrap BEFORE the real sheets, then:
      slots. Whichever slot it seats into snugly (not loose, not forced) says
      how thick your stock is actually measuring -- use that to sanity-check
      MATERIAL_THICKNESS / FINGER_PLAY in config.py before cutting joints.
-  2. Measure the square hole with calipers. It was drawn 10.0mm x 10.0mm; the
-     laser's kerf eats into every cut line, so the hole will measure a bit
-     larger than 10.0mm cut-to-cut. The difference is (approximately) twice
-     the real kerf -- compare it to BURN in config.py.
+  2. Measure the square hole with calipers. Its tool path is drawn at exactly
+     10.0mm x 10.0mm (burn compensation cancelled for this one feature), so
+     the physical hole measures 10.0 + 2x(real per-side kerf). Set
+     BURN = (measured - 10.0) / 2, then regenerate and re-cut the coupon:
+     the thickness slots only read true once BURN matches the real kerf.
 
 All cut lines are CUT_COLOR (blue) -- nothing on this coupon is engraved.
 """
@@ -27,7 +28,7 @@ from boxes import Boxes
 from boxes import edges
 
 from faxbox.config import (
-    FINGER_PLAY,
+    FINGER_PLAY_RELATIVE,
     BURN,
     CUT_COLOR,
     MATERIAL_THICKNESS,
@@ -47,9 +48,15 @@ SLOT_WIDTHS = (3.05, MATERIAL_THICKNESS, 3.30)
 SLOT_HEIGHT = 15.0
 SLOT_LABELS = ("undersize (3.05mm)", "nominal (3.175mm = T)", "oversize (3.30mm)")
 
-# Kerf-calibration through-hole: a nominal 10.0mm square. The laser's kerf
-# widens every cut, so the physical hole always measures a bit over 10.0mm;
-# the excess is roughly 2x the real per-side kerf -- compare against BURN.
+# Kerf-calibration through-hole: the TOOL PATH must be exactly 10.0mm square
+# for the measurement to mean anything, so it is drawn with raw ctx line
+# segments (which Boxes.py never burn-compensates -- same mechanism as the
+# pixel-font engraving) instead of rectangularHole (whose drawn size shifts
+# with the current BURN). Drawn at 10.0 exactly, the physical hole measures
+# 10.0 + 2*(real per-side kerf): set BURN to (measured - 10.0) / 2. A
+# burn-compensated square would instead measure the kerf *error* relative to
+# the current BURN, and a perfectly calibrated laser would read "kerf = 0" --
+# a trap that zeroes out BURN (red-team pass-2 catch).
 KERF_HOLE_SIZE = 10.0
 
 # Even spacing across COUPON_WIDTH for the 3 slots + 1 hole (4 items -> 5
@@ -89,7 +96,16 @@ class CalibrationCoupon(Boxes):
         def callback() -> None:
             for cx, width in zip(slot_centers, SLOT_WIDTHS):
                 self.rectangularHole(cx, CENTER_Y, width, SLOT_HEIGHT, r=0)
-            self.rectangularHole(hole_center, CENTER_Y, KERF_HOLE_SIZE, KERF_HOLE_SIZE, r=0)
+            # Raw ctx path: exact 10.0mm tool path, immune to burn compensation.
+            half = KERF_HOLE_SIZE / 2
+            x0, y0 = hole_center - half, CENTER_Y - half
+            x1, y1 = hole_center + half, CENTER_Y + half
+            self.ctx.move_to(x0, y0)
+            self.ctx.line_to(x1, y0)
+            self.ctx.line_to(x1, y1)
+            self.ctx.line_to(x0, y1)
+            self.ctx.line_to(x0, y0)
+            self.ctx.stroke()
 
         self.rectangularWall(
             COUPON_WIDTH, COUPON_HEIGHT, "eeee",
@@ -114,7 +130,7 @@ def generate_calibration() -> Path:
         "--thickness", str(MATERIAL_THICKNESS),
         "--burn", str(BURN),
         "--reference", "0",
-        "--FingerJoint_play", str(FINGER_PLAY),
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
 
     coupon.open()
@@ -131,9 +147,14 @@ def generate_calibration() -> Path:
         print(f"    - {width:.3f}mm slot: {label} -- press a scrap of the actual ply into all")
         print("      three; whichever it seats into snugly tells you the real stock thickness.")
     print(
-        f"  Square hole: nominal {KERF_HOLE_SIZE:.1f}mm x {KERF_HOLE_SIZE:.1f}mm -- measure the "
-        "physical hole with calipers; the excess over 10.0mm is roughly 2x the real kerf, to "
-        f"compare against BURN ({BURN}mm) in config.py."
+        f"  Square hole: tool path exactly {KERF_HOLE_SIZE:.1f}mm x {KERF_HOLE_SIZE:.1f}mm "
+        "(burn-neutral). Measure the physical hole with calipers: "
+        "set BURN = (measured - 10.0) / 2 in config.py."
+    )
+    print(
+        "  If you change BURN (or FINGER_PLAY), regenerate and RE-CUT this coupon "
+        "before trusting the thickness slots -- their physical widths are only "
+        "accurate once BURN matches the real kerf."
     )
     return output_file
 

@@ -21,7 +21,7 @@ from boxes import Boxes
 from boxes import edges
 
 from faxbox.config import (
-    FINGER_PLAY,
+    FINGER_PLAY_RELATIVE,
     BAY_LENGTH,
     BAY_X0,
     BAY_X1,
@@ -383,7 +383,7 @@ def generate_shell() -> Path:
         "--thickness", str(MATERIAL_THICKNESS),
         "--burn", str(BURN),
         "--reference", "0",
-        "--FingerJoint_play", str(FINGER_PLAY),
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
 
     shell.open()

@@ -17,10 +17,14 @@ T = MATERIAL_THICKNESS
 # laser; calibrate with a test cut at NYC Resistor before the real run.
 BURN = 0.08
 
-# Boxes.py FingerJointSettings play: widens finger holes/slots so joints
-# still assemble when the ply runs thick (nominal 3.175 stock commonly
-# measures 3.0-3.4). Calibrate together with BURN via the kerf coupon.
+# Finger-joint play in MM: widens finger holes/slots so joints still
+# assemble when the ply runs thick (nominal 3.175 stock commonly measures
+# 3.0-3.4). Calibrate together with BURN via the kerf coupon.
+# CAUTION: Boxes.py's FingerJointSettings "play" is RELATIVE (multiples of
+# thickness), so generators must pass FINGER_PLAY_RELATIVE, never this raw
+# mm value (0.1 passed raw silently becomes 0.3175mm — red-team pass-2 catch).
 FINGER_PLAY = 0.1
+FINGER_PLAY_RELATIVE = FINGER_PLAY / MATERIAL_THICKNESS
 
 # --- Fit policy (DESIGN.md "Clearance summary") -----------------------------
 
@@ -94,8 +98,10 @@ TOP_OPENING_Z1 = TOP_OPENING_Z0 + OPENING_HEIGHT          # 120.0875
 DRAWER_BODY = {   # external
     "width": 149.0,    # Y
     "length": 218.6,   # X (pull direction); bay gap 0.475 -- the divider is
-                       # the drawer's flush in-stop (red-team finding: the
-                       # inset faceplate can't stop against the rear wall)
+                       # the drawer's in-stop (the inset faceplate can't stop
+                       # against the rear wall). Closed, the faceplate sits
+                       # recessed by the 0.475 slide gap -- near-flush; true
+                       # flush and slide clearance are mutually exclusive.
     "height": 53.5,    # Z
 }
 

@@ -16,7 +16,7 @@ from boxes import Boxes
 from boxes import edges
 
 from faxbox.config import (
-    FINGER_PLAY,
+    FINGER_PLAY_RELATIVE,
     BURN,
     CUT_COLOR,
     LID_GRIP_SLOT,
@@ -71,7 +71,7 @@ def generate_lids() -> Path:
         "--thickness", str(MATERIAL_THICKNESS),
         "--burn", str(BURN),
         "--reference", "0",
-        "--FingerJoint_play", str(FINGER_PLAY),
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
 
     lids.open()

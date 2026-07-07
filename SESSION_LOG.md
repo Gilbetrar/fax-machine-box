@@ -455,3 +455,9 @@ Suite: 91 passed, 31 xfailed after amendment (one former xfail now passes legiti
 - NYC Resistor constraints researched: bed size AMBIGUOUS (site says 32"x20" Epilog Fusion 32; a page comment disputes with 12"x24"). Conservative 18"x24" fallback used and documented; CONFIRM BED SIZE AT THE SPACE before buying material.
 - layout.py rewritten: deterministic shelf packer over per-part <g> groups, 3 sheets, 21/21 parts, path-count parity in=out, colors preserved. final_layout.svg is reference-only.
 - tests/test_layout.py added (8 tests). Full suite: 128 passed, 0 xfail. README rewritten for the real design + cut-day checklist.
+
+## 2026-07-07 — Red-team review (4 Opus critics, 3 passes)
+
+Pass 1 findings fixed: top panel finger/hole misalignment (assembly-impossible; CompoundEdge fix, verified 0.08mm alignment); lid grip ligament 0.2mm -> 10mm; drawer in-stop via divider (length 218.6); red part labels would have engraved (now gray reference-only); hairline strokes; hatched engraving (solid burn); kerf coupon; impossible README assembly order rewritten (side-wall-last); 36 new positional/mating tests that catch all 4 demonstrated green-but-broken mutations.
+Pass 2 findings fixed: Boxes.py FingerJointSettings play is RELATIVE to thickness (0.1 raw = 0.3175mm; now FINGER_PLAY_RELATIVE converts mm->relative, verified 0.100mm effective); kerf square was burn-compensated and would have read "kerf=0" on a calibrated laser (now raw-ctx exact 10.0000mm tool path); "flush" faceplate wording corrected to near-flush (0.475 recess = slide gap).
+Open for Ben: bed size (12x24 vs 32x20 conflict), game contents fit never checked, lid/drawer retention accepted-as-documented.
