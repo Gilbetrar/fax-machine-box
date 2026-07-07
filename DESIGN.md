@@ -113,10 +113,12 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Top edge: plain over the paper compartment/rail; finger-jointed to the top
   panel over the bay (X = 82.55 → 301.625).
 - **Lid through-slot**: X = 3.175 → 79.375 within the wall, **open at the
-  wall's front edge** (an edge notch in the blank outline, not a closed
-  hole — the lid could never be inserted otherwise), Z = 118.025 → 122.0.
-  Leaves a 5.0mm rail above (Z 122 → 127) cantilevered from X = 79.375 —
-  handle gently until assembled.
+  wall's front edge** (the lid could never be inserted otherwise),
+  Z = 118.025 → 122.0. Construction: drawn as a closed rectangular hole whose
+  front boundary exactly coincides with the blank's front edge — the laser
+  cuts both lines and the mouth opens (one 3.975mm segment double-cut;
+  negligible). Leaves a 5.0mm rail above (Z 122 → 127) cantilevered from
+  X = 79.375 — handle gently until assembled.
 - **Divider finger-hole line**: vertical, X = 79.375 → 82.55, Z = 3.175 →
   123.825. (A Boxes.py `fingerHolesAt` line — a dashed row of T-wide holes,
   not one continuous slot.)

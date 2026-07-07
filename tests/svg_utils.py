@@ -309,43 +309,6 @@ def non_cut_engrave_strokes(svg_path: str | Path) -> list[PathInfo]:
     return [p for p in iter_paths(svg_path) if normalize_color(p.stroke) not in ("blue", "red")]
 
 
-def outline_segments(piece: Piece) -> list[tuple[str, float]]:
-    """Axis-aligned straight segments of a piece's OUTER path, as
-    (orientation, length) tuples with orientation 'h' (horizontal) or 'v'
-    (vertical); non-axis-aligned or curved segments are reported as ('o',
-    chord_length). Used to detect edge NOTCHES (e.g. the side walls' open
-    lid-slot mouth), which are part of the outline and therefore invisible
-    to hole-based checks.
-    """
-    parsed = svgpathtools.parse_path(piece.outer.d)
-    out: list[tuple[str, float]] = []
-    for seg in parsed:
-        if isinstance(seg, svgpathtools.Line):
-            dx = abs(seg.end.real - seg.start.real)
-            dy = abs(seg.end.imag - seg.start.imag)
-            if dy < 0.01 and dx > 0.01:
-                out.append(("h", dx))
-            elif dx < 0.01 and dy > 0.01:
-                out.append(("v", dy))
-            elif dx > 0.01 or dy > 0.01:
-                out.append(("o", abs(seg.end - seg.start)))
-        else:
-            out.append(("o", abs(seg.end - seg.start)))
-    return out
-
-
-def count_outline_segments(piece: Piece, orientation: str, length: float, tol: float = 1.0) -> int:
-    """How many outer-path segments of `orientation` are within `tol` of
-    `length`. Finger teeth are short (roughly T to a few T), so probing for a
-    long, specific length is a reliable presence-signature for a designed
-    notch without depending on where the piece sits on the canvas."""
-    return sum(
-        1
-        for o, seg_len in outline_segments(piece)
-        if o == orientation and abs(seg_len - length) <= tol
-    )
-
-
 def hole_line_spans(
     holes: list[PathInfo],
     thickness: float,

@@ -338,44 +338,6 @@ def test_expected_band_rejects_invalid_edge_count():
         su.expected_band(100.0, 3, 3.175)
 
 
-# --- outline_segments / count_outline_segments ---------------------------------
-
-def _notched_rect_piece(tmp_path):
-    """A 100x40 rectangle with a 30x5 notch cut into its left edge at y=20:
-    the outline detours in by 30, up 5, back out 30 (like the side walls'
-    open lid-slot mouth, which is part of the outline, not a hole)."""
-    d = (
-        "M 0 0 L 100 0 L 100 40 L 0 40 "
-        "L 0 25 L 30 25 L 30 20 L 0 20 Z"
-    )
-    body = f'<g><path d="{d}" stroke="rgb(0,0,255)" fill="none"/></g>'
-    pieces = su.get_pieces(write_svg(tmp_path, body))
-    assert len(pieces) == 1
-    return pieces[0]
-
-
-def test_outline_segments_classifies_axis_aligned(tmp_path):
-    piece = _notched_rect_piece(tmp_path)
-    segments = su.outline_segments(piece)
-    assert ("h", 100.0) in segments
-    assert ("v", 40.0) in segments
-
-
-def test_count_outline_segments_finds_notch_signature(tmp_path):
-    piece = _notched_rect_piece(tmp_path)
-    # The notch contributes two 30mm horizontal runs and one 5mm vertical.
-    assert su.count_outline_segments(piece, "h", 30.0) == 2
-    assert su.count_outline_segments(piece, "v", 5.0) == 1
-    # A plain rectangle has neither.
-    assert su.count_outline_segments(piece, "h", 77.0) == 0
-
-
-def test_count_outline_segments_respects_tolerance(tmp_path):
-    piece = _notched_rect_piece(tmp_path)
-    assert su.count_outline_segments(piece, "h", 30.4, tol=0.5) == 2
-    assert su.count_outline_segments(piece, "h", 30.4, tol=0.1) == 0
-
-
 # --- hole_line_spans -------------------------------------------------------------
 
 def _hole(x0, x1, y0, y1):

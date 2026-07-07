@@ -325,15 +325,13 @@ def test_rear_wall_has_two_drawer_openings():
 
 # --- Side walls: lid through-slot + divider finger-hole line + shelf finger-
 # hole line ---------------------------------------------------------------------
-# The lid slot is an EDGE NOTCH in the blank outline (DESIGN.md #2, amended:
-# it must be open at the wall's front edge or the lid could never be
-# inserted), so it can't be found as a closed hole. We detect it by its
-# outline signature instead: the notch contributes two long horizontal
-# segments of exactly the slot length (top and bottom of the notch) and a
-# vertical closing segment of the slot height. Finger teeth are far shorter
-# and the rail top (79.375) differs from the slot length (76.2) by a full T,
-# so neither can false-positive at these probe lengths. Placement-blind by
-# design; front-vs-rear mouth orientation is checked visually per #17.
+# The lid slot must be open at the wall's front edge (a closed slot could
+# never admit the lid). Construction (DESIGN.md #2, amended): the slot is
+# drawn as a closed rectangularHole whose front boundary exactly coincides
+# with the blank's front edge -- the laser cuts both lines and the mouth
+# opens (one 3.975mm segment is double-cut; negligible). This keeps the slot
+# detectable as an ordinary hole. Front-vs-rear mouth placement is
+# position-blind here; checked visually per #17.
 LID_SLOT_LENGTH = c.LID_SLOT_X_END - T                          # 76.2
 
 # Finger-hole lines are DASHED rows of separate T-wide holes (Boxes.py
@@ -349,11 +347,10 @@ SHELF_LINE_NOMINAL = c.BAY_LENGTH                                # 219.075 (hori
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_lid_slot(side):
     piece = _piece(SHELL_SVG, side)
-    h_hits = su.count_outline_segments(piece, "h", LID_SLOT_LENGTH, tol=1.0)
-    v_hits = su.count_outline_segments(piece, "v", c.LID_SLOT_HEIGHT, tol=0.5)
-    assert h_hits >= 2 and v_hits >= 1, (
-        f"expected lid-slot notch signature (>=2 horizontal segments ~{LID_SLOT_LENGTH}mm, "
-        f">=1 vertical ~{c.LID_SLOT_HEIGHT}mm) in {side} outline; got h={h_hits}, v={v_hits}"
+    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
+    assert len(matches) == 1, (
+        f"expected 1 lid slot hole ~{LID_SLOT_LENGTH}x{c.LID_SLOT_HEIGHT}mm "
+        f"(front boundary flush with the blank's front edge) in {side}, found {len(matches)}"
     )
 
 
