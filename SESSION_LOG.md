@@ -449,3 +449,9 @@ Suite: 91 passed, 31 xfailed after amendment (one former xfail now passes legiti
 
 - generate_drawers.py rewritten: 6 pieces (open-top body + faceplate), grip slots aligned 8.0mm below top edges of Front and Faceplate, red registration outline on faceplate (drawn as 4 gapped segments to avoid HOLE_AREA_RATIO misclassification), --reference 0.
 - All remaining xfail markers removed. Suite: 120 passed, 0 xfail — the generator gate is fully green for the first time.
+
+## 2026-07-07 — Issue #19: sheet nesting + docs (delegated, reviewed)
+
+- NYC Resistor constraints researched: bed size AMBIGUOUS (site says 32"x20" Epilog Fusion 32; a page comment disputes with 12"x24"). Conservative 18"x24" fallback used and documented; CONFIRM BED SIZE AT THE SPACE before buying material.
+- layout.py rewritten: deterministic shelf packer over per-part <g> groups, 3 sheets, 21/21 parts, path-count parity in=out, colors preserved. final_layout.svg is reference-only.
+- tests/test_layout.py added (8 tests). Full suite: 128 passed, 0 xfail. README rewritten for the real design + cut-day checklist.
