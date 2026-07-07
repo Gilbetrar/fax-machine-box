@@ -115,6 +115,99 @@ FACEPLATE = {
 DRAWER_GRIP_SLOT = {"width": 30.0, "height": 15.0, "radius": 7.5,
                     "top_below_edge": 8.0}
 
+# --- Drawer retention (iteration 2, issue #20): magnet pair per drawer ------
+# DESIGN.md "Retention (iteration 2)": one 6mm-nominal disc magnet press-fit
+# into a hole in the drawer's LEADING body wall (the "Back" piece in
+# generate_drawers.py -- the deep end opposite the faceplate) and a matching
+# coaxial hole in the divider, at the drawer's fully-closed position (the
+# divider is the drawer's in-stop, contact gap 0 -- see DRAWER_BODY comment
+# above). An attracting pair pulls the drawer closed against the divider.
+#
+# Hole diameter: undersize the magnet's own diameter for a press fit, THEN
+# let Boxes.py's `self.hole()` burn-compensate the drawn tool path the same
+# way every other hole in this project is compensated (kerf widens the cut
+# back out towards nominal) -- this is also upstream precedent: Boxes.py's
+# own gridfinitybase.py generator drills its magnet holes via plain
+# `self.hole(x, y, d=dia)` with `dia = requested_diameter - 0.5` for a press
+# -fit variant (its default magnet-hole argument is 6.5 for 6mm magnets, a
+# generic snug fit; the "-0.5" branch is its OWN press-fit case). We follow
+# the same `self.hole()` + fixed-undersize pattern, but pick our own
+# press-fit constant (0.35, not gridfinity's 0.5) since ply and magnet
+# tolerances here were never validated against that project's stock --
+# MAGNET_PRESS_FIT is exactly the number the magnet-fit coupon (see
+# calibration.py's magnet coupon) exists to recalibrate before cutting real
+# parts. BURN and MAGNET_PRESS_FIT do two different jobs and must not be
+# conflated: MAGNET_PRESS_FIT sets the *physical* (post-kerf) hole size
+# relative to the magnet; BURN is what makes the *drawn* tool path smaller
+# than that physical target so the laser's kerf widens it back out to
+# MAGNET_HOLE_DIA. As long as BURN stays calibrated (via the kerf coupon),
+# the magnet holes need no separate kerf correction of their own.
+MAGNET_DIA = 6.0            # nominal disc magnet diameter
+MAGNET_PRESS_FIT = 0.35     # undersize for a press fit; recalibrate via the
+                             # magnet coupon (calibration.py) before cutting
+MAGNET_HOLE_DIA = MAGNET_DIA - MAGNET_PRESS_FIT   # 5.65, physical target size
+
+# Position (DESIGN.md): offset from the drawer's own Y-center (the grip slot
+# -- on the OTHER end panel, the Front -- is 30mm wide and Y-centered; the
+# magnet hole sits well clear of that zone at center + 40mm). Both drawers
+# use the same local offset, and since each drawer is Y-centered in its
+# rear-wall opening at closed position (opening_cx = INTERIOR_WIDTH/2 in the
+# rear wall's own frame -> box Y = T + INTERIOR_WIDTH/2, see shell_generator's
+# rear wall), the two drawers' magnet holes and both divider holes all land
+# at the SAME box Y. Checked (2026-07-07): +40mm puts the hole ~39mm from
+# the divider's nearer Y-edge and the drawer Back panel's nearer finger edge
+# (both >> the required 3mm/8mm clearances); -40mm is symmetric and equally
+# safe -- the choice of side is arbitrary given that clearance margin, so +40
+# (toward increasing Y, the right/engraved-wall side) was picked for no
+# reason beyond matching the literal offset direction in the design brief.
+MAGNET_Y_OFFSET = 40.0
+MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 122.55
+
+# Z: "drawer mid-height" is a property of the drawer body alone (half its own
+# height), independent of which slot it sits in; for the DIVIDER hole (a
+# fixed box part) that local mid-height has to be projected into absolute
+# box Z using each slot's own floor -- the bottom drawer rests on the bay
+# floor (sill-free bottom opening, see DESIGN.md #4), the top drawer rests on
+# the shelf's top face (sill-free top opening) -- so the two divider holes
+# sit at different Z, one per drawer.
+MAGNET_BOTTOM_DRAWER_Z = FLOOR_TOP + DRAWER_BODY["height"] / 2   # 29.925
+MAGNET_TOP_DRAWER_Z = SHELF_Z1 + DRAWER_BODY["height"] / 2       # 91.8375
+
+# --- Lid retention (iteration 2, issue #20): turn-buttons at the slot mouths -
+# DESIGN.md "Retention (iteration 2)": a rounded paddle pivots on a bolt
+# through each side wall, just below/behind its lid slot mouth, and turns up
+# to physically block the slot's own cut opening (caging the lid between the
+# button and the divider stop) or down to clear it entirely.
+TURN_BUTTON = {
+    "length": 22.0,               # X
+    "width": 9.0,                 # Y; half-width doubles as the blunt-end
+                                   # cap radius for the stadium/paddle shape
+    "pivot_from_blunt_end": 4.5,  # = width/2: pivot sits at the blunt end's
+                                   # own rounded-cap center
+    "pivot_hole_dia": 3.2,        # M3 clearance
+}
+# Pivot position on each side wall (box X, box Z). X=8.0 sits inside the lid
+# slot's own X-span (T..LID_SLOT_X_END = 3.175..79.375) rather than at its
+# mouth -- rotating the button up sweeps its paddle across the slot's actual
+# cut opening (where the lid rides), not just the boundary notch at the very
+# front edge, which is what lets the button block the lid without ever
+# needing to overhang past the wall's own front edge. X=8.0 clears the
+# front-edge finger-joint zone (box X 0->T) by 8.0-T=4.825mm (>= the required
+# 3mm); Z=112.0 clears the slot floor (LID_SLOT_BOTTOM=118.025) by 6.025mm
+# (>= 3mm).
+TURN_BUTTON_PIVOT_X = 8.0
+TURN_BUTTON_PIVOT_Z = 112.0
+# Reach (pivot -> tip) needed for the button, rotated to vertical, to clear
+# the slot's top edge (LID_SLOT_TOP=122.0) by >=3mm:
+# TURN_BUTTON_MIN_REACH = (LID_SLOT_TOP + 3) - TURN_BUTTON_PIVOT_Z = 13.0.
+# The button's actual reach (length - pivot_from_blunt_end = 22 - 4.5 = 17.5)
+# exceeds this, so rotated fully vertical the tip lands at box Z = 112 +
+# 17.5 = 129.5 -- 2.5mm above the wall's own top edge (127.0), into open air
+# above the box. DESIGN.md explicitly allows overhang above the slot into
+# the rail zone when the button is up (it presses flat against the wall
+# face and needs nothing to touch at the tip); a knob poking slightly above
+# the box when engaged is normal turn-button behavior, not a defect.
+
 # --- Sliding lid -------------------------------------------------------------
 
 SLIDING_LID = {
