@@ -19,6 +19,22 @@ on scrap BEFORE the real sheets, then:
      BURN = (measured - 10.0) / 2, then regenerate and re-cut the coupon:
      the thickness slots only read true once BURN matches the real kerf.
 
+RETENTION COUPON (iteration 2, issue #20): a SEPARATE sibling output,
+output/retention_coupon.svg (kept out of kerf_coupon.svg so its existing
+"exactly 1 piece" tests -- see tests/test_layout.py -- stay meaningful), with
+4 small pieces for tuning the two retention interference values
+(LID_DETENT_ENGAGE, DRAWER_DETENT_PROTRUDE) before cutting real
+iteration-2 parts:
+
+  3. Wall Flexure Sample + Lid Notch Strip: press the strip's notch over the
+     sample's nub and feel it snap in/out. If it's too loose (pops out with
+     a light nudge) or too stiff (won't seat without force), adjust
+     LID_DETENT_ENGAGE in config.py, regenerate, and re-cut both pieces.
+  4. Faceplate Flexure Sample + Mock Opening Edge: slide the mock edge
+     across the sample's nub the way the rear-wall opening's corner would
+     slide across it on a real close, and feel the same snap. Adjust
+     DRAWER_DETENT_PROTRUDE if it's too loose/stiff, regenerate, and re-cut.
+
 All cut lines are CUT_COLOR (blue) -- nothing on this coupon is engraved.
 """
 
@@ -31,9 +47,21 @@ from faxbox.config import (
     FINGER_PLAY_RELATIVE,
     BURN,
     CUT_COLOR,
+    DETENT_BEAM_LENGTH,
+    DETENT_BEAM_WIDTH,
+    DETENT_CLEARANCE,
+    DETENT_ROOT_FILLET,
+    DETENT_SEVER_WIDTH,
+    DRAWER_DETENT_PROTRUDE,
+    FACEPLATE_REVEAL,
+    LID_DETENT_ENGAGE,
+    LID_NOTCH_CHAMFER,
+    LID_NOTCH_DEPTH,
+    LID_NOTCH_WIDTH,
     MATERIAL_THICKNESS,
     OUTPUT_DIR,
 )
+from faxbox.detent import edge_nub_detour, lid_slot_with_nub_points, notch_points, release_cut_rects
 
 # --- Coupon geometry ---------------------------------------------------------
 
@@ -78,6 +106,42 @@ def _item_centers() -> list[float]:
     return centers
 
 
+# --- Retention coupon geometry (iteration 2, issue #20) ----------------------
+# Four standalone pieces exercising the two mechanisms at small scale, so Ben
+# can feel the snap force and tune LID_DETENT_ENGAGE / DRAWER_DETENT_PROTRUDE
+# before cutting real parts. All plain-edged blanks, same conventions as the
+# kerf/fit pieces above.
+
+_SAMPLE_MARGIN = 5.0
+
+# Wall Flexure Sample: a compact stand-in for a side wall's lid-detent area
+# -- a slot-with-nub hole across the top (the lid slot floor, with the nub
+# poking up into it) and the cantilever release cut below, both drawn with
+# the SAME faxbox.detent helpers shell_generator.py uses for the real wall.
+WALL_SAMPLE_WIDTH = DETENT_BEAM_LENGTH + 2 * _SAMPLE_MARGIN
+WALL_SAMPLE_FLOOR_Z = DETENT_BEAM_WIDTH + DETENT_CLEARANCE + 3.0
+WALL_SAMPLE_HEIGHT = WALL_SAMPLE_FLOOR_Z + LID_DETENT_ENGAGE + 5.0
+
+# Lid Notch Strip: a short stand-in for the lid's mating edge, carrying the
+# same notch generate_lids.py cuts into the real lid.
+NOTCH_STRIP_WIDTH = LID_NOTCH_WIDTH + 2 * _SAMPLE_MARGIN
+NOTCH_STRIP_HEIGHT = LID_NOTCH_DEPTH + _SAMPLE_MARGIN
+
+# Faceplate Flexure Sample: a compact stand-in for one faceplate Y edge --
+# the SAME nub-detour + release-cut shape generate_drawers.py cuts into the
+# real faceplate, on just one edge (a sample only needs one to demonstrate
+# the snap).
+FACE_SAMPLE_HEIGHT = DETENT_BEAM_LENGTH + 2 * _SAMPLE_MARGIN
+FACE_SAMPLE_BODY_WIDTH = DETENT_BEAM_WIDTH + DETENT_CLEARANCE + 3.0
+FACE_SAMPLE_WIDTH = FACE_SAMPLE_BODY_WIDTH + DRAWER_DETENT_PROTRUDE
+
+# Mock Opening Edge: a plain strip representing the rear-wall opening's side
+# edge the faceplate nub snaps behind -- hold it FACEPLATE_REVEAL off the
+# faceplate sample's rest edge and slide the two together.
+MOCK_EDGE_WIDTH = 40.0
+MOCK_EDGE_HEIGHT = 15.0
+
+
 class CalibrationCoupon(Boxes):
     """A single small standalone panel: 3 fit-test slots + 1 kerf-test hole."""
 
@@ -112,6 +176,116 @@ class CalibrationCoupon(Boxes):
             callback=[callback, None, None, None],
             move="right", label="Kerf Coupon",
         )
+
+
+class RetentionCoupon(Boxes):
+    """A separate standalone sheet (issue #20): 4 small pieces exercising
+    the two retention mechanisms so LID_DETENT_ENGAGE / DRAWER_DETENT_PROTRUDE
+    can be tuned by feel before cutting real iteration-2 parts. Kept in its
+    own output file rather than appended to CalibrationCoupon's sheet, per
+    the module docstring."""
+
+    def __init__(self) -> None:
+        Boxes.__init__(self)
+        self.addSettingsArgs(edges.FingerJointSettings)
+
+    def _draw_closed_polygon(self, points: list[tuple[float, float]]) -> None:
+        """Stroke a closed polygon -- see faxbox.detent module docstring."""
+        self.ctx.move_to(*points[0])
+        for pt in points[1:]:
+            self.ctx.line_to(*pt)
+        self.ctx.line_to(*points[0])
+        self.ctx.stroke()
+
+    def _build_wall_sample(self) -> None:
+        def callback() -> None:
+            nub_top_z = WALL_SAMPLE_FLOOR_Z + LID_DETENT_ENGAGE
+            points = lid_slot_with_nub_points(
+                u0=0, u1=WALL_SAMPLE_WIDTH, z0=WALL_SAMPLE_FLOOR_Z, z1=WALL_SAMPLE_HEIGHT,
+                nub_center=WALL_SAMPLE_WIDTH / 2, nub_top_z=nub_top_z,
+            )
+            self._draw_closed_polygon(points)
+
+            tip = WALL_SAMPLE_WIDTH / 2 - DETENT_BEAM_LENGTH / 2
+            root = WALL_SAMPLE_WIDTH / 2 + DETENT_BEAM_LENGTH / 2
+            beam_bottom = WALL_SAMPLE_FLOOR_Z - DETENT_BEAM_WIDTH
+            cavity_bottom = beam_bottom - DETENT_CLEARANCE
+            cavity, sever = release_cut_rects(
+                tip=tip, root=root, beam_bottom=beam_bottom, cavity_bottom=cavity_bottom,
+                sever_width=DETENT_SEVER_WIDTH, floor=WALL_SAMPLE_FLOOR_Z,
+            )
+            self.rectangularHole(*cavity, r=DETENT_ROOT_FILLET)
+            self.rectangularHole(*sever, r=DETENT_ROOT_FILLET)
+
+        self.rectangularWall(
+            WALL_SAMPLE_WIDTH, WALL_SAMPLE_HEIGHT, "eeee",
+            callback=[callback, None, None, None],
+            move="right", label="Retention: Wall Flexure Sample",
+        )
+
+    def _build_notch_strip(self) -> None:
+        def callback() -> None:
+            points = notch_points(
+                center=NOTCH_STRIP_WIDTH / 2, width=LID_NOTCH_WIDTH, depth=LID_NOTCH_DEPTH,
+                chamfer=LID_NOTCH_CHAMFER, edge_level=0.0, inward_sign=1.0,
+            )
+            self._draw_closed_polygon(points)
+
+        self.rectangularWall(
+            NOTCH_STRIP_WIDTH, NOTCH_STRIP_HEIGHT, "eeee",
+            callback=[callback, None, None, None],
+            move="right", label="Retention: Lid Notch Strip",
+        )
+
+    def _build_faceplate_sample(self) -> None:
+        """Bypasses rectangularWall's automatic straight edges for the same
+        reason generate_drawers.py's _build_faceplate does: the nub-bearing
+        edge needs a local protrusion no Boxes.py edge class can express, so
+        the whole outline is hand-drawn (see faxbox.detent's docstring)."""
+        edge_rest = DRAWER_DETENT_PROTRUDE
+        peak = 0.0
+        tip_z = FACE_SAMPLE_HEIGHT / 2 + DETENT_BEAM_LENGTH / 2
+        root_z = FACE_SAMPLE_HEIGHT / 2 - DETENT_BEAM_LENGTH / 2
+        detour = [(x, y) for y, x in edge_nub_detour(root_z, tip_z, edge_rest, peak)]
+        outline = [
+            (edge_rest, 0.0),
+            (FACE_SAMPLE_WIDTH, 0.0),
+            (FACE_SAMPLE_WIDTH, FACE_SAMPLE_HEIGHT),
+            (edge_rest, FACE_SAMPLE_HEIGHT),
+            (edge_rest, tip_z),
+            *reversed(detour),
+        ]
+
+        if self.move(FACE_SAMPLE_WIDTH, FACE_SAMPLE_HEIGHT, "right", before=True):
+            return
+        self.moveTo(0, 0)
+        self.set_source_color(CUT_COLOR)
+        self._draw_closed_polygon(outline)
+
+        beam_bottom = edge_rest + DETENT_BEAM_WIDTH
+        cavity_bottom = beam_bottom + DETENT_CLEARANCE
+        cavity, sever = release_cut_rects(
+            tip=tip_z, root=root_z, beam_bottom=beam_bottom, cavity_bottom=cavity_bottom,
+            sever_width=DETENT_SEVER_WIDTH, floor=edge_rest,
+        )
+        for cx, cy, dx, dy in (cavity, sever):
+            self.rectangularHole(cy, cx, dy, dx, r=DETENT_ROOT_FILLET)
+
+        self.move(FACE_SAMPLE_WIDTH, FACE_SAMPLE_HEIGHT, "right", label="Retention: Faceplate Flexure Sample")
+
+    def _build_mock_opening_edge(self) -> None:
+        self.rectangularWall(
+            MOCK_EDGE_WIDTH, MOCK_EDGE_HEIGHT, "eeee",
+            move="right", label="Retention: Mock Opening Edge",
+        )
+
+    def render(self) -> None:
+        """Render all 4 retention-coupon pieces in a single row."""
+        self.set_source_color(CUT_COLOR)
+        self._build_wall_sample()
+        self._build_notch_strip()
+        self._build_faceplate_sample()
+        self._build_mock_opening_edge()
 
 
 def generate_calibration() -> Path:
@@ -159,5 +333,45 @@ def generate_calibration() -> Path:
     return output_file
 
 
+def generate_retention_coupon() -> Path:
+    """Generate the retention coupon SVG file (issue #20): 4 small pieces
+    for tuning LID_DETENT_ENGAGE / DRAWER_DETENT_PROTRUDE by feel before
+    cutting real iteration-2 parts. See this module's docstring.
+
+    Returns:
+        Path to the generated SVG file.
+    """
+    output_path = Path(OUTPUT_DIR)
+    output_path.mkdir(parents=True, exist_ok=True)
+    output_file = output_path / "retention_coupon.svg"
+
+    coupon = RetentionCoupon()
+    coupon.parseArgs([
+        "--output", str(output_file),
+        "--thickness", str(MATERIAL_THICKNESS),
+        "--burn", str(BURN),
+        "--reference", "0",
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
+    ])
+
+    coupon.open()
+    coupon.render()
+    data = coupon.close()
+
+    with open(output_file, "wb") as f:
+        f.write(data.getvalue())
+
+    print(f"Generated retention coupon SVG: {output_file.absolute()}")
+    print("  Cut this on scrap BEFORE the real iteration-2 parts. Pieces:")
+    print("    - Wall Flexure Sample + Lid Notch Strip: press the notch over the")
+    print("      sample's nub and feel it snap. Tune LID_DETENT_ENGAGE if it's")
+    print("      too loose/stiff, regenerate, and re-cut both.")
+    print("    - Faceplate Flexure Sample + Mock Opening Edge: slide the mock edge")
+    print("      across the sample's nub the way a real close would, and feel the")
+    print("      same snap. Tune DRAWER_DETENT_PROTRUDE, regenerate, and re-cut.")
+    return output_file
+
+
 if __name__ == "__main__":
     generate_calibration()
+    generate_retention_coupon()

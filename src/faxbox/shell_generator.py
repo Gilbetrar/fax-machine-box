@@ -29,6 +29,8 @@ from faxbox.config import (
     BOTTOM_OPENING_Z1,
     BURN,
     CUT_COLOR,
+    DETENT_ROOT_FILLET,
+    DETENT_SEVER_WIDTH,
     DIVIDER_HEIGHT,
     DIVIDER_X0,
     DIVIDER_X1,
@@ -42,8 +44,15 @@ from faxbox.config import (
     FRONT_WALL_TOP,
     INTERIOR_LENGTH,
     INTERIOR_WIDTH,
+    LID_DETENT_BEAM_BOTTOM_Z,
+    LID_DETENT_CAVITY_BOTTOM_Z,
+    LID_DETENT_NUB_TOP_Z,
+    LID_DETENT_ROOT_X,
+    LID_DETENT_TIP_X,
+    LID_DETENT_X,
     LID_SLOT_BOTTOM,
     LID_SLOT_HEIGHT,
+    LID_SLOT_TOP,
     LID_SLOT_X_END,
     MATERIAL_THICKNESS,
     OPENING_HEIGHT,
@@ -55,6 +64,7 @@ from faxbox.config import (
     TOP_PANEL_HOLE_Z,
     WALL_HEIGHT,
 )
+from faxbox.detent import lid_slot_with_nub_points, release_cut_rects
 
 T = MATERIAL_THICKNESS
 
@@ -144,6 +154,17 @@ class OuterShell(Boxes):
                 self.ctx.stroke()
         return pixel_size * 5 + ENGRAVE_FONT_SPACING
 
+    def _draw_closed_polygon(self, points: list[tuple[float, float]]) -> None:
+        """Stroke a closed polygon from a plain (x, y) point list -- burn-
+        neutral raw ctx path (see detent.py's module docstring for why),
+        used for the retention nub/notch shapes that rectangularHole's plain
+        rectangle can't express."""
+        self.ctx.move_to(*points[0])
+        for pt in points[1:]:
+            self.ctx.line_to(*pt)
+        self.ctx.line_to(*points[0])  # close (Boxes.py's Context has no close_path)
+        self.ctx.stroke()
+
     def draw_pixel_text(self, text: str, x: float, y: float, pixel_size: float = ENGRAVE_PIXEL_SIZE) -> None:
         """Draw text using the pixel font in the engraving (red) color."""
         self.set_source_color(ENGRAVE_COLOR)
@@ -228,13 +249,40 @@ class OuterShell(Boxes):
 
             # Lid through-slot: closed hole whose front boundary coincides
             # with the blank's front edge -- both lines get cut, opening the
-            # mouth (DESIGN.md #2).
+            # mouth (DESIGN.md #2). Its bottom boundary carries a ramped nub
+            # bump (retention iteration 2, issue #20, DESIGN.md "Retention
+            # (iteration 2)") -- the nub is the tip of a cantilever cut into
+            # the material below the slot floor (see the release cut below);
+            # both features are defined in unmirrored local-u = box X - T,
+            # then every vertex is mirrored for the left wall so both walls'
+            # nubs land at the same real box X (same convention as slot_cx).
             slot_length = LID_SLOT_X_END - T
-            slot_cx = slot_length / 2
-            slot_cz = LID_SLOT_BOTTOM + LID_SLOT_HEIGHT / 2
+            u_nub = LID_DETENT_X - T
+            points = lid_slot_with_nub_points(
+                u0=0, u1=slot_length, z0=LID_SLOT_BOTTOM, z1=LID_SLOT_TOP,
+                nub_center=u_nub, nub_top_z=LID_DETENT_NUB_TOP_Z,
+            )
             if mirror:
-                slot_cx = mirror_point(slot_cx)
-            self.rectangularHole(slot_cx, slot_cz, slot_length, LID_SLOT_HEIGHT, r=0)
+                points = [(mirror_point(u), z) for u, z in points]
+            self._draw_closed_polygon(points)
+
+            # Cantilever release cut: frees the beam on 3 sides (clearance
+            # cavity below it, a severing slot at its free/tip end) while
+            # leaving the root end (deeper into the wall) solid, so the
+            # tongue carrying the nub above can flex down under the lid's
+            # leading edge and spring back up once past it.
+            u_tip = LID_DETENT_TIP_X - T
+            u_root = LID_DETENT_ROOT_X - T
+            if mirror:
+                u_tip, u_root = mirror_point(u_tip), mirror_point(u_root)
+            cavity, sever = release_cut_rects(
+                tip=u_tip, root=u_root,
+                beam_bottom=LID_DETENT_BEAM_BOTTOM_Z,
+                cavity_bottom=LID_DETENT_CAVITY_BOTTOM_Z,
+                sever_width=DETENT_SEVER_WIDTH, floor=LID_SLOT_BOTTOM,
+            )
+            self.rectangularHole(*cavity, r=DETENT_ROOT_FILLET)
+            self.rectangularHole(*sever, r=DETENT_ROOT_FILLET)
 
             # Divider finger-hole line (vertical).
             divider_x = DIVIDER_MID_LOCAL_X

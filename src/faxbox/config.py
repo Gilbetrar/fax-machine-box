@@ -8,6 +8,8 @@ Coordinate convention (DESIGN.md): origin at the exterior front-left-bottom
 corner. X+ rearward (length, 12"), Y+ rightward (width, 6.5"), Z+ up (5").
 """
 
+import math
+
 # --- Material & laser -------------------------------------------------------
 
 MATERIAL_THICKNESS = 3.175  # 1/8" plywood, uniform for ALL parts (SPEC)
@@ -134,6 +136,100 @@ ENGRAVE_TEXT = "FAX MACHINE"
 ENGRAVE_PIXEL_SIZE = 4.0          # 5x7 pixel font cell size
 ENGRAVE_FONT_SPACING = 2.0        # gap between letters
 ENGRAVE_CENTER = {"x": SHELL_EXT["length"] / 2, "z": 63.5}  # right wall exterior
+
+# --- Retention (iteration 2, issue #20) --------------------------------------
+# Two in-plane laser-cut cantilever spring detents, adapted from Boxes.py's
+# own precedents (boxes/edges.py SlideOnLidSettings/LidRight: spring finger
+# length min(6t, ...), 30 degree tip ramp, catch-hole depth 0.4t; boxes/
+# generators/dinrailbox.py: a cantilever tongue with a nub cut directly into
+# a panel). We adapt the *proportions* of those precedents, not their play
+# values (they assume ~0.3mm clearance; this project's slide clearances are
+# deliberately looser, see SLIDE_CLEARANCE / LID_SLOT_VERTICAL_CLEARANCE
+# above) -- see DESIGN.md's "Retention (iteration 2)" section for the full
+# derivation and coordinates.
+#
+# Mechanism A (side walls): a cantilever cut into the wall material just
+# below the lid slot floor, with a ramped nub poking up through the floor
+# into the slot cavity -- the lid's closed position carries a matching
+# edge-open notch that the nub pops into.
+# Mechanism B (drawer faceplates): a cantilever cut near each Y side edge of
+# the faceplate, with a ramped nub poking out sideways past the faceplate's
+# own edge -- it snaps past the rear-wall opening's side edge on close.
+
+# Nub engagement / interference depths (the two values Ben tunes against the
+# retention coupon before cutting real parts -- see calibration.py).
+LID_DETENT_ENGAGE = 1.5        # nub rise above the lid slot floor (mm); must
+                                # exceed LID_SLOT_VERTICAL_CLEARANCE (0.8) so
+                                # the nub stays engaged when the lid shifts
+                                # within its own vertical play.
+DRAWER_DETENT_PROTRUDE = 1.2   # nub protrusion beyond the faceplate edge
+                                # (mm); 0.45mm interference past the 0.75mm
+                                # FACEPLATE_REVEAL when the faceplate is
+                                # centered in its opening.
+
+# Shared cantilever proportions (both mechanisms use the same beam stock;
+# only the nub height/protrusion differs per mechanism above).
+DETENT_BEAM_LENGTH = 18.0       # cantilever length (mm)
+DETENT_BEAM_WIDTH = 2.5         # beam cross-section width in the flex
+                                # direction (mm) -- the dimension that bends
+DETENT_ROOT_FILLET = 1.0        # minimum root fillet radius (mm)
+DETENT_CLEARANCE = 2.5          # clearance behind/below the beam so it can
+                                # deflect its own engagement depth without
+                                # bottoming out (mm)
+DETENT_RAMP_DEG = 30.0          # nub ramp angle from the beam's rest plane,
+                                # matching Boxes.py LidRight's barb angle `a`
+DETENT_SEVER_WIDTH = 1.0        # width of the release cut that frees the
+                                # beam's tip from the surrounding material
+                                # (mm) -- well above kerf so it fully parts
+DETENT_NUB_TOP_WIDTH = 2.5      # flat land at the nub's tip (mm); a flat
+                                # top (rather than a knife edge) avoids the
+                                # stress-concentrating point a bare 30 degree
+                                # wedge would leave in cross-grain plywood
+
+# --- Mechanism A: side-wall lid detent ---------------------------------------
+# Nub centered on the beam (LID_DETENT_X +/- half the beam length); the free
+# (severed) end sits toward the wall's front (mouth) edge, the root end is
+# solid, deeper into the wall -- clear of both the front-edge finger joints
+# (below LID_SLOT_BOTTOM only) and the divider hole line (79.375-82.55).
+LID_DETENT_X = 20.0             # box X, nub center (both walls; the mirror
+                                 # convention in shell_generator.py lands
+                                 # both walls' nubs at this same real box X)
+LID_DETENT_TIP_X = LID_DETENT_X - DETENT_BEAM_LENGTH / 2   # 11.0, free/severed end
+LID_DETENT_ROOT_X = LID_DETENT_X + DETENT_BEAM_LENGTH / 2  # 29.0, solid anchor end
+
+LID_DETENT_RAMP_RUN = LID_DETENT_ENGAGE / math.tan(math.radians(DETENT_RAMP_DEG))
+LID_DETENT_NUB_BASE_WIDTH = DETENT_NUB_TOP_WIDTH + 2 * LID_DETENT_RAMP_RUN  # ~7.7
+
+LID_DETENT_NUB_TOP_Z = LID_SLOT_BOTTOM + LID_DETENT_ENGAGE          # 119.525
+LID_DETENT_BEAM_BOTTOM_Z = LID_SLOT_BOTTOM - DETENT_BEAM_WIDTH      # 115.525
+LID_DETENT_CAVITY_BOTTOM_Z = LID_DETENT_BEAM_BOTTOM_Z - DETENT_CLEARANCE  # 113.025
+
+# Mating notch in the lid's side edges (DESIGN.md #8: closed lid front edge
+# sits at box X = LID_SLOT_X_END - SLIDING_LID["length"], "~0.4mm shy" of the
+# front face -- lid-local X = box X - that offset).
+LID_CLOSED_FRONT_X = LID_SLOT_X_END - SLIDING_LID["length"]        # 0.375
+LID_NOTCH_X = LID_DETENT_X - LID_CLOSED_FRONT_X                    # 19.625, lid-local
+LID_NOTCH_WIDTH = LID_DETENT_NUB_BASE_WIDTH + 1.0                  # ~8.7
+LID_NOTCH_DEPTH = 3.0                # >= LID lid-slot engagement (2.425) + margin
+LID_NOTCH_CHAMFER = 1.0              # corner ease at the notch mouth (mm)
+
+# --- Mechanism B: drawer faceplate detent ------------------------------------
+# Nub Z-center at the faceplate's mid-height -- beside (never intersecting)
+# the Y-centered grip slot, which sits ~60mm away in Y. Root end toward the
+# bottom edge, free/severed (tip) end toward the top -- an arbitrary but
+# consistent choice; the grip slot's Y-separation is what actually keeps the
+# two features apart, not the Z split.
+DRAWER_DETENT_Z = FACEPLATE["height"] / 2                          # 26.75
+DRAWER_DETENT_ROOT_Z = DRAWER_DETENT_Z - DETENT_BEAM_LENGTH / 2    # 17.75
+DRAWER_DETENT_TIP_Z = DRAWER_DETENT_Z + DETENT_BEAM_LENGTH / 2     # 35.75
+
+DRAWER_DETENT_RAMP_RUN = DRAWER_DETENT_PROTRUDE / math.tan(math.radians(DETENT_RAMP_DEG))
+DRAWER_DETENT_NUB_BASE_WIDTH = DETENT_NUB_TOP_WIDTH + 2 * DRAWER_DETENT_RAMP_RUN  # ~6.66
+
+# Faceplate's true drawn footprint, including both nubs (DESIGN.md #9,
+# amended): the outer boundary is drawn offset by DRAWER_DETENT_PROTRUDE so
+# the leftmost nub tip sits at local x=0 (see generate_drawers.py).
+FACEPLATE_DRAWN_WIDTH = FACEPLATE["width"] + 2 * DRAWER_DETENT_PROTRUDE  # 153.3
 
 # --- Output ------------------------------------------------------------------
 

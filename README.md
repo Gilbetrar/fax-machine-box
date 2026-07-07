@@ -122,11 +122,15 @@ There is **no separate flat/tabbed lid** — that part doesn't exist in this
 design. The drawer bay is covered by the fixed Top Panel above, not a
 removable cover.
 
-**Calibration — standalone, not part of the box (from `kerf_coupon.svg`):**
+**Calibration — standalone, not part of the box (from `kerf_coupon.svg` and
+`retention_coupon.svg`):**
 
 - [ ] 1× Kerf/thickness coupon — three ply-thickness gauge slots (3.05 /
   3.175 / 3.30mm) and a 10mm reference square. Cut this on scrap *before*
   cutting any real part; see "Cut-day checklist" step 3.
+- [ ] 4× Retention coupon pieces (issue #20) — Wall Flexure Sample, Lid
+  Notch Strip, Faceplate Flexure Sample, Mock Opening Edge. Cut on scrap
+  *before* the real iteration-2 parts; see "Cut-day checklist" step 3b.
 
 ## Wall identification (read this before assembly)
 
@@ -259,16 +263,19 @@ This design accepts some real tradeoffs to hit the SPEC envelope and the
 front-insert lid concept. None of these are bugs — they're documented so
 nobody "fixes" them mid-build or is surprised later:
 
-- **The sliding lid has no retention along its travel axis.** The divider
-  stops it from sliding in too far (rearward), but nothing stops it sliding
-  back *out* the front. Tip the box front-down and the lid will slide out.
-  This is an accepted cost of the front-insert design (the slots have to be
-  open at the front edge for the lid to go in at all) — **carry the box
-  level**, especially with the lid closed.
-- **The drawers have no out-stop either.** Nothing prevents a drawer from
-  sliding fully out its rear-wall opening. Tip the box rear-down and a
-  drawer will slide free. Don't rely on friction to keep drawers seated in
-  transit.
+- **The sliding lid has spring-detent retention (iteration 2, issue #20),
+  not a lock.** Each side wall carries a cantilever nub that pops through a
+  matching notch in the lid's side edges when it's closed, holding it
+  seated if the box tips 90° front-down. It's still a light detent, not a
+  latch — don't rely on it against a hard drop, and it still slides free
+  with normal one-finger effort when you want it to. See DESIGN.md
+  "Retention (iteration 2)" for the mechanism; **tune the fit on the
+  retention coupon before cutting real parts** (see the checklist below).
+- **The drawers have the same kind of detent, not a hard stop.** Each
+  faceplate carries a cantilever nub per side that snaps behind the
+  rear-wall opening's edge on close, holding the drawer seated if the box
+  tips 90° rear-down. Same caveat: a detent, not a latch — pull with the
+  grip slot as usual to open.
 - **Drawers close flush by bottoming out on the divider, not the rear
   wall.** The inset faceplate never bears against the rear-wall opening
   frame — the drawer body's front face is what stops against the divider
@@ -324,6 +331,22 @@ this checklist is current.
    confirm before trusting the gauge slots) before cutting real parts. Do not skip this
    because `BURN`/`FINGER_PLAY` already have values in the repo — those are
    starting values, not calibrated ones.
+3b. **Cut `output/retention_coupon.svg` on scrap NEXT, before the real
+   iteration-2 parts** (issue #20's spring-detent lid/drawer retention — see
+   DESIGN.md "Retention (iteration 2)"). Four small pieces: a Wall Flexure
+   Sample + Lid Notch Strip (press the notch over the sample's nub and feel
+   it snap in/out), and a Faceplate Flexure Sample + Mock Opening Edge
+   (slide the mock edge across the sample's nub the way a real close would).
+   Too loose (pops out with a light nudge) or too stiff (won't seat without
+   force, or feels like it might snap the nub off) — adjust
+   `LID_DETENT_ENGAGE` and/or `DRAWER_DETENT_PROTRUDE` in
+   `src/faxbox/config.py`, regenerate `calibration` (and everything else,
+   since those constants also drive the real wall/lid/faceplate geometry),
+   and re-cut before trusting the real parts' fit. Cut both flexure samples
+   with the same grain orientation the real parts will have (see DESIGN.md's
+   Grain caveat) — the faceplate sample bends across grain, the weaker
+   direction, so it's the one most likely to need tuning or a fallback to
+   magnets if the ply proves too brittle.
 4. **CorelDraw import.** NYC Resistor's workflow is CorelDraw-based; their
    tips page warns Inkscape's raw SVG export can get corrupted there and
    recommends exporting PDF instead. On import: set all strokes to

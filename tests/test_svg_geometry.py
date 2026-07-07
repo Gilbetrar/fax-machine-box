@@ -276,9 +276,22 @@ def test_drawer_bottom_blank_size():
 
 # DESIGN.md #9 faceplate: "glued to the body front" (not finger-jointed) ->
 # 0 jointed edges both axes.
+#
+# FLAGGED DEVIATION (issue #20, retention iteration 2): the Y-axis nominal
+# below is c.FACEPLATE_DRAWN_WIDTH (150.9 + 2*DRAWER_DETENT_PROTRUDE), not
+# the plain c.FACEPLATE["width"] this test used pre-#20. The faceplate now
+# carries a real cantilever nub that protrudes DRAWER_DETENT_PROTRUDE past
+# each Y edge (see generate_drawers.py's _build_faceplate and DESIGN.md's
+# "Retention (iteration 2)" section) -- svg_utils's bbox-based piece
+# detection has no way to distinguish "a bigger nominal blank" from "a real
+# protruding feature on the same connected piece", so a genuinely larger
+# physical part is the only way to add real interference retention here,
+# and this test's *measurement* (piece.bbox.width) legitimately grew. The
+# tolerance slack (0.5mm) is unchanged from before -- this updates the
+# nominal being measured against, not the rigor of the check.
 def test_faceplate_blank_size():
     piece = _piece(DRAWER_SVG, "faceplate")
-    _assert_band(piece, "Y", piece.bbox.width, c.FACEPLATE["width"], jointed_edges=0)
+    _assert_band(piece, "Y", piece.bbox.width, c.FACEPLATE_DRAWN_WIDTH, jointed_edges=0)
     _assert_band(piece, "Z", piece.bbox.height, c.FACEPLATE["height"], jointed_edges=0)
 
 
@@ -859,5 +872,11 @@ def test_edge_polarity_literals_present():
     assert drawer_src.count('"fFeF"') == 2, "expected drawer Front + Back both using \"fFeF\""
     # Drawer side walls: front/back-mating edges finger, bottom fingers, top open.
     assert '"ffef"' in drawer_src
-    # Drawer Bottom AND Faceplate: plain all around.
-    assert drawer_src.count('"eeee"') == 2, "expected drawer Bottom + Faceplate both using \"eeee\""
+    # Drawer Bottom: plain all around. (Faceplate was also a plain "eeee"
+    # rectangularWall pre-#20; retention iteration 2 gave it a real
+    # protruding nub on both Y edges, which Boxes.py's edge classes can't
+    # express -- generate_drawers.py now hand-draws its whole outer boundary
+    # instead of calling rectangularWall with an edge-type string at all, so
+    # there is no "eeee" literal left to find for it. See the flagged
+    # deviation on test_faceplate_blank_size above for the same root cause.)
+    assert drawer_src.count('"eeee"') == 1, "expected drawer Bottom using \"eeee\""
