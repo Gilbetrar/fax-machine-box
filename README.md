@@ -67,8 +67,9 @@ fax-machine-box/
 │   ├── generate_drawers.py  # one drawer's 6 pieces (body x5 + faceplate); cut this sheet twice
 │   ├── generate_lids.py     # sliding lid (1 piece)
 │   ├── layout.py            # nests all parts onto bed-sized sheets for cutting
-│   ├── calibration.py       # kerf/ply-thickness coupon + magnet press-fit coupon
-│   └── generate_hardware.py # iteration-2 lid turn-button (1 piece) -> output/hardware.svg
+│   ├── calibration.py       # kerf/ply-thickness coupon + magnet press-fit coupon (+ Ponoko combined coupon)
+│   ├── generate_hardware.py # iteration-2 lid turn-button (1 piece) -> output/hardware.svg
+│   └── ponoko.py            # Ponoko export mode -> output/ponoko/ (see "Ordering from Ponoko")
 ├── tests/                   # pytest harness: geometry, laser-compliance, and layout checks
 ├── docs/service-comparison.md  # laser service comparison + verified NYC Resistor constraints
 ├── DESIGN.md                # canonical geometry — the source of truth for every number
@@ -463,3 +464,60 @@ this checklist is current.
    piece), then dry-fit before gluing anything** — see "Assembly steps"
    above. Don't fit the magnets/turn-button bolts until after glue-up (see
    "Iteration-2 retention hardware" above).
+
+## Ordering from Ponoko
+
+The NYC Resistor path above **remains the default** — nothing about it
+changes unless you explicitly opt in. Ponoko export is an alternate,
+mail-order way to get the same box cut without a laser class or a Brooklyn
+craft night.
+
+**Regenerate for Ponoko** (either command; they're equivalent):
+
+```bash
+.venv/bin/python -m faxbox.ponoko
+# or: FAXBOX_PROVIDER=ponoko .venv/bin/python -m faxbox.layout
+```
+
+This writes `output/ponoko/sheet_1.svg`, `sheet_2.svg`, `sheet_3.svg` (plus
+a reference-only `final_layout.svg` — never upload that one). Differences
+from the NYCR sheets, all verified against Ponoko's own current docs on
+2026-07-07 (source URLs in `src/faxbox/config.py`'s `PONOKO_*` constants):
+
+- **Kerf compensation:** `BURN = 0.10` (half Ponoko's published 0.20mm birch
+  kerf), vs. the NYCR default 0.08.
+- **Sheets re-nested** to fit Ponoko's published 790×384mm max design area
+  for birch plywood (the NYCR sheet 2 at ~549×434mm is too tall for it).
+  Still 3 sheets — price scales with material.
+- **All 22 real parts on the sheets** — the 21 NYCR parts plus the
+  turn-button (standalone `hardware.svg` on the NYCR path) — **plus a
+  self-calibration coupon** (kerf square + 4-hole magnet press-fit gauge
+  row) nested into spare space, since Ponoko has no "cut a coupon on scrap
+  first" step: your first order IS the test cut.
+- **No gray reference text** — Ponoko requires text converted to outlines
+  (it isn't read otherwise), and outlined part names would engrave onto
+  visible faces. Identify parts by size against the "Parts checklist" above
+  (each `<g>` also carries a `data-part` attribute if you open the SVG).
+- Colors are blue=cut / red=vector-engrave — Ponoko's recommended convention,
+  which happens to match this project's own.
+
+**Placing the order:** upload the three `output/ponoko/sheet_*.svg` files at
+ponoko.com, pick **Birch Plywood, 3.2mm** (their 1/8" stock — within this
+design's 3.0–3.4mm tolerance band), one sheet each. Their quote is instant
+at upload. Typical turnaround is roughly ~8 business days production +
+shipping to NYC (check the quote page for current dates).
+
+**Calibrate from the first order** (closes the loop for order #2+):
+
+1. Find the small 110×25mm coupon strip. Measure its square hole with
+   calipers. Its tool path is drawn at exactly 10.0mm (burn-neutral), so:
+   `PONOKO_BURN = (measured − 10.0) / 2` — update it in
+   `src/faxbox/config.py` if it differs from the current 0.10.
+2. Press a real 6mm disc magnet into the 4 gauge holes (5.5 / 5.65 / 5.8 /
+   5.95mm, left to right after the square). Whichever seats snugly sets
+   `MAGNET_PRESS_FIT = MAGNET_DIA − <snuggest diameter>`.
+3. If the first order's finger joints are loose/tight, the kerf-square
+   reading from step 1 is the fix — regenerate and the next order is dialed
+   in. (If joints on the FIRST order don't assemble at all, that's a
+   thickness problem, not kerf — check the delivered ply with calipers
+   against the 3.0–3.4mm band.)

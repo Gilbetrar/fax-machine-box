@@ -20,6 +20,7 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox import config
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
     BAY_LENGTH,
@@ -27,13 +28,10 @@ from faxbox.config import (
     BAY_X1,
     BOTTOM_OPENING_Z0,
     BOTTOM_OPENING_Z1,
-    BURN,
-    CUT_COLOR,
     DIVIDER_HEIGHT,
     DIVIDER_X0,
     DIVIDER_X1,
     ENGRAVE_CENTER,
-    ENGRAVE_COLOR,
     ENGRAVE_FONT_SPACING,
     ENGRAVE_PIXEL_SIZE,
     ENGRAVE_TEXT,
@@ -52,7 +50,6 @@ from faxbox.config import (
     MATERIAL_THICKNESS,
     OPENING_HEIGHT,
     OPENING_WIDTH,
-    OUTPUT_DIR,
     SHELF_Z0,
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
@@ -113,9 +110,18 @@ SHELF_MID_Z = SHELF_Z0 + T / 2
 class OuterShell(Boxes):
     """Outer shell: bottom, 4 walls, divider, shelf, fixed top panel."""
 
-    def __init__(self) -> None:
+    def __init__(self, provider: str | None = None) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
+        # Provider abstraction (config.PROVIDERS): which cut/engrave colors
+        # this instance draws with. Defaults to "nycr" (this project's
+        # original hardcoded CUT_COLOR/ENGRAVE_COLOR), so an un-parameterized
+        # OuterShell() is byte-for-byte identical to pre-provider-abstraction
+        # behavior. BURN itself is NOT threaded through here -- it flows via
+        # the --burn CLI arg in generate_shell() below, same as always.
+        provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+        self.cut_color = provider_cfg["cut_color"]
+        self.engrave_color = provider_cfg["engrave_color"]
 
     # -- pixel-font engraving (ctx.fill() is not implemented by Boxes.py;
     # engrave by stroking closed pixel-square paths in ENGRAVE_COLOR) -------
@@ -153,12 +159,12 @@ class OuterShell(Boxes):
 
     def draw_pixel_text(self, text: str, x: float, y: float, pixel_size: float = ENGRAVE_PIXEL_SIZE) -> None:
         """Draw text using the pixel font in the engraving (red) color."""
-        self.set_source_color(ENGRAVE_COLOR)
+        self.set_source_color(self.engrave_color)
         current_x = x
         for char in text.upper():
             width = self.draw_pixel_char(char, current_x, y, pixel_size)
             current_x += width
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
 
     def _engrave_fax_machine(self) -> None:
         """"FAX MACHINE" pixel text, centered per DESIGN.md's ENGRAVE_CENTER
@@ -387,7 +393,7 @@ class OuterShell(Boxes):
     def render(self) -> None:
         """Render all 8 shell pieces, laid out in a single row (move=
         'right' throughout) so bounding boxes never overlap."""
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
 
         self._build_bottom()
         self._build_side_wall(mirror=False, label="Right Wall", engrave=True)
@@ -399,17 +405,25 @@ class OuterShell(Boxes):
         self._build_top_panel()
 
 
-def generate_shell() -> Path:
-    """Generate outer shell SVG file."""
-    output_path = Path(OUTPUT_DIR)
+def generate_shell(provider: str | None = None) -> Path:
+    """Generate outer shell SVG file.
+
+    `provider` selects a faxbox.config.PROVIDERS entry (falls back to the
+    FAXBOX_PROVIDER env var, then "nycr" -- see config.resolve_provider).
+    Passing nothing reproduces this project's original behavior exactly:
+    output/outer_shell.svg, BURN=0.08, blue cut / red engrave.
+    """
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
     output_path.mkdir(parents=True, exist_ok=True)
     output_file = output_path / "outer_shell.svg"
 
-    shell = OuterShell()
+    shell = OuterShell(provider=name)
     shell.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(BURN),
+        "--burn", str(provider_cfg["burn"]),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
