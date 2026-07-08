@@ -115,6 +115,128 @@ FACEPLATE = {
 DRAWER_GRIP_SLOT = {"width": 30.0, "height": 15.0, "radius": 7.5,
                     "top_below_edge": 8.0}
 
+# --- Drawer retention (iteration 2, issue #20): magnet pair per drawer ------
+# DESIGN.md "Retention (iteration 2)": one 6mm-nominal disc magnet press-fit
+# into a hole in the drawer's LEADING body wall (the "Back" piece in
+# generate_drawers.py -- the deep end opposite the faceplate) and a matching
+# coaxial hole in the divider, at the drawer's fully-closed position (the
+# divider is the drawer's in-stop, contact gap 0 -- see DRAWER_BODY comment
+# above). An attracting pair pulls the drawer closed against the divider.
+#
+# Hole diameter: undersize the magnet's own diameter for a press fit, THEN
+# let Boxes.py's `self.hole()` burn-compensate the drawn tool path the same
+# way every other hole in this project is compensated (kerf widens the cut
+# back out towards nominal) -- this is also upstream precedent: Boxes.py's
+# own gridfinitybase.py generator drills its magnet holes via plain
+# `self.hole(x, y, d=dia)` with `dia = requested_diameter - 0.5` for a press
+# -fit variant (its default magnet-hole argument is 6.5 for 6mm magnets, a
+# generic snug fit; the "-0.5" branch is its OWN press-fit case). We follow
+# the same `self.hole()` + fixed-undersize pattern, but pick our own
+# press-fit constant (0.35, not gridfinity's 0.5) since ply and magnet
+# tolerances here were never validated against that project's stock --
+# MAGNET_PRESS_FIT is exactly the number the magnet-fit coupon (see
+# calibration.py's magnet coupon) exists to recalibrate before cutting real
+# parts. BURN and MAGNET_PRESS_FIT do two different jobs and must not be
+# conflated: MAGNET_PRESS_FIT sets the *physical* (post-kerf) hole size
+# relative to the magnet; BURN is what makes the *drawn* tool path smaller
+# than that physical target so the laser's kerf widens it back out to
+# MAGNET_HOLE_DIA. As long as BURN stays calibrated (via the kerf coupon),
+# the magnet holes need no separate kerf correction of their own.
+MAGNET_DIA = 6.0            # nominal disc magnet diameter
+MAGNET_PRESS_FIT = 0.35     # undersize for a press fit; recalibrate via the
+                             # magnet coupon (calibration.py) before cutting
+MAGNET_HOLE_DIA = MAGNET_DIA - MAGNET_PRESS_FIT   # 5.65, physical target size
+
+# Position (DESIGN.md): offset from the drawer's own Y-center (the grip slot
+# -- on the OTHER end panel, the Front -- is 30mm wide and Y-centered; the
+# magnet hole sits well clear of that zone at center + 40mm). Both drawers
+# use the same local offset, and since each drawer is Y-centered in its
+# rear-wall opening at closed position (opening_cx = INTERIOR_WIDTH/2 in the
+# rear wall's own frame -> box Y = T + INTERIOR_WIDTH/2, see shell_generator's
+# rear wall), the two drawers' magnet holes and both divider holes all land
+# at the SAME box Y. Checked (2026-07-07): +40mm puts the hole ~39mm from
+# the divider's nearer Y-edge and the drawer Back panel's nearer finger edge
+# (both >> the required 3mm/8mm clearances); -40mm is symmetric and equally
+# safe -- the choice of side is arbitrary given that clearance margin, so +40
+# (toward increasing Y, the right/engraved-wall side) was picked for no
+# reason beyond matching the literal offset direction in the design brief.
+MAGNET_Y_OFFSET = 40.0
+MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 122.55
+
+# Z: "drawer mid-height" is a property of the drawer body alone (half its own
+# height), independent of which slot it sits in; for the DIVIDER hole (a
+# fixed box part) that local mid-height has to be projected into absolute
+# box Z using each slot's own floor -- the bottom drawer rests on the bay
+# floor (sill-free bottom opening, see DESIGN.md #4), the top drawer rests on
+# the shelf's top face (sill-free top opening) -- so the two divider holes
+# sit at different Z, one per drawer.
+MAGNET_BOTTOM_DRAWER_Z = FLOOR_TOP + DRAWER_BODY["height"] / 2   # 29.925
+MAGNET_TOP_DRAWER_Z = SHELF_Z1 + DRAWER_BODY["height"] / 2       # 91.8375
+
+# --- Lid retention (iteration 2 REV.B, issue #20 + adversarial review
+# finding #1): ONE turn-button on the FRONT WALL's exterior face.
+#
+# REV.A (a pivot + paddle on each SIDE wall, just below/behind the lid slot
+# mouth) was proven geometrically incapable of retention and was caught in
+# adversarial review before any part was cut: a side-wall paddle sweeps that
+# wall's own exterior plane (e.g. the left wall's exterior sits at box
+# Y -T..0), while the lid edge riding in that wall's through-slot occupies
+# box Y 0..SLIDE_CLEARANCE/2-ish (the lid's own thickness band, box Y
+# 0.75..3.175 for the left wall) and exits by travelling along X -- the
+# paddle's sweep plane and the lid's travel band are disjoint volumes at
+# every pivot position and paddle length, so no parameter tweak could have
+# fixed it; the mechanism retained nothing. REV.B replaces it with a single
+# button mounted on the FRONT WALL's exterior face (box X=0 plane), which
+# the lid's own front edge physically crosses on its way out -- see
+# DESIGN.md "Retention (iteration 2)" section B for the full geometry and
+# the disjoint-volume proof for why REV.A could never have worked.
+TURN_BUTTON = {
+    "length": 22.0,               # paddle axis (pivot -> tip)
+    "width": 9.0,                 # cross-axis; half-width doubles as the
+                                   # blunt-end cap radius for the paddle's
+                                   # stadium shape
+    "pivot_from_blunt_end": 4.5,  # = width/2: pivot sits at the blunt end's
+                                   # own rounded-cap center
+    "pivot_hole_dia": 3.2,        # M3 clearance
+}
+# Pivot position on the FRONT WALL's exterior face, in BOX coordinates
+# (Y = wall center, Z = 110.0). Checked >=3mm from every other front-wall
+# feature: the bottom-panel hole line sits at Z~1.5875 (>100mm clear); the
+# two vertical edges finger-joint to the side walls over a ~T-wide zone at
+# each end, and the pivot sits at the wall's own Y-center
+# (INTERIOR_WIDTH/2 = 79.375mm local, i.e. box Y=82.55) -- 79.375mm from
+# either jointed edge, far past the 3mm minimum; the wall's own plain top
+# edge (Z=FRONT_WALL_TOP=118.025) is 8.025mm above the pivot.
+TURN_BUTTON_PIVOT_BOX_Y = SHELL_EXT["width"] / 2   # 82.55, front wall center
+TURN_BUTTON_PIVOT_BOX_Z = 110.0
+
+# The lid's own physical Z-band where it crosses the front wall's plane on
+# exit: the lid rests on the slot floor under gravity, so it occupies the
+# bottom T of the slot's vertical clearance band (LID_SLOT_BOTTOM ->
+# LID_SLOT_BOTTOM + T = 118.025 -> 121.2), not the full
+# LID_SLOT_BOTTOM..LID_SLOT_TOP clearance span (that extra 0.8mm is slop
+# above the lid, not lid material). The lid's front edge itself sits
+# recessed ~0.4mm behind the front-wall plane at full rearward travel
+# (SLIDING_LID length 79.0 vs. the 79.375mm to the divider stop), so there
+# is a small (~0.4mm) free-slide gap before the button makes contact -- see
+# DESIGN.md for the full blocking-slop note.
+LID_FRONT_BAND_Z0 = LID_SLOT_BOTTOM                  # 118.025
+LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
+
+# Reach (pivot -> tip) needed for the button, rotated to vertical, to clear
+# the lid band's top (LID_FRONT_BAND_Z1) by >=1mm:
+# TURN_BUTTON_MIN_REACH_UP = (LID_FRONT_BAND_Z1 + 1) - TURN_BUTTON_PIVOT_BOX_Z
+#                          = 122.2 - 110.0 = 12.2mm.
+# The button's actual reach (length - pivot_from_blunt_end = 22 - 4.5 = 17.5)
+# exceeds this, so rotated fully vertical the tip lands at box Z = 110 +
+# 17.5 = 127.5 -- 6.3mm past the required 122.2mm margin, standing proud in
+# open air above/in front of the lid slot region (nothing else is there to
+# hit). Rotated fully DOWN (180 deg from vertical), the button's near
+# (blunt-cap) edge lands at box Z = 110 + pivot_from_blunt_end = 114.5,
+# comfortably (3.525mm) below FRONT_WALL_TOP=118.025 -- the whole paddle
+# clears the lid's travel path so the lid slides freely when the button is
+# disengaged.
+
 # --- Sliding lid -------------------------------------------------------------
 
 SLIDING_LID = {

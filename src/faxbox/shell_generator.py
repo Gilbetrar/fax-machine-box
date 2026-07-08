@@ -45,6 +45,10 @@ from faxbox.config import (
     LID_SLOT_BOTTOM,
     LID_SLOT_HEIGHT,
     LID_SLOT_X_END,
+    MAGNET_BOTTOM_DRAWER_Z,
+    MAGNET_BOX_Y,
+    MAGNET_HOLE_DIA,
+    MAGNET_TOP_DRAWER_Z,
     MATERIAL_THICKNESS,
     OPENING_HEIGHT,
     OPENING_WIDTH,
@@ -53,6 +57,9 @@ from faxbox.config import (
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
     TOP_PANEL_HOLE_Z,
+    TURN_BUTTON,
+    TURN_BUTTON_PIVOT_BOX_Y,
+    TURN_BUTTON_PIVOT_BOX_Z,
     WALL_HEIGHT,
 )
 
@@ -268,10 +275,21 @@ class OuterShell(Boxes):
     def _build_front_wall(self) -> None:
         """Front wall: INTERIOR_WIDTH (local X = box Y - T) x
         FRONT_WALL_HEIGHT (local Y = box Z), Z = 0 -> FRONT_WALL_TOP
-        (DESIGN.md #3)."""
+        (DESIGN.md #3).
+
+        Also carries the sole lid-retention turn-button pivot hole
+        (DESIGN.md "Retention (iteration 2)" section B, adversarial-review
+        REV.B): a single M3-clearance hole on this wall's exterior face, at
+        box (Y, Z) = (TURN_BUTTON_PIVOT_BOX_Y, TURN_BUTTON_PIVOT_BOX_Z). No
+        mirroring needed -- there is only one front wall and only one
+        button. Local X = box Y - T, same mapping the bottom-panel hole
+        line above already uses; local Y = box Z directly (this wall's Z
+        axis is unextended -- see test_front_wall_blank_size)."""
 
         def callback() -> None:
             self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
+            pivot_local_x = TURN_BUTTON_PIVOT_BOX_Y - T
+            self.hole(pivot_local_x, TURN_BUTTON_PIVOT_BOX_Z, d=TURN_BUTTON["pivot_hole_dia"])
 
         self.rectangularWall(
             INTERIOR_WIDTH, FRONT_WALL_HEIGHT, "eFeF",
@@ -304,11 +322,21 @@ class OuterShell(Boxes):
         """Vertical divider: INTERIOR_WIDTH (local X = box Y) x
         DIVIDER_HEIGHT (local Y = box Z - FLOOR_TOP), fully captive on all
         four edges (DESIGN.md #5). Callback adds the shelf's front-edge
-        finger-hole line (DESIGN.md #6)."""
+        finger-hole line (DESIGN.md #6) plus the two drawer-magnet holes
+        (DESIGN.md "Retention (iteration 2)"): one per drawer, coaxial with
+        that drawer's Back-wall magnet hole at the drawer's fully-closed
+        position. Both share the same local X (MAGNET_BOX_Y - T, box Y is
+        the same for both drawers by design); Z differs per drawer since
+        the bottom drawer rests on the bay floor and the top drawer rests
+        on the shelf."""
 
         def callback() -> None:
             shelf_mid_local_y = SHELF_MID_Z - FLOOR_TOP
             self.fingerHolesAt(0, shelf_mid_local_y, INTERIOR_WIDTH, angle=0)
+
+            magnet_local_x = MAGNET_BOX_Y - T
+            self.hole(magnet_local_x, MAGNET_BOTTOM_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
+            self.hole(magnet_local_x, MAGNET_TOP_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
 
         self.rectangularWall(
             INTERIOR_WIDTH, DIVIDER_HEIGHT, "ffff",
