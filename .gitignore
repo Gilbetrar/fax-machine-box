@@ -1,5 +1,6 @@
-# Generated SVG files
+# Generated SVG/PDF files
 output/*.svg
+output/*.pdf
 
 # Python
 __pycache__/
