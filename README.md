@@ -467,6 +467,13 @@ this checklist is current.
 
 ## Ordering from Ponoko
 
+> **⏸️ FABRICATION IS PAUSED (Ben, 2026-07-08) — gated on artwork.**
+> The plan is to order online (the held Ponoko quote) rather than a friend's
+> laser, but **not until the exterior engrave artwork is finalized** and
+> baked into the order files (see `art/FACES.md`). Do not pay the held
+> quote or regenerate/upload order files for fabrication until the art
+> workstream signs off — otherwise box #1 ships without its art.
+
 The NYC Resistor path above **remains the default** — nothing about it
 changes unless you explicitly opt in. Ponoko export is an alternate,
 mail-order way to get the same box cut without a laser class or a Brooklyn
