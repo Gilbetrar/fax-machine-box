@@ -35,6 +35,8 @@ from faxbox.config import (
     DRAWER_GRIP_SLOT,
     ENGRAVE_COLOR,
     FACEPLATE,
+    MAGNET_HOLE_DIA,
+    MAGNET_Y_OFFSET,
     MATERIAL_THICKNESS,
     OUTPUT_DIR,
 )
@@ -52,6 +54,21 @@ GRIP_SLOT_W = DRAWER_GRIP_SLOT["width"]
 GRIP_SLOT_H = DRAWER_GRIP_SLOT["height"]
 GRIP_SLOT_R = DRAWER_GRIP_SLOT["radius"]
 GRIP_SLOT_TOP_BELOW_EDGE = DRAWER_GRIP_SLOT["top_below_edge"]  # 8.0
+
+# Magnet retention hole on the Back panel -- the drawer's LEADING wall (the
+# deep end, opposite the Front/faceplate -- DESIGN.md "Retention (iteration
+# 2)"). Local X is the Back panel's own width axis (= box Y once installed),
+# offset from the panel's own center by MAGNET_Y_OFFSET (see config.py: the
+# same offset used for the divider's coaxial hole, since the drawer is
+# Y-centered in its opening at closed position). Local Y is the panel's own
+# height axis; "drawer mid-height" (DRAWER_BODY['height'] / 2) is measured
+# from the panel's true physical bottom, which sits T below local y=0 (the
+# bottom edge is finger-jointed and protrudes T further down than the
+# nominal/unextended blank -- same relationship DESIGN.md's grip-slot formula
+# on Front relies on, cross-checked there against the physical 30.5->45.5
+# span), hence the "- T" correction here.
+MAGNET_BACK_LOCAL_X = BODY_INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET
+MAGNET_BACK_LOCAL_Y = DRAWER_BODY["height"] / 2 - T
 
 
 class DrawerBox(Boxes):
@@ -126,9 +143,18 @@ class DrawerBox(Boxes):
         )
 
     def _build_back(self) -> None:
-        """Back: same shape as Front, no grip slot."""
+        """Back: same shape as Front, no grip slot -- this IS the drawer's
+        LEADING wall (deep end, opposite the faceplate). Carries the
+        retention magnet's press-fit through-hole (DESIGN.md "Retention
+        (iteration 2)"), coaxial with the divider's matching hole at the
+        drawer's fully-closed position."""
+
+        def callback() -> None:
+            self.hole(MAGNET_BACK_LOCAL_X, MAGNET_BACK_LOCAL_Y, d=MAGNET_HOLE_DIA)
+
         self.rectangularWall(
             BODY_INTERIOR_WIDTH, BODY_INTERIOR_HEIGHT, "fFeF",
+            callback=[callback, None, None, None],
             move="right", label="Back",
         )
 

@@ -144,6 +144,9 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Nominal: **158.75 (Y) × 118.025 (Z)** (Z = 0 → 118.025).
 - Bottom-panel hole line near the bottom edge (midplane Z = 1.5875); vertical
   edges finger-joint to side walls; top edge plain (the lid slides over it).
+- **Iteration 2**: carries the sole lid-retention turn-button pivot hole
+  (Ø3.2, box Y = 82.55, box Z = 110.0) on its exterior face — see
+  "Retention (iteration 2, magnets + turn-buttons)" section B.
 
 ### 4. Rear wall — 1×
 
@@ -197,9 +200,10 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Grip: rounded through-slot **30 × 10, r = 5**, centered in Y, slot center
   25mm from the front edge (10mm ligament to the edge; at 15mm the ligament
   was ~0.2mm and would have broken into a notch — red-team finding).
-- No retention along the travel axis: the divider stops rearward motion but
-  nothing stops the lid sliding out the front when the box tips forward.
-  Accepted cost of the front-insert decision; carry the box level.
+- No retention along the travel axis in v1: the divider stops rearward
+  motion but nothing stops the lid sliding out the front when the box tips
+  forward. **Iteration 2 (below) adds a single turn-button on the front
+  wall to fix this** — see "Retention (iteration 2, magnets + turn-buttons)".
 
 ### 9. Drawers — 2× identical, 6 pieces each
 
@@ -213,8 +217,9 @@ Body = open-top finger-jointed box, captive bottom:
   drawer's in-stop** (the inset faceplate never bears on the rear-wall frame;
   red-team finding). Closed, the faceplate sits recessed by the 0.475 slide
   gap — near-flush, since true flush and slide clearance are mutually
-  exclusive. There is no out-retention: a drawer slides free if the box is
-  tipped rear-down.
+  exclusive. There is no out-retention in v1: a drawer slides free if the
+  box is tipped rear-down. **Iteration 2 (below) adds a magnet pair per
+  drawer to fix this** — see "Retention (iteration 2, magnets + turn-buttons)".
 - Lateral play in the bay is ~4.9mm/side by design — the drawer is guided by
   its opening, not the bay walls; max skew ≈ 1.3°, acceptable for a first cut.
 
@@ -231,6 +236,246 @@ Faceplate (6th piece), glued to the body front:
 - Registration: red-engraved outline of the body cross-section on the
   faceplate's back for glue-up alignment.
 
+## Retention (iteration 2, magnets + turn-buttons)
+
+Decision record (Ben, 2026-07-07, issue #20): v1 ships from `main` with no
+retention, as already decided above. This is the **recommended** iteration-2
+mechanism — rigid, tolerance-insensitive, minimal parts — chosen over the
+experimental spring-detent alternative (PR #22) for being the most-likely-
+to-work path. Two independent mechanisms, one per moving part class.
+
+> **Revision note (adversarial review, 2026-07-07):** the lid mechanism
+> below is **REV.B**. The original design (REV.A: a pivoting paddle on
+> EACH side wall) was found in review to be geometrically incapable of
+> retaining the lid — the paddle's sweep plane and the lid's travel band
+> never intersect, at any pivot position — and was replaced with REV.B (one
+> button on the front wall) before any part was cut. See section B below
+> for the full proof. The drawer-magnet mechanism (section A) was not
+> affected by that finding, but section A below has also been amended with
+> an honest accounting of the drawer's leading-end lateral float
+> (adversarial-review finding #4) and its mitigation.
+
+### A. Drawer retention — magnet pair per drawer
+
+One 6mm-nominal disc magnet, press-fit into a through-hole in the drawer's
+**leading body wall** (the "Back" piece in `generate_drawers.py` — the deep
+end opposite the faceplate/grip-slot end) and a matching coaxial hole in the
+**divider**, at the drawer's fully-closed position (the divider is the
+drawer's in-stop, contact gap 0 — part #9 above). An attracting pair pulls
+the drawer closed.
+
+- New config constants: `MAGNET_DIA = 6.0`, `MAGNET_PRESS_FIT = 0.35`,
+  `MAGNET_HOLE_DIA = MAGNET_DIA - MAGNET_PRESS_FIT = 5.65`.
+- **BURN/press-fit interaction** (researched against Boxes.py's own
+  `gridfinitybase.py` generator, which drills its own magnet holes via plain
+  `self.hole(x, y, d=dia)` with a `dia - 0.5` press-fit variant — same
+  pattern used here): `self.hole()` burn-compensates the drawn tool path the
+  same way every other hole in this project is compensated, so the physical
+  (post-kerf) hole size is governed by `MAGNET_PRESS_FIT` alone, as long as
+  `BURN` stays calibrated via the kerf coupon. The two constants are not
+  redundant: `MAGNET_PRESS_FIT` sets size relative to the magnet;
+  `BURN` is what makes the *drawn* path smaller so the laser's kerf widens it
+  back out to `MAGNET_HOLE_DIA`. Recalibrate `MAGNET_PRESS_FIT` via the
+  magnet-fit coupon (below) before cutting real parts — it is a starting
+  guess with the same status as `BURN`/`FINGER_PLAY`.
+- Position: offset from the drawer's own Y-center by `MAGNET_Y_OFFSET =
+  40.0mm` (config.py) — clear of the grip-slot zone (30mm wide, Y-centered,
+  though on the OTHER end panel). Both drawers use the same offset; since
+  each drawer is Y-centered in its rear-wall opening at closed position, the
+  drawer's Back-wall hole and both divider holes share one box Y = `T +
+  INTERIOR_WIDTH/2 + 40.0 = 122.55`. Checked: this sits ~39mm from the
+  divider's nearer Y-edge and the Back panel's nearer finger edge either way
+  — the choice of +40 vs. −40 is arbitrary given that margin; +40 (toward
+  increasing Y) was picked with no other reasoning.
+- Z: "drawer mid-height" (`DRAWER_BODY['height']/2`) is a property of the
+  drawer body alone; on the divider (a fixed part) it is projected via each
+  slot's own resting datum — the bottom drawer rests on the bay floor
+  (sill-free, `BOTTOM_OPENING_Z0 = FLOOR_TOP`), the top drawer on the shelf
+  top (`TOP_OPENING_Z0 = SHELF_Z1`) — giving two divider holes:
+  `MAGNET_BOTTOM_DRAWER_Z = FLOOR_TOP + height/2 = 29.925`,
+  `MAGNET_TOP_DRAWER_Z = SHELF_Z1 + height/2 = 91.8375`.
+- Clearances (measured from the generated SVGs): both divider holes sit
+  ≥23mm from every divider edge and ≥23mm from the divider's own shelf
+  finger-hole row — comfortably over the 8mm structural-clearance target for
+  this fully-captive, 4-edge load-bearing panel (part #5). The drawer
+  Back-wall hole sits ≥20mm from every one of its own edges (well over the
+  general 3mm minimum).
+- Install AFTER assembly test-fit: pair the two magnets stuck together, mark
+  the outward faces with a sharpie before separating, press-fit each into
+  its hole, then CA glue. Recommend **6×2mm N35 discs** (gentler pull,
+  ~0.5–0.7kg at contact — one-finger openable); force is tunable by buying
+  N52 or 3mm-thick discs instead, no geometry change. 2mm-thick magnets sit
+  1.2mm recessed in 3.175mm ply (fine, glue backfills); 3mm sit near-flush.
+- **Leading-end float, honestly stated (adversarial-review finding #4):**
+  the magnet sits on the drawer's Back (leading) wall, where lateral play in
+  the bay is **±4.9mm/side** (part #9 above — the drawer is guided by its
+  rear-wall opening, not the bay walls). At the moment the magnets first
+  come into proximity, nothing has yet centered the drawer to better than
+  that ±4.9mm bay float — the divider hole and the Back-wall hole are NOT
+  guaranteed coaxial at first approach.
+  - **Capture sequence**: true Y-centering only happens in the drawer's
+    **final ~2.7mm of travel** (`FACEPLATE_thickness − FACEPLATE_REVEAL` =
+    `T − 0.75 = 2.425mm`, i.e. the last stretch where the faceplate itself is
+    entering its snug rear-wall opening, ≥1.5mm total clearance
+    width-wise) — the faceplate's own fit against its opening is what
+    narrows the drawer's lateral position down to the opening's own
+    tolerance (≈±0.75mm) by the time the magnets are at contact distance.
+    Before that final stretch, the drawer body alone (loose in the ±4.9mm
+    bay float) is doing the guiding, not the faceplate.
+  - **Residual worst case**: at the moment the faceplate starts entering its
+    opening (magnet gap closing to contact), the drawer could still be
+    off-center by close to the bay's own float before the faceplate's fit
+    takes over and narrows it — i.e. the magnets are relying on the
+    faceplate/opening fit, not the magnet holes' own placement tolerance, to
+    do the fine centering. The magnet pair's pull (a few mm of magnetic
+    reach at contact) is what closes the last bit of any residual
+    misalignment once the faceplate has already done the coarse centering.
+  - **Mitigation — self-registering install, not a geometry fix:** install
+    the magnets AFTER a full dry test-fit (already required — see "Install
+    order" below), and **mark the drawer-side magnet's actual contact point
+    through the divider hole while the drawer is closed**, rather than
+    trusting the two holes' nominal coaxiality on paper. Concretely: with
+    the drawer fully closed (faceplate seated in its opening) and the
+    divider-side magnet already glued in place, hold the drawer-side magnet
+    (or a scribe) through the Back-wall hole and mark/scribe its true
+    contact point against the (temporarily uninstalled or masked) divider
+    face before final placement — this makes the install self-correcting
+    for whatever the real, as-built float turns out to be, instead of
+    depending on the ±4.9mm bay float never mattering. README's install
+    steps (below) state this explicitly.
+  - This is why `test_magnet_holes_coaxial_at_closed_position`
+    (`tests/test_retention.py`) is checked against a **0.6mm** tolerance
+    band, not the bay's full ±4.9mm float: that test asserts the two
+    *drilled hole positions* agree with the DESIGN.md numbers (a drafting
+    check), not that the assembled drawer will actually make contact
+    dead-center on first try — the self-registering install above is what
+    reconciles the two.
+
+### B. Lid retention — ONE turn-button on the FRONT WALL
+
+**Adversarial-review finding #1 (critical): the original mechanism below
+(REV.A) was geometrically incapable of retention and was caught before any
+part was cut.** REV.A put a pivoting paddle on each SIDE wall, just
+below/behind that wall's lid-slot mouth. The proof it could never work: on
+a side wall, the paddle sweeps that wall's own **exterior plane** (e.g. the
+left wall's exterior sits at box Y −3.175 → 0), while the lid's edge riding
+in that same wall's through-slot occupies box Y 0.75 → 3.175 and **exits by
+travelling along X** — axially past the paddle's sweep plane, never through
+it. The paddle's swept volume and the lid's travel band are disjoint at
+*every* pivot position and paddle length; no parameter tweak (moving the
+pivot, lengthening the paddle) could have fixed it, because the two moving
+parts don't occupy overlapping space at any point in the mechanism's own
+rotation. The side-wall pivot holes have been **removed entirely** — the
+side walls are now byte-identical to `main`'s v1 geometry (verified by
+diffing the regenerated SVG against `main`'s own output; see
+`test_side_wall_matches_main_footprint` in `tests/test_retention.py`).
+
+**REV.B (current): a single button on the FRONT WALL's exterior face**
+(box X=0 plane) — the plane the lid's own front edge physically crosses on
+its way out, so the paddle's sweep and the lid's exit band now genuinely
+overlap.
+
+A rounded paddle ("stadium": rectangle + full semicircular end caps,
+`~22mm × 9mm`, `TURN_BUTTON` in config.py — unchanged from REV.A, only its
+mounting location/orientation moved) pivots on an M3 bolt through the front
+wall, and turns up to physically block the lid's exit cross-section
+(caging the lid between the button and the divider stop) or down to clear
+it entirely.
+
+- Pivot hole Ø3.2 (M3 clearance) on the front wall's exterior face at box
+  **Y = 82.55 (wall center), Z = 110.0** (`TURN_BUTTON_PIVOT_BOX_Y/Z` in
+  config.py). No mirroring — there is only one front wall and only one
+  button.
+  - Y = wall center (`SHELL_EXT["width"]/2` = 82.55) sits `INTERIOR_WIDTH/2
+    = 79.375mm` from either vertical (side-wall) finger-joint zone — far
+    past the required 3mm.
+  - Z = 110.0 clears the bottom-panel hole line (Z ≈ 1.5875) by
+    a huge margin and clears the wall's own plain top edge
+    (`FRONT_WALL_TOP = 118.025`) by 8.025mm (≥ 3mm).
+- **Blocking slop**: the sliding lid's front edge, at full rearward travel,
+  sits at box X ≈ 0.375 — recessed ~0.4mm behind the front wall's own
+  exterior plane (X=0), since `SLIDING_LID` length (79.0) is ~0.4mm short of
+  the 79.375mm travel to the divider stop. This means there is a small
+  (~0.4mm) free-slide gap before the lid's edge makes contact with a
+  lowered button — negligible next to the ≥1mm blocking margins below, but
+  stated here so it isn't mistaken for a fit defect.
+- **Reach and the blocking geometry** (this is what REV.A's design notes
+  never actually verified — see the note on the blocking TEST below): the
+  lid, resting under gravity on its slot floor, occupies the bottom `T` of
+  the slot's vertical clearance band when it crosses the front wall's
+  plane: box Z `LID_SLOT_BOTTOM (118.025) → LID_SLOT_BOTTOM + T (121.2)`
+  (`LID_FRONT_BAND_Z0/Z1` in config.py) — not the full
+  `LID_SLOT_BOTTOM..LID_SLOT_TOP` clearance span (that extra 0.8mm is slop
+  *above* the lid, not lid material). The button's pivot sits
+  `pivot_from_blunt_end = 4.5mm` (= half its own width, the blunt end's own
+  rounded-cap center) from its blunt end, so pivot→tip reach =
+  `22.0 − 4.5 = 17.5mm`.
+  - **Rotated UP** (paddle pointing +Z): the button's blunt-cap rear sits at
+    box Z = `110 − 4.5 = 105.5` (below the lid band already) and the tip
+    reaches box Z = `110 + 17.5 = 127.5` — comfortably past the required
+    `(121.2 + 1) = 122.2` (6.3mm of margin), standing proud in open air
+    above/in front of the lid-slot region where nothing else is present to
+    hit. In Y, the paddle's ±4.5mm half-width band (box Y 78.05 → 87.05)
+    sits well inside the lid's own Y-span (0.75 → 164.35), so a single
+    button blocking one point along the lid's rigid width is sufficient —
+    it doesn't need to span the whole 163.6mm lid width, any more than a
+    door's single deadbolt needs to span the whole door.
+  - **Rotated DOWN** (180° from vertical): the button's now-topmost point
+    (the blunt cap) sits at box Z = `110 + 4.5 = 114.5`, which is 3.525mm
+    *below* `FRONT_WALL_TOP = 118.025` — the whole paddle clears the lid's
+    travel path so the lid slides freely when the button is disengaged.
+- **The blocking test** (`test_button_up_envelope_blocks_lid_exit` in
+  `tests/test_retention.py`) is the assertion whose ABSENCE let REV.A ship:
+  it computes, from independent datums (`SHELL_EXT`/`SLIDE_CLEARANCE` for
+  the lid's Y-span; `LID_SLOT_BOTTOM`/`T` for its Z-band; the pivot position
+  plus the *measured* paddle reach off the real `hardware.svg` piece — not
+  assumed from config), whether the button-up envelope actually overlaps
+  the lid's exit cross-section in BOTH Y and Z, with ≥1mm margin. Moving the
+  pivot to a non-blocking Z, shrinking the paddle so its measured reach came
+  up short, or re-siting the whole mechanism onto a wall the lid never
+  crosses would all fail this test — a purely positional "hole exists at
+  (X,Z)" check (which REV.A had, and which passed) would not have caught
+  any of those.
+- Hardware (documented, not laser-cut): **1× M3×12 button-head bolt, 1× M3
+  nyloc nut, 2× M3 washer** — nyloc tensioned so the button holds position
+  by friction, not a spring. The nut lands inside the paper compartment,
+  reachable with the lid off.
+- The single button piece is cut from `output/hardware.svg`
+  (`generate_hardware.py`), standalone like the calibration coupons — not
+  nested into any `sheet_*.svg`.
+
+### C. Magnet press-fit coupon
+
+`output/magnet_coupon.svg` (`calibration.py`'s `generate_magnet_coupon()`):
+a row of 4 holes labeled 5.5 / 5.65 / 5.8 / 5.95mm, each with a gray
+reference-only text label. **Adversarial-review finding #3 (fixed):** these
+gauge holes are now drawn through the SAME burn-**compensated** `self.hole()`
+path the real divider/drawer part holes use — a labeled 5.65mm gauge hole
+here is now physically identical to what a labeled-5.65mm PART hole
+actually gets. Previously the gauge holes were drawn burn-**neutral** (like
+the kerf square below), which measures a *different* physical diameter than
+the part will ever get: a burn-neutral hole labeled 5.65 cuts out at
+physical `5.65 + 2×BURN` (≈5.81mm at `BURN=0.08`), while a burn-compensated
+PART hole labeled 5.65 cuts out at physical 5.65 exactly — the old coupon
+was silently reading ~0.16mm oversize, eating **~46%** of the whole 0.35mm
+press-fit budget before a magnet was ever pressed in.
+
+**Do NOT apply this fix to the kerf square** in the same file
+(`CalibrationCoupon`/`generate_calibration()`): that square exists
+specifically to *measure the kerf itself*, so it must stay burn-neutral
+(drawn tool path = exactly 10.0mm, physical = 10.0 + 2×real-kerf) — see
+`calibration.py`'s own module comment for why burn-compensating it would be
+self-defeating (it would just report how close the *current, unvalidated*
+`BURN` guess is to itself). The magnet coupon and the kerf square measure
+two different things and must stay on two different code paths; the
+distinction is documented in `calibration.py`'s docstring.
+
+Press a real 6mm disc magnet into each of the 4 gauge holes on scrap;
+whichever seats snugly (not loose, not forced) sets `MAGNET_PRESS_FIT =
+MAGNET_DIA − <snuggest diameter>` in config.py. Cut this coupon (and the
+kerf coupon) again any time `BURN` changes — both coupons' readings depend
+on it.
+
 ## Clearance summary (what the tests enforce)
 
 | Interface | Clearance | Rule |
@@ -243,6 +488,13 @@ Faceplate (6th piece), glued to the body front:
 | Lid thickness ↔ slot height | 0.8 | = 0.8 (documented deviation) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
 | Webs in rear wall | 3.175 / 3.7375 | ≥ 3.0 |
+| Magnet hole (drawer Back) ↔ its own edges | ≥ 20 | ≥ 3.0 |
+| Magnet hole (divider) ↔ edges / shelf row | ≥ 23 | ≥ 8.0 (structural) |
+| Turn-button pivot (front wall) ↔ side joint zones | ≥ 79.375 each side | ≥ 3.0 |
+| Turn-button pivot (front wall) ↔ wall top edge | 8.025 | ≥ 3.0 |
+| Turn-button reach ↔ required reach (up, blocking) | 17.5 vs. 12.2 | ≥ required |
+| Turn-button-up envelope ↔ lid exit band (Y, Z) | wide margin both axes | ≥ 1.0 each axis (the blocking test) |
+| Turn-button-down top ↔ front wall top edge | 3.525 | ≥ 1.0 |
 
 ## Known deltas from SPEC.md targets
 
