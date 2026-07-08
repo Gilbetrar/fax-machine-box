@@ -153,23 +153,28 @@
 
 ---
 
-## Summary Table: Face → Best Source Image
+## Summary Table: Face → Source Image (DECIDED — Ben, 2026-07-08)
 
-| Face | Best image(s) | Confidence |
+| Face | Image(s) | Status |
 |---|---|---|
-| Front (closed) | **IMG_4229** (clean) | Confirmed |
-| Front (open / interior context) | IMG_4232 | Confirmed |
-| Left long side | **IMG_4228** | Confirmed |
-| Right long side | IMG_4230 | Inferred |
-| Lid top (exterior) | IMG_4231 | Inferred; flagged for lid redesign |
-| Lid interior | IMG_4232 (inset) | Confirmed content, needs cleaner shot |
-| Back | IMG_4237 (best guess) | Inferred, low-moderate confidence |
-| Drawer 1 front | IMG_4236 ("COLORS") | Inferred |
-| Drawer 2 front | IMG_4238 ("Lines") | Inferred |
-| Drawer/side panel (unassigned) | IMG_4233 (turkeys) | Unconfirmed placement |
-| Drawer/side panel (unassigned) | IMG_4235 (alligator/seagull) | Unconfirmed placement |
-| Drawer/side panel (unassigned) | IMG_4239 (bookshelf) | Unconfirmed placement |
-| Bottom / plain face | IMG_4234 (dotted, undecorated) | Unconfirmed — may be unfinished |
+| Front (closed) | **IMG_4229** (clean) | Decided |
+| Front (open / interior context) | IMG_4232 | Reference only |
+| Long side 1 | **IMG_4228** (parrot) | Decided — pilot face |
+| Long side 2 | IMG_4230 (writers & artists) | Decided (Ben confirmed: main-box side) |
+| Lid top (exterior) | IMG_4231 (panorama) | Decided — transpose onto sliding lid top; the snake/dragon head may run off the retracting edge; accepted that it won't read the same as the flip lid |
+| Lid interior | IMG_4232 (inset mosaic) | Dropped — no equivalent surface on sliding lid |
+| Back of main box | — | No art assigned |
+| Drawer fronts (×2) | IMG_4236 ("COLORS") / IMG_4238 ("Lines") | Decided — one each; which drawer gets which doesn't matter |
+| Drawer sides (×4) | IMG_4233 (turkeys), IMG_4235 (alligator/seagull), IMG_4237 (gallery), IMG_4239 (bookshelf) | Decided — one per drawer side; assignment among sides doesn't matter |
+| Drawer backs | — | No art (Ben confirmed) |
+| Bottom | IMG_4234 (dotted) | Not in art scope — reads as unfinished; bottom stays plain unless Ben says otherwise |
+
+## Decisions (Ben, 2026-07-08)
+
+1. **Face map settled** (see table above): writers panel = second main-box long side; the four scene panels (turkeys, alligator, gallery, bookshelf) = the four drawer sides, any assignment; drawer fronts = "COLORS"/"Lines" (either drawer); drawer backs = no art.
+2. **Lid:** keep the IMG_4231 panorama, transposed onto the sliding lid's top surface. The composition won't map 1:1 (the mosaic snake/dragon head may slide off the retracting edge) and that's accepted. The lid-interior mosaic and edge trims are dropped.
+3. **Fabrication is PAUSED — gated on artwork.** Ordering will be done online (held Ponoko quote path), not via Clark, but NOT until the engrave art is finalized and baked into the cut files. Do not pay/order or regenerate order files for fabrication until the art workstream signs off.
+4. **Line-art workstream is GO** — parrot-face pilot first (2–3 trace candidates, Ben judges side-by-sides), then batch the remaining faces. Raster tone layer still waits on the target machine's identity.
 
 ## Faces With No Photo Coverage
 
@@ -181,11 +186,7 @@ None of the 12 photos are wasted, but **true face coverage is ambiguous rather t
 2. **IMG_4231's panorama is a single continuous composition** (floral → cat → dragon → mosaic face) rather than a repeatable/tileable pattern, so it can't simply be cropped to fit a shorter sliding-lid footprint without deciding which portion to keep.
 3. Given the wooden box's sliding lid likely has a smaller "always visible" surface than the cardboard flip lid's total surface area (top + underside + edges combined), **expect to lose or relocate roughly half of the lid-related artwork** cataloged here (IMG_4231 and the IMG_4232 mosaic) — flagging this now so it's an explicit decision rather than a default loss during the vector-tracing pass.
 
-## Open Questions for Ben (blocking final placement, not blocking pilot)
+## Remaining Open Questions
 
-1. Physical walkthrough: which of the 5 "extra" panels (4230, 4233, 4235, 4237, 4239) live on the box back vs. drawer sides? Are 4236/4238 really the two drawer fronts?
-2. Is IMG_4234 (plain dots) the intended bottom, or unfinished?
-3. Lid decision: what happens to the IMG_4231 panorama and the IMG_4232 interior mosaic on the sliding-lid design?
-4. Which faces get art in wood v1 vs. the gift run? (Carried over from HANDOFF/issue #20.)
-
-**None of these block the parrot-face pilot (IMG_4228)** — that face is confirmed and awaits Ben's go.
+1. Which faces get art in wood v1 vs. the gift run? (Carried over from issue #20 — moot if all faces get art before any order, per the "art gates fabrication" decision.)
+2. Final color→burn-tone map and raster rendering — waits on the target laser (CO2 vs diode).
