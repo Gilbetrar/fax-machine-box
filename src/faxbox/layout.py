@@ -38,6 +38,7 @@ from xml.sax.saxutils import escape, quoteattr
 
 import svgpathtools
 
+from faxbox import config
 from faxbox.config import OUTPUT_DIR
 
 SVG_NS = "{http://www.w3.org/2000/svg}"
@@ -95,8 +96,17 @@ class Placement:
     y: float
 
 
-def _load_pieces(svg_path: Path, source: str) -> list[Piece]:
-    """Read every top-level <g> (one per Boxes.py part) from svg_path."""
+def _load_pieces(svg_path: Path, source: str, strip_labels: bool = False) -> list[Piece]:
+    """Read every top-level <g> (one per Boxes.py part) from svg_path.
+
+    `strip_labels`: when True, the piece's `<text>` label (if any) is used
+    only to compute a human-readable `label` for identification, and is
+    NOT carried into the Piece's text_attrib/text_content -- so
+    _emit_piece_group later emits no <text> element at all for this piece.
+    Used by the Ponoko path (config.PONOKO_STRIP_LABELS), which strips
+    reference labels entirely rather than re-coloring them gray like the
+    default NYCR path.
+    """
     root = ET.parse(svg_path).getroot()
     pieces: list[Piece] = []
     for g in root.findall(f"{SVG_NS}g"):
@@ -126,8 +136,8 @@ def _load_pieces(svg_path: Path, source: str) -> list[Piece]:
                 ymin=ymin,
                 group_style=g.get("style", ""),
                 svg_paths=svg_paths,
-                text_attrib=dict(text_el.attrib) if text_el is not None else None,
-                text_content=text_el.text if text_el is not None else None,
+                text_attrib=None if strip_labels or text_el is None else dict(text_el.attrib),
+                text_content=None if strip_labels or text_el is None else text_el.text,
             )
         )
     return pieces
@@ -135,21 +145,32 @@ def _load_pieces(svg_path: Path, source: str) -> list[Piece]:
 
 # --- Packing --------------------------------------------------------------
 
-def _pack_pieces(pieces: list[Piece]) -> list[list[Placement]]:
+def _pack_pieces(
+    pieces: list[Piece],
+    sheet_width: float = SHEET_WIDTH_MM,
+    sheet_height: float = SHEET_HEIGHT_MM,
+    margin: float = MARGIN_MM,
+    spacing: float = SPACING_MM,
+) -> list[list[Placement]]:
     """Shelf (row) packer. See module docstring for the algorithm.
+
+    `sheet_width`/`sheet_height`/`margin`/`spacing` default to this
+    project's NYC Resistor planning constants; the Ponoko path passes
+    config.PROVIDERS["ponoko"]'s sheet limit instead (same margin/spacing,
+    which are already well over Ponoko's published ~1mm minimum).
 
     Returns one list of Placement per sheet, in sheet order. Raises
     ValueError if any single piece is too big to ever fit a sheet.
     """
-    usable_w = SHEET_WIDTH_MM - 2 * MARGIN_MM
-    usable_h = SHEET_HEIGHT_MM - 2 * MARGIN_MM
+    usable_w = sheet_width - 2 * margin
+    usable_h = sheet_height - 2 * margin
 
     for p in pieces:
         if p.width > usable_w + 1e-6 or p.height > usable_h + 1e-6:
             raise ValueError(
                 f"{p.source}: {p.label!r} ({p.width:.1f}x{p.height:.1f}mm) does not fit "
-                f"within a single {SHEET_WIDTH_MM:.1f}x{SHEET_HEIGHT_MM:.1f}mm sheet "
-                f"(usable {usable_w:.1f}x{usable_h:.1f}mm after {MARGIN_MM}mm margins) -- "
+                f"within a single {sheet_width:.1f}x{sheet_height:.1f}mm sheet "
+                f"(usable {usable_w:.1f}x{usable_h:.1f}mm after {margin}mm margins) -- "
                 f"bed size too small for this part"
             )
 
@@ -166,7 +187,7 @@ def _pack_pieces(pieces: list[Piece]) -> list[list[Placement]]:
             for hi, shelf in enumerate(shelves):
                 if shelf["height"] + 1e-6 < piece.height:
                     continue
-                gap = SPACING_MM if shelf["items"] else 0.0
+                gap = spacing if shelf["items"] else 0.0
                 if shelf["x_cursor"] + gap + piece.width > usable_w + 1e-6:
                     continue
                 if best is None or shelf["height"] < sheets[best[0]][best[1]]["height"]:
@@ -177,7 +198,7 @@ def _pack_pieces(pieces: list[Piece]) -> list[list[Placement]]:
             # room on the current (last) sheet before starting a new sheet.
             si = len(sheets) - 1
             shelves = sheets[si]
-            y_cursor = sum(s["height"] + SPACING_MM for s in shelves)
+            y_cursor = sum(s["height"] + spacing for s in shelves)
             if y_cursor + piece.height > usable_h + 1e-6:
                 sheets.append([])
                 si = len(sheets) - 1
@@ -188,20 +209,20 @@ def _pack_pieces(pieces: list[Piece]) -> list[list[Placement]]:
 
         si, hi = best
         shelf = sheets[si][hi]
-        gap = SPACING_MM if shelf["items"] else 0.0
+        gap = spacing if shelf["items"] else 0.0
         x = shelf["x_cursor"] + gap
         shelf["x_cursor"] = x + piece.width
-        shelf["items"].append(Placement(piece=piece, x=MARGIN_MM + x, y=MARGIN_MM + shelf["y"]))
+        shelf["items"].append(Placement(piece=piece, x=margin + x, y=margin + shelf["y"]))
 
     return [[placement for shelf in shelves for placement in shelf["items"]] for shelves in sheets]
 
 
-def _sheet_content_bounds(placements: list[Placement]) -> tuple[float, float]:
+def _sheet_content_bounds(placements: list[Placement], margin: float = MARGIN_MM) -> tuple[float, float]:
     """Sheet dimensions trimmed to just fit the placed content plus the far
     margin (so real material bought for cutting isn't bigger than needed)."""
     max_x = max(p.x + p.piece.width for p in placements)
     max_y = max(p.y + p.piece.height for p in placements)
-    return max_x + MARGIN_MM, max_y + MARGIN_MM
+    return max_x + margin, max_y + margin
 
 
 # --- SVG emission ------------------------------------------------------------
@@ -274,21 +295,24 @@ def _emit_piece_group(piece: Piece, target_x: float, target_y: float, group_id: 
 
 
 def _write_sheet_svg(
-    placements: list[Placement], width: float, height: float, output_path: Path, sheet_number: int, total_sheets: int
+    placements: list[Placement],
+    width: float,
+    height: float,
+    output_path: Path,
+    sheet_number: int,
+    total_sheets: int,
+    header_comment: str | None = None,
+    title: str | None = None,
 ) -> None:
     groups = [
         _emit_piece_group(placement.piece, placement.x, placement.y, f"sheet{sheet_number}-p{i}")
         for i, placement in enumerate(placements)
     ]
     body = "\n".join(groups)
-    # Note: XML comments may not contain "--", so the comment body below
-    # uses single hyphens only (unlike the surrounding Python docstrings).
-    svg = f"""<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg"
-    width="{width:.2f}mm" height="{height:.2f}mm"
-    viewBox="0 0 {width:.2f} {height:.2f}">
-<!--
-Fax Machine Box - Sheet {sheet_number} of {total_sheets}. Ready for laser
+    if header_comment is None:
+        # Note: XML comments may not contain "--", so the comment body below
+        # uses single hyphens only (unlike the surrounding Python docstrings).
+        header_comment = f"""Fax Machine Box - Sheet {sheet_number} of {total_sheets}. Ready for laser
 cutting (NYC Resistor or any service with an equal or larger bed).
 Material: 3.175mm (1/8 inch) plywood.
 
@@ -297,9 +321,17 @@ Color coding: Blue (#0000FF) = cut, Red (#FF0000) = engrave. The gray
 identify the part for a human; it carries data-purpose="reference-label" on
 its <text> element and must NOT be mapped to any cut or engrave operation in
 the laser driver.
-Margins: {MARGIN_MM:.0f}mm from sheet edge; {SPACING_MM:.0f}mm between parts.
+Margins: {MARGIN_MM:.0f}mm from sheet edge; {SPACING_MM:.0f}mm between parts."""
+    if title is None:
+        title = f"Fax Machine Box - Sheet {sheet_number} of {total_sheets}"
+    svg = f"""<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="{width:.2f}mm" height="{height:.2f}mm"
+    viewBox="0 0 {width:.2f} {height:.2f}">
+<!--
+{header_comment}
 -->
-<title>Fax Machine Box - Sheet {sheet_number} of {total_sheets}</title>
+<title>{title}</title>
 {body}
 </svg>
 """
@@ -437,5 +469,134 @@ def generate_layout() -> list[Path]:
     return sheet_paths
 
 
+# --- Ponoko export mode (additive; never touches the NYCR path above) --------
+
+# 21 NYCR parts (8 shell + 12 drawer + 1 lid) + the turn-button hardware
+# piece, which the NYCR default path deliberately keeps standalone (see
+# generate_layout's docstring / DESIGN.md section B) but the Ponoko path
+# nests like every other part, since a single Ponoko order should carry
+# every laser-cut piece the box needs.
+PONOKO_EXPECTED_PARTS = 22
+# The combined kerf-square + magnet-gauge-row self-calibration coupon
+# (faxbox.calibration.generate_ponoko_coupon) -- see README "Ordering from
+# Ponoko" for why Ponoko orders need this nested onto the real sheet rather
+# than cut on scrap first (unlike NYC Resistor, there is no walk-up scrap
+# test cut available before a Ponoko order ships).
+PONOKO_EXPECTED_COUPONS = 1
+
+
+def _ponoko_header_comment(sheet_number: int, total_sheets: int) -> str:
+    # Note: XML comments may not contain "--" (same constraint documented on
+    # _write_sheet_svg's default header comment), so the text below uses
+    # single hyphens and colons only.
+    return f"""Fax Machine Box - PONOKO order - Sheet {sheet_number} of {total_sheets}.
+Material: 3.2mm birch plywood (Ponoko's nominal size for 1/8in stock).
+
+Verified against Ponoko's own current help pages (2026-07-07):
+  Color coding: Blue (#0000FF) = cut, Red (#FF0000) = line/vector engrave.
+  Source: https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions
+  Kerf 0.20mm, so BURN = 0.10mm (this project's per-side kerf compensation).
+  Source: https://www.ponoko.com/materials/birch-plywood
+  Sheet nested within the 790mm x 384mm max DESIGN area (not the 795x395mm
+  raw max sheet size; the gap is Ponoko's own sheet-edge margin).
+  Source: https://help.ponoko.com/en/articles/2688726-what-size-can-i-make-my-part-what-material-sizes-are-available
+
+No reference-only labels on this sheet: Ponoko's file-prep docs require
+text be outlined/converted before upload or it "will not be read" as a
+laser instruction at all (source: https://help.ponoko.com/en/articles/2688477-what-design-software-file-type-should-i-use).
+Rather than outline part names into visible engrave-red paths, this sheet
+omits them entirely; see README "Ordering from Ponoko" for part
+identification instead.
+Margins: {MARGIN_MM:.0f}mm from sheet edge; {SPACING_MM:.0f}mm between parts
+(Ponoko's own published minimum is ~1mm; kept at this project's existing,
+more conservative NYCR values)."""
+
+
+def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
+    """Regenerate every part with Ponoko's provider settings (kerf-derived
+    BURN, Ponoko's cut/vector-engrave colors, no reference labels -- see
+    config.PROVIDERS["ponoko"]) and re-nest ALL of them -- the 21 NYCR parts,
+    the turn-button hardware piece, and a small self-calibration coupon
+    (kerf square + magnet press-fit gauge row) -- onto sheets sized within
+    Ponoko's published birch-plywood workable area. Output:
+    config.PROVIDERS["ponoko"]["output_dir"] (output/ponoko/).
+
+    This is entirely additive: it never touches output/*.svg (the NYCR
+    default path generate_layout() produces) and is only invoked via
+    faxbox.ponoko or FAXBOX_PROVIDER=ponoko.
+
+    Returns the list of sheet_N.svg paths, in order.
+    """
+    name = config.resolve_provider(provider)
+    if name != "ponoko":
+        raise ValueError(f"generate_ponoko_layout only supports provider='ponoko', got {name!r}")
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Regenerate every ponoko-flavored source SVG. Imported here (not at
+    # module level) purely to keep this Ponoko-only dependency scoped to
+    # where it's used -- these modules only import faxbox.config, so there
+    # is no import cycle either way.
+    from faxbox import calibration, generate_drawers, generate_hardware, generate_lids, shell_generator
+
+    shell_svg = shell_generator.generate_shell(provider=name)
+    drawer_svg = generate_drawers.generate_drawer(provider=name)
+    lids_svg = generate_lids.generate_lids(provider=name)
+    hardware_svg = generate_hardware.generate_hardware(provider=name)
+    coupon_svg = calibration.generate_ponoko_coupon(provider=name)
+
+    strip = provider_cfg["strip_labels"]
+    pieces: list[Piece] = []
+    pieces += _load_pieces(shell_svg, "Shell", strip_labels=strip)
+    pieces += _load_pieces(drawer_svg, "Drawer 1", strip_labels=strip)
+    pieces += _load_pieces(drawer_svg, "Drawer 2", strip_labels=strip)
+    pieces += _load_pieces(lids_svg, "Lid", strip_labels=strip)
+    pieces += _load_pieces(hardware_svg, "Hardware", strip_labels=strip)
+    pieces += _load_pieces(coupon_svg, "Calibration", strip_labels=strip)
+
+    sheets = _pack_pieces(
+        pieces,
+        sheet_width=provider_cfg["sheet_width"],
+        sheet_height=provider_cfg["sheet_height"],
+    )
+
+    sheet_paths: list[Path] = []
+    sheet_dims: list[tuple[float, float]] = []
+    for i, placements in enumerate(sheets, start=1):
+        width, height = _sheet_content_bounds(placements)
+        sheet_path = output_path / f"sheet_{i}.svg"
+        _write_sheet_svg(
+            placements, width, height, sheet_path, i, len(sheets),
+            header_comment=_ponoko_header_comment(i, len(sheets)),
+            title=f"Fax Machine Box - PONOKO order - Sheet {i} of {len(sheets)}",
+        )
+        sheet_paths.append(sheet_path)
+        sheet_dims.append((width, height))
+
+    _write_reference_layout(sheets, sheet_dims, output_path / "final_layout.svg")
+
+    total_parts = sum(len(p) for p in sheets)
+    print(f"Generated {len(sheets)} Ponoko sheet(s) in {output_path.absolute()}:")
+    for path, (w, h) in zip(sheet_paths, sheet_dims):
+        print(f"  {path.name}: {w:.1f}mm x {h:.1f}mm")
+    print(
+        f"Total parts placed: {total_parts} (expected "
+        f"{PONOKO_EXPECTED_PARTS + PONOKO_EXPECTED_COUPONS}: {PONOKO_EXPECTED_PARTS} real parts "
+        "[21 NYCR parts + 1 turn button] + "
+        f"{PONOKO_EXPECTED_COUPONS} self-calibration coupon)"
+    )
+    print(
+        f"Ponoko sheet limit used: {provider_cfg['sheet_width']:.1f}mm x "
+        f"{provider_cfg['sheet_height']:.1f}mm (verified 2026-07-07, see config.py PONOKO_* constants)"
+    )
+    print(f"Reference-only combined view: {(output_path / 'final_layout.svg').absolute()}")
+
+    return sheet_paths
+
+
 if __name__ == "__main__":
-    generate_layout()
+    if config.resolve_provider() == "ponoko":
+        generate_ponoko_layout()
+    else:
+        generate_layout()

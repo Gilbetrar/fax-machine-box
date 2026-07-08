@@ -29,13 +29,11 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox import config
 from faxbox.calibration import LABEL_GRAY
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
-    BURN,
-    CUT_COLOR,
     MATERIAL_THICKNESS,
-    OUTPUT_DIR,
     TURN_BUTTON,
 )
 
@@ -57,9 +55,13 @@ assert abs(CAP_RADIUS - PIVOT_FROM_BLUNT_END) < 1e-9, (
 class TurnButton(Boxes):
     """One rounded paddle/stadium turn-button, pivot hole in the blunt end."""
 
-    def __init__(self) -> None:
+    def __init__(self, provider: str | None = None) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
+        # Provider abstraction (config.PROVIDERS) -- see shell_generator.py's
+        # OuterShell.__init__ for the full rationale. Defaults to "nycr".
+        provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+        self.cut_color = provider_cfg["cut_color"]
 
     def _build_button(self, label: str) -> None:
         """Draw one button: pivot hole first (in the pristine, untranslated
@@ -97,25 +99,31 @@ class TurnButton(Boxes):
     def render(self) -> None:
         """Render the single button (REV.B: one front-wall button, not two
         side-wall ones -- see module docstring)."""
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
         self._build_button("Turn Button")
 
 
-def generate_hardware() -> Path:
+def generate_hardware(provider: str | None = None) -> Path:
     """Generate the turn-button hardware SVG file.
+
+    `provider` selects a faxbox.config.PROVIDERS entry (see
+    shell_generator.generate_shell's docstring). Passing nothing reproduces
+    the original output/hardware.svg exactly.
 
     Returns:
         Path to the generated SVG file.
     """
-    output_path = Path(OUTPUT_DIR)
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
     output_path.mkdir(parents=True, exist_ok=True)
     output_file = output_path / "hardware.svg"
 
-    hardware = TurnButton()
+    hardware = TurnButton(provider=name)
     hardware.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(BURN),
+        "--burn", str(provider_cfg["burn"]),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
