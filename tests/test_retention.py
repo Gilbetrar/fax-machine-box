@@ -486,6 +486,84 @@ def test_drawer_side_strain_within_crack_threshold(side):
     )
 
 
+def _measured_tip_rise(engage: float, overhang: float, span: float) -> float:
+    """Local (test-only) re-implementation of config._tip_rise's formula --
+    deliberately NOT imported from faxbox.config, so this test's oracle is
+    independent of the helper that sizes DRAWER_DETENT_CAVITY (issue #20
+    pass-3 F3: comparing a measurement to the value that produced it can't
+    catch a wrong value)."""
+    return engage * (1 + 3 * overhang / (2 * span))
+
+
+@pytest.mark.parametrize("side", DRAWER_SIDES)
+def test_drawer_side_cavity_clears_measured_tip_rise(side):
+    """F3 (issue #20 pass-3, MAJOR): the drawer flexure's free tip rises
+    MORE than the nub's own designed engagement, because the severed free
+    tip overhangs past the nub's own load point toward the beam's free end
+    -- a beam-deflection effect the previous revision's shared
+    DETENT_CLEARANCE (2.5mm, sized only to the nub's own rise) did not
+    account for: computed tip rise ~2.97mm > that 2.5mm cavity, so the beam
+    would BIND against the cavity's far wall at ~1.85mm of nub lift,
+    short of the designed 2.2mm engagement (test_drawer_side_strain_
+    within_crack_threshold, above, only checks bending STRAIN -- it does
+    not catch a too-shallow cavity, since the beam can be well within its
+    crack threshold and still physically bind).
+
+    Computes the tip rise ENTIRELY from measured SVG dimensions (nub
+    position, root position, severed free-tip position, nub's own rise)
+    via a LOCAL copy of the tip-rise formula (not importing DRAWER_DETENT_
+    CAVITY / DRAWER_DETENT_TIP_RISE from config), then asserts the beam's
+    own measured clearance cavity is deep enough that it won't bind --
+    catches e.g. a reversion of DRAWER_DETENT_CAVITY back to the old
+    shared 2.5mm value.
+    """
+    piece = _piece(DRAWER_SVG, side)
+    bump = _nub_bump_geometry(piece.outer.d)
+    nub_cx = (bump["top_left"] + bump["top_right"]) / 2
+
+    cavity_candidates = [
+        h for h in _blue_holes(piece)
+        if abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 30.0
+        and h.bbox.width >= 15.0
+    ]
+    assert len(cavity_candidates) == 1, (
+        f"{side}: expected exactly 1 wide (cavity) release-cut hole, found {len(cavity_candidates)}"
+    )
+    cavity = cavity_candidates[0].bbox
+    root_x = cavity.xmax if abs(cavity.xmax - nub_cx) > abs(cavity.xmin - nub_cx) else cavity.xmin
+    span = abs(root_x - nub_cx)
+    assert span > 5.0, f"{side}: measured root-to-nub span implausibly small ({span:.2f})"
+
+    sever_candidates = [
+        h for h in _blue_holes(piece)
+        if abs((h.bbox.xmin + h.bbox.xmax) / 2 - nub_cx) <= 30.0
+        and h.bbox.width <= 3.0
+    ]
+    assert len(sever_candidates) == 1, (
+        f"{side}: expected exactly 1 narrow (sever) release-cut hole, found {len(sever_candidates)}"
+    )
+    sever = sever_candidates[0].bbox
+    # The beam's TRUE free tip is the sever cut's edge CLOSER to the root --
+    # the opposite edge disconnects into non-load-bearing material (see
+    # config._tip_rise's docstring / DESIGN.md's "Retention" section).
+    free_tip_x = sever.xmax if abs(sever.xmax - root_x) < abs(sever.xmin - root_x) else sever.xmin
+    overhang = abs(nub_cx - free_tip_x)
+    assert overhang > 0.5, f"{side}: measured tip overhang implausibly small ({overhang:.2f})"
+
+    tab_reach_y = _deepest_y_excluding_nub(piece.outer.d, bump["top_y"])
+    engage = bump["top_y"] - tab_reach_y
+    assert engage > 0
+
+    computed_tip_rise = _measured_tip_rise(engage, overhang, span)
+    available_clearance = cavity.height
+    assert available_clearance >= computed_tip_rise - 0.1, (
+        f"{side}: measured cavity clearance ({available_clearance:.2f}mm) is less "
+        f"than the computed free-tip rise ({computed_tip_rise:.2f}mm at engage="
+        f"{engage:.2f}, overhang={overhang:.2f}, span={span:.2f}) -- the beam "
+        f"would BIND against the cavity's far wall before reaching full engagement"
+    )
+
+
 # =============================================================================
 # 4. Faceplate BLANK INVARIANT: back to the exact v1 plain rectangle
 # =============================================================================
@@ -592,6 +670,104 @@ def test_catch_holes_at_same_box_x_on_both_panels():
         assert abs(bx - sx) <= 0.6, (
             f"bottom-panel catch hole at box X={bx:.2f} does not match shelf's "
             f"catch hole at box X={sx:.2f} -- both drawers close to the same position"
+        )
+
+
+def test_catch_hole_registers_with_nub_via_independent_datums():
+    """F4 (issue #20 pass-3, CRITICAL): catch-hole <-> nub registration was
+    previously untested end-to-end -- the pass-2 critic's mutation
+    `CATCH_HOLE_X += 5.0` stayed green against every other test in this
+    file, because nothing computed the nub's closed-position box-X
+    INDEPENDENTLY of the very formula (DRAWER_FRONT_INNER_FACE_CLOSED_X -
+    DRAWER_DETENT_NUB_X) that drew the catch hole -- comparing a
+    measurement to the config value that produced it can't catch a wrong
+    value, only a crashed generator.
+
+    Datums, matching DESIGN.md's own registration derivation, but each
+    combined from a MEASUREMENT (not a config echo of CATCH_HOLE_X or
+    DRAWER_DETENT_NUB_X, the two values a registration bug would touch)
+    plus stable, unrelated bay-fit constants (BAY_X1 "rear-wall plane",
+    BAY_LENGTH -- shell/bay geometry with nothing to do with retention
+    specifically):
+    - drawer body length: MEASURED from drawer.svg's own "Bottom" piece (a
+      plain, un-jointed "eeee" rectangle -- generate_drawers.py -- so its
+      bbox is the body's true external footprint with zero tab-protrusion
+      ambiguity, unlike the finger-jointed side panels the nub itself is
+      cut into).
+    - flexure X-position within the side (the faceplate-recess-relative
+      "nub position" datum): MEASURED as that SAME Bottom piece's own
+      nub-clearance slot center (F2 fix, generate_drawers.py) -- also a
+      plain, un-jointed rectangularHole, anchored to the exact same
+      unambiguous local x=0 as the body-length measurement above. The slot
+      is deliberately centered on the nub, so its measured center is a
+      legitimate, precise stand-in for the nub's own X position that
+      avoids the jointed side panel's up-to-T tab-position ambiguity.
+
+    Asserts the SHELL's catch hole X-span CONTAINS the independently-
+    computed nub X-span (at the nub's floor-plane cross-section --
+    NUB_WIDTH_AT_FLOOR_PLANE, the fixed physical width that actually
+    threads through the hole, not a mutation target) with <= 1.0mm total
+    slop.
+    """
+    bottom_drawer = _piece(DRAWER_SVG, "bottom")
+    body_length = bottom_drawer.bbox.width  # measured, NOT c.DRAWER_BODY["length"]
+
+    slot_candidates = [
+        h for h in _blue_holes(bottom_drawer)
+        if h.bbox.width > h.bbox.height
+        and 15.0 <= h.bbox.width <= 35.0
+        and 2.0 <= h.bbox.height <= 6.0
+    ]
+    assert len(slot_candidates) == 2, (
+        f"expected 2 nub-clearance slots (F2) on the drawer's Bottom panel, "
+        f"found {len(slot_candidates)} -- can't independently locate the nub "
+        f"without them"
+    )
+
+    measured_bay_gap = c.BAY_LENGTH - body_length  # independent stand-in for
+                                                    # DRAWER_BAY_GAP, using the
+                                                    # MEASURED body length
+
+    nub_box_xs = []
+    for slot in slot_candidates:
+        slot_center_x_local = (slot.bbox.xmin + slot.bbox.xmax) / 2 - bottom_drawer.bbox.xmin
+        flexure_x_from_front_inner_face = slot_center_x_local - T
+        nub_box_xs.append(c.BAY_X1 - measured_bay_gap - T - flexure_x_from_front_inner_face)
+
+    assert max(nub_box_xs) - min(nub_box_xs) <= 0.6, (
+        f"the two side walls' flexure slots don't land at the same box X: {nub_box_xs}"
+    )
+
+    bottom_shell = _piece(SHELL_SVG, "bottom")
+    min_span = T + 2 * DRAWER_LATERAL_FLOAT_PER_SIDE
+    catch_holes = [
+        h for h in _blue_holes(bottom_shell)
+        if h.bbox.width < h.bbox.height and 8.0 <= h.bbox.width <= 16.0
+        and h.bbox.height >= min_span
+    ]
+    assert len(catch_holes) == 2, f"expected 2 catch holes on the bottom panel, found {len(catch_holes)}"
+
+    half_floor_width = c.NUB_WIDTH_AT_FLOOR_PLANE / 2
+
+    for nub_box_x in nub_box_xs:
+        nub_lo = nub_box_x - half_floor_width
+        nub_hi = nub_box_x + half_floor_width
+        # Both catch holes should sit at the same box X (only Y differs);
+        # pick the nearest one so a symmetric X-shift of both is still caught.
+        best = min(
+            catch_holes,
+            key=lambda h: abs((h.bbox.xmin + h.bbox.xmax) / 2 - bottom_shell.bbox.xmin - nub_box_x),
+        )
+        catch_lo = best.bbox.xmin - bottom_shell.bbox.xmin
+        catch_hi = best.bbox.xmax - bottom_shell.bbox.xmin
+        lo_slack = max(0.0, catch_lo - nub_lo)
+        hi_slack = max(0.0, nub_hi - catch_hi)
+        total_slop = lo_slack + hi_slack
+        assert total_slop <= 1.0, (
+            f"catch hole X-span [{catch_lo:.2f}, {catch_hi:.2f}] does not contain the "
+            f"independently-computed nub X-span [{nub_lo:.2f}, {nub_hi:.2f}] (combined "
+            f"slop {total_slop:.2f}mm > 1.0mm) -- registration broken (e.g. mutation "
+            f"CATCH_HOLE_X += 5.0 must fail this)"
         )
 
 

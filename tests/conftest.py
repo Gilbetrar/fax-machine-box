@@ -32,6 +32,25 @@ SRC_DIR = str(REPO_ROOT / "src")
 # everywhere, not just in the fixture below.
 os.environ["PYTHONPATH"] = SRC_DIR + os.pathsep + os.environ.get("PYTHONPATH", "")
 
+# ... but os.environ["PYTHONPATH"] only affects subprocesses spawned from here
+# on (pass-2 red-team CRITICAL finding): the pytest process ITSELF has already
+# resolved `faxbox` at interpreter startup via the editable install's .pth
+# file, which in a worktree checkout points at the ORIGINAL repo's src/, not
+# this one. Every in-process `import faxbox...` in the test modules --
+# including config.py, which most of test_retention.py etc. read directly
+# without ever going through a subprocess -- would therefore still silently
+# read the WRONG tree's code, regardless of the env var above.
+#
+# Fix: put THIS checkout's src/ at the front of sys.path directly, before any
+# test module (or this conftest) has imported faxbox. conftest.py is always
+# imported by pytest before it collects/imports test modules in this
+# directory, so doing this here -- at conftest import time, prior to any
+# `import faxbox` anywhere in the session -- guarantees in-process imports
+# resolve to this checkout too. Insert at index 0 so it wins over the
+# editable install's .pth entry regardless of where that entry lands.
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
 # The three generator entry points (issue #16 verification procedure). Run in
 # this order via `sys.executable -m <module>` -- same as a human would from
 # the README -- so the fixture exercises exactly what ships, not an in-process

@@ -63,14 +63,15 @@ from faxbox.config import (
     CATCH_HOLE_Y_WIDTH,
     CUT_COLOR,
     DETENT_BEAM_WIDTH,
-    DETENT_CLEARANCE,
     DETENT_ROOT_FILLET,
     DETENT_SEVER_WIDTH,
+    DRAWER_DETENT_CAVITY,
     DRAWER_DETENT_ENGAGE,
     DRAWER_DETENT_NUB_TO_ROOT_SPAN,
     DRAWER_DETENT_NUB_X,
     DRAWER_DETENT_ROOT_X,
     DRAWER_DETENT_TIP_X,
+    LID_DETENT_CAVITY,
     LID_DETENT_ENGAGE,
     LID_DETENT_NUB_TO_ROOT_SPAN,
     LID_DETENT_ROOT_X,
@@ -149,7 +150,7 @@ WALL_SAMPLE_TIP_X = LID_DETENT_TIP_X + _WALL_SHIFT          # = _SAMPLE_MARGIN
 WALL_SAMPLE_NUB_X = LID_DETENT_X + _WALL_SHIFT
 WALL_SAMPLE_ROOT_X = LID_DETENT_ROOT_X + _WALL_SHIFT
 WALL_SAMPLE_WIDTH = WALL_SAMPLE_ROOT_X + _SAMPLE_MARGIN
-WALL_SAMPLE_FLOOR_Z = DETENT_BEAM_WIDTH + DETENT_CLEARANCE + 3.0
+WALL_SAMPLE_FLOOR_Z = DETENT_BEAM_WIDTH + LID_DETENT_CAVITY + 3.0
 WALL_SAMPLE_HEIGHT = WALL_SAMPLE_FLOOR_Z + LID_DETENT_ENGAGE + 5.0
 
 # Lid Notch Strip: a short stand-in for the lid's mating edge, carrying the
@@ -173,7 +174,7 @@ DRAWER_SAMPLE_NUB_X = DRAWER_DETENT_NUB_X + _DRAWER_SHIFT
 DRAWER_SAMPLE_ROOT_X = DRAWER_DETENT_ROOT_X + _DRAWER_SHIFT
 DRAWER_SAMPLE_LENGTH = DRAWER_SAMPLE_ROOT_X + _SAMPLE_MARGIN
 DRAWER_SAMPLE_NUB_DEPTH = T + DRAWER_DETENT_ENGAGE
-DRAWER_SAMPLE_HEIGHT = DRAWER_SAMPLE_NUB_DEPTH + DETENT_BEAM_WIDTH + DETENT_CLEARANCE + 5.0
+DRAWER_SAMPLE_HEIGHT = DRAWER_SAMPLE_NUB_DEPTH + DETENT_BEAM_WIDTH + DRAWER_DETENT_CAVITY + 5.0
 
 # Mock Sill Edge: a thin plain strip, T thick, representing the rear wall's
 # own cross-section at the drawer opening (DESIGN.md: "bottom opening sill
@@ -280,7 +281,7 @@ class RetentionCoupon(Boxes):
             self._draw_closed_polygon(points)
 
             beam_bottom = WALL_SAMPLE_FLOOR_Z - DETENT_BEAM_WIDTH
-            cavity_bottom = beam_bottom - DETENT_CLEARANCE
+            cavity_bottom = beam_bottom - LID_DETENT_CAVITY
             cavity, sever = release_cut_rects(
                 tip=WALL_SAMPLE_TIP_X, root=WALL_SAMPLE_ROOT_X,
                 beam_bottom=beam_bottom, cavity_bottom=cavity_bottom,
@@ -325,7 +326,7 @@ class RetentionCoupon(Boxes):
 
         def callback() -> None:
             beam_top = DETENT_BEAM_WIDTH
-            cavity_top = DETENT_BEAM_WIDTH + DETENT_CLEARANCE
+            cavity_top = DETENT_BEAM_WIDTH + DRAWER_DETENT_CAVITY
             cavity, sever = release_cut_rects(
                 tip=DRAWER_SAMPLE_TIP_X, root=DRAWER_SAMPLE_ROOT_X,
                 beam_bottom=beam_top, cavity_bottom=cavity_top,

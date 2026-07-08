@@ -32,10 +32,12 @@ from faxbox.config import (
     BURN,
     CUT_COLOR,
     DETENT_BEAM_WIDTH,
-    DETENT_CLEARANCE,
     DETENT_ROOT_FILLET,
     DETENT_SEVER_WIDTH,
     DRAWER_BODY,
+    DRAWER_BOTTOM_SLOT_X_LENGTH,
+    DRAWER_BOTTOM_SLOT_Y_SPAN,
+    DRAWER_DETENT_CAVITY,
     DRAWER_DETENT_ENGAGE,
     DRAWER_DETENT_NUB_X,
     DRAWER_DETENT_PLAIN_HI,
@@ -223,7 +225,7 @@ class DrawerBox(Boxes):
             # the panel) rather than below, since the nub protrudes DOWN
             # past y=0 while the panel's own bulk is above it.
             beam_top = DETENT_BEAM_WIDTH
-            cavity_top = DETENT_BEAM_WIDTH + DETENT_CLEARANCE
+            cavity_top = DETENT_BEAM_WIDTH + DRAWER_DETENT_CAVITY
             cavity, sever = release_cut_rects(
                 tip=DRAWER_DETENT_TIP_X, root=DRAWER_DETENT_ROOT_X,
                 beam_bottom=beam_top, cavity_bottom=cavity_top,
@@ -252,7 +254,24 @@ class DrawerBox(Boxes):
         skipping DRAWER_DETENT_PLAIN_LO -> DRAWER_DETENT_PLAIN_HI, matching
         the side walls' own CompoundEdge plain zone there (mechanism B) --
         without this split, that row would carry finger holes with no
-        tab to plug them (the side wall has no tab in that zone either)."""
+        tab to plug them (the side wall has no tab in that zone either).
+
+        Nub clearance slot (F2, issue #20 red-team pass-3): the flexure nub
+        protrudes T + DRAWER_DETENT_ENGAGE below the wall's own local y=0,
+        i.e. DRAWER_DETENT_ENGAGE past this panel's own bottom face -- but
+        this panel spans the drawer's FULL exterior footprint, so without a
+        cutout here, the nub's own swept material has nowhere to go (it
+        would have to occupy the same space as this panel's own solid
+        plywood). One rectangular clearance hole per side wall, centered on
+        that wall's flexure nub (box X = T + DRAWER_DETENT_NUB_X, the same
+        offset the finger-hole row split above already accounts for), sized
+        to the nub's WIDEST cross-section (at the wall plane, where it's
+        still flush with the wall's bulk) plus margin -- see
+        DRAWER_BOTTOM_SLOT_X_LENGTH / DRAWER_BOTTOM_SLOT_Y_SPAN in
+        config.py. Y-span starts exactly at each side's true edge (0 or
+        width) since that's where the wall itself sits -- no material is
+        lost outboard of the wall's own seat, only inboard by the slot's
+        margin. Hidden under the drawer once assembled."""
 
         def callback() -> None:
             length, width = DRAWER_BODY["length"], DRAWER_BODY["width"]
@@ -267,6 +286,17 @@ class DrawerBox(Boxes):
             for y in (T / 2, width - T / 2):
                 self.fingerHolesAt(T, y, DRAWER_DETENT_PLAIN_LO, angle=0)
                 self.fingerHolesAt(seg2_start, y, seg2_len, angle=0)
+
+            # Nub clearance slot, one per side wall (F2, above).
+            slot_cx = T + DRAWER_DETENT_NUB_X
+            for slot_cy in (
+                DRAWER_BOTTOM_SLOT_Y_SPAN / 2,
+                width - DRAWER_BOTTOM_SLOT_Y_SPAN / 2,
+            ):
+                self.rectangularHole(
+                    slot_cx, slot_cy,
+                    DRAWER_BOTTOM_SLOT_X_LENGTH, DRAWER_BOTTOM_SLOT_Y_SPAN, r=0,
+                )
 
         self.rectangularWall(
             DRAWER_BODY["length"], DRAWER_BODY["width"], "eeee",

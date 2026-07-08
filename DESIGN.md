@@ -282,17 +282,47 @@ axis X *and* the deflection axis Z, so its ramps genuinely cam against
 motion along X).
 
 **Shared cantilever proportions**: beam cross-section width 2.5mm in the
-flex direction (`DETENT_BEAM_WIDTH`), root fillet ≥1.0mm, ≥2.5mm clearance
-behind the beam so it can deflect its engagement depth without bottoming
-out (`DETENT_CLEARANCE`), 30° ramp angle (`DETENT_RAMP_DEG`), 1.0mm
-release-cut width to fully part the beam's free tip from the surrounding
-material (`DETENT_SEVER_WIDTH`), and `DETENT_SEVER_CLEARANCE` = 1.5mm kept
-between a nub's own (ramped) base edge and its release/sever cut, so the
-sever cut cannot undercut the nub's own base and leave it bridged to the
-fixed material on its outward side (this was verified against the ACTUAL
-drawn geometry, not assumed — see the "nub bridging" note below). Beam
-length differs per mechanism (see each below), driven by the strain
-formula, not a shared constant.
+flex direction (`DETENT_BEAM_WIDTH`), root fillet ≥1.0mm, 30° ramp angle
+(`DETENT_RAMP_DEG`), 1.0mm release-cut width to fully part the beam's free
+tip from the surrounding material (`DETENT_SEVER_WIDTH`), and
+`DETENT_SEVER_CLEARANCE` = 1.5mm kept between a nub's own (ramped) base
+edge and its release/sever cut, so the sever cut cannot undercut the nub's
+own base and leave it bridged to the fixed material on its outward side
+(this was verified against the ACTUAL drawn geometry, not assumed — see
+the "nub bridging" note below). Beam length differs per mechanism (see
+each below), driven by the strain formula, not a shared constant.
+
+**Clearance cavity depth is now PER-MECHANISM, not shared** (FIX, issue #20
+pass-3 red-team F3): a single shared `DETENT_CLEARANCE` (2.5mm) used to size
+the clearance behind/above BOTH beams, sized only to each mechanism's own
+nub engagement depth. That undercounts how far the beam's FREE TIP actually
+rises, because in both mechanisms the nub sits near, but not exactly at,
+the beam's severed free end (`DETENT_SEVER_CLEARANCE` keeps a gap between
+the nub's own base and the sever cut) — the tip therefore overhangs past
+the nub's own load point, and by ordinary cantilever beam theory a point
+further past a load rises MORE than the load point itself:
+
+**tip rise = engage · (1 + 3·overhang / (2·span))**
+
+(`overhang` = distance from the nub's load point to the beam's true
+severed free tip; `span` = root-to-nub distance; see `config._tip_rise`).
+Each mechanism's cavity must be **≥ its own tip rise + 0.5mm real margin**,
+computed via this formula, not assumed equal to the nub's own engagement:
+
+- **Mechanism A (lid, side wall)**: overhang ≈4.85mm, span = 22.0mm ⇒ tip
+  rise ≈2.00mm ⇒ `LID_DETENT_CAVITY` = 2.00 + 0.5 = **2.5mm** — unchanged
+  from the old shared value. This mechanism's proportions happened to keep
+  the tip rise within the old cavity's margin; the formula makes that
+  margin explicit instead of accidental.
+- **Mechanism B (drawer, side wall)**: overhang ≈6.06mm, span = 26.0mm ⇒
+  tip rise ≈2.97mm, which EXCEEDS the old shared 2.5mm cavity — the beam
+  would bind against the cavity's far wall at ≈1.85mm of nub lift, short of
+  the designed 2.2mm engagement. `DRAWER_DETENT_CAVITY` = 2.97 + 0.5 =
+  **≈3.47mm** fixes this. Checked against the drawer side's own 53.5mm
+  total height (DESIGN.md #9): the deeper cavity's far edge sits well
+  short of the panel's own top edge and every other feature, with no web
+  thinner than `MIN_WEB` (3.0mm) introduced — confirmed both by the
+  measured constants and by rendering `drawer.svg`.
 
 **Burn (FIX3, red-team)**: every nub/notch/detour shape is drawn
 BURN-compensated (see `faxbox.detent`'s module docstring for the exact
@@ -393,12 +423,42 @@ always sound — it's an X-Z part); only the strain (below) was refit.
   fully finger-jointed to the drawer's own Bottom panel along its whole
   length; a Boxes.py finger-joint edge can't locally express the nub's
   protrusion (the same limitation the removed faceplate detent hit), so a
-  short PLAIN zone (`DRAWER_DETENT_PLAIN_LO` ≈ 15.44 → `..._PLAIN_HI` =
+  short PLAIN zone (`DRAWER_DETENT_PLAIN_LO` ≈ 9.44 → `..._PLAIN_HI` =
   52.0) replaces the finger joint there via a 3-segment CompoundEdge
   (finger / purpose-built nub edge / finger — see
   `generate_drawers.py`'s `_DrawerFlexureNubEdge`). The Bottom panel's own
   matching finger-hole row is split to skip the same X-range, so there are
-  no unplugged holes.
+  no unplugged holes. (`PLAIN_LO` moved from ≈15.44 to ≈9.44 as part of the
+  bottom-panel clearance slot fix below — the slot is wider than the
+  beam's own tip-to-root span, so it, not the beam, now sets this bound.)
+- **Bottom-panel clearance slot** (FIX, issue #20 pass-3 red-team F2,
+  CRITICAL): the drawer's own Bottom panel sits flush across the drawer's
+  FULL exterior footprint (DESIGN.md #9), directly beneath the flexure
+  zone — before this fix, that panel was solid there, but the nub needs to
+  reach `DRAWER_DETENT_ENGAGE` (2.2mm) PAST it to do anything useful (skipping
+  the finger-hole ROW there, as described above, only removes the row's
+  individual tab-holes; it does nothing to open the panel's own solid
+  field to the nub's swept path). At the nub's WIDEST cross-section — the
+  wall plane, where the nub is still flush with the wall's bulk material,
+  `NUB_WIDTH_AT_WALL_PLANE` ≈ 21.1mm nominal (≈21.4mm as-cut with BURN) —
+  the panel had nowhere for the nub to go. Fix: one rectangular clearance
+  hole per side wall, cut through the drawer's Bottom panel
+  (`generate_drawers.py`'s `_build_bottom`), sized to:
+  - X-length (`DRAWER_BOTTOM_SLOT_X_LENGTH` ≈ 23.1mm): `NUB_WIDTH_AT_WALL_PLANE`
+    + 1mm margin on each end, centered on the nub (box X = T +
+    `DRAWER_DETENT_NUB_X`).
+  - Y-span (`DRAWER_BOTTOM_SLOT_Y_SPAN` ≈ 3.675mm): the wall's own seat
+    zone (0 → T) + 0.5mm inboard margin — starts exactly at the panel's
+    true edge (nothing is lost outboard of the wall's own footprint) and
+    extends 0.5mm inboard for real clearance.
+  Because this slot is WIDER than the flexure beam's own tip-to-root span,
+  `DRAWER_DETENT_PLAIN_LO`/`..._PLAIN_HI` (above) are now sized to whichever
+  requirement is wider on each side — the slot's own X-extent + 3mm margin
+  (so the slot doesn't clip the finger-hole row's own teeth where it
+  resumes, the same principle `CATCH_HOLE_PLAIN_MARGIN` applies to the
+  catch holes below), or the beam's tip-to-root span + 2mm, whichever is
+  wider. Hidden under the drawer once assembled (cosmetic underside
+  cutout, same visibility caveat as the catch holes below).
 - **Kinematics**: on insertion, the drawer (faceplate trailing) has its nub
   cam UP over the rear-wall opening's own sill web (the T=3.175mm-thick
   rear-wall material below the bottom opening / above the top opening's
@@ -417,8 +477,23 @@ always sound — it's an X-Z part); only the strain (below) was refit.
     drawer body length, per the fix's own instruction, landing at
     `CATCH_HOLE_X` ≈ 273.975 (≈24mm in from the rear wall's interior face —
     matches the drawer's remaining travel after the nub clears the sill).
-  - X-length: `CATCH_HOLE_X_LENGTH` = nub base width + 0.8mm, keeping
-    engaged X-slop ≤ 0.8mm.
+  - X-length: `CATCH_HOLE_X_LENGTH` = `NUB_WIDTH_AT_FLOOR_PLANE` + 0.8mm,
+    keeping engaged X-slop ≤ 0.8mm nominal (≈0.5mm real engaged slop, per
+    the independent-datum registration test below). **Nub width naming
+    fix (FIX, issue #20 pass-3 red-team F4)**: the taper is linear
+    (constant `DETENT_RAMP_DEG`), so its half-width simply grows with
+    depth traveled back up the ramp from the narrow tip — this means the
+    nub has a DIFFERENT width at every Z/Y level along its length, and the
+    previous revision's `DRAWER_DETENT_NUB_BASE_WIDTH` (≈10.12) was
+    measured at the FLOOR plane (`DRAWER_DETENT_ENGAGE` above the tip —
+    the cross-section that actually threads through this catch hole) while
+    being *named* as if it were the nub's "base" (i.e. its widest point, at
+    the wall plane, ≈21.1mm nominal / ≈21.4mm as-cut — see the
+    bottom-panel clearance slot, above, which DOES need that wider value).
+    Renamed to two explicit, correctly-scoped constants:
+    `NUB_WIDTH_AT_FLOOR_PLANE` (≈10.12, unchanged value — used here, for
+    catch-hole sizing) and `NUB_WIDTH_AT_WALL_PLANE` (≈21.1, new — used for
+    the bottom-panel clearance slot).
   - Y-width: `CATCH_HOLE_Y_WIDTH` = T (side thickness) + 2×`DRAWER_LATERAL_GAP`
     (the drawer's own ~4.9mm/side bay float) + 1mm margin ≈ 13.925mm, so the
     nub can't miss the hole even at worst-case drawer skew.
@@ -435,6 +510,21 @@ always sound — it's an X-Z part); only the strain (below) was refit.
     worst-case skew, which is the failure mode this hole exists to prevent.
   - Visible from the box underside when the drawer is out (bottom panel
     only) — cosmetic, accepted.
+  - **Registration test (FIX, issue #20 pass-3 red-team F4, CRITICAL)**:
+    prior to this fix, no test verified the catch hole and the nub actually
+    land at the same box X end-to-end — a red-team mutation
+    (`CATCH_HOLE_X += 5.0`) stayed green against every existing test,
+    since none of them independently recomputed one side's expected
+    position from the other. `tests/test_retention.py::
+    test_catch_hole_registers_with_nub_via_independent_datums` now
+    measures the drawer's own Bottom-panel clearance slot (above, F2 —
+    a plain, un-jointed hole with zero tab-position ambiguity, unlike the
+    jointed side panel the nub itself is cut into) as an independent proxy
+    for the nub's true position, combines it with the rear-wall plane
+    (`BAY_X1`) and a MEASURED (not config-echoed) drawer body length, and
+    asserts the shell's catch hole X-span contains the computed nub X-span
+    with ≤1.0mm total slop — parsed entirely from the generated SVGs, not
+    by comparing config constants to themselves.
 - Grip slot (Y-centered) and the flexure zone (near each side panel's front
   end) never intersect.
 

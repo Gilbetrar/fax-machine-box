@@ -175,9 +175,6 @@ DRAWER_DETENT_ENGAGE = 2.2     # nub protrusion below the drawer side wall's
 DETENT_BEAM_WIDTH = 2.5         # beam cross-section width in the flex
                                 # direction (mm) -- the dimension that bends
 DETENT_ROOT_FILLET = 1.0        # minimum root fillet radius (mm)
-DETENT_CLEARANCE = 2.5          # clearance behind/below the beam so it can
-                                # deflect its own engagement depth without
-                                # bottoming out (mm)
 DETENT_RAMP_DEG = 30.0          # nub ramp angle from the beam's rest plane,
                                 # matching Boxes.py LidRight's barb angle `a`
 DETENT_SEVER_WIDTH = 1.0        # width of the release cut that frees the
@@ -207,6 +204,34 @@ def _nub_base_width(rise: float) -> float:
     return DETENT_NUB_TOP_WIDTH + 2 * _ramp_run(rise)
 
 
+def _tip_rise(engage: float, overhang: float, span: float) -> float:
+    """Free-tip rise of a cantilever beam under a concentrated nub load,
+    when the beam's severed free end extends `overhang` mm PAST the nub's
+    own load point, toward the tip (root-to-nub span `span`; both mechanisms
+    put the nub near, but not exactly at, the free tip -- see
+    DETENT_SEVER_CLEARANCE) -- issue #20 red-team pass-3 F3.
+
+    A point load a distance `span` from a fixed root deflects that point by
+    `engage` (the nub's own designed rise); standard cantilever beam theory
+    (constant EI) gives the ADDITIONAL deflection at a point `overhang`
+    further out, past the load, as linear in the load-point's own rotation
+    there -- for a fixed-root beam this works out to a tip deflection of
+    engage * (1 + 3*overhang / (2*span)), i.e. the tip always rises MORE
+    than the nub's own rise if it overhangs past it. Pass-2's design only
+    sized the clearance CAVITY to the nub's own rise (`engage`), so a beam
+    whose free tip overhangs the nub by very much would try to rise further
+    than the cavity is deep and BIND before reaching full engagement --
+    exactly what happened to the drawer mechanism (see DRAWER_DETENT_CAVITY
+    below): tip rise ~2.97mm > the shared 2.5mm cavity of that revision ->
+    binds at ~1.85mm, short of the designed 2.2mm engagement. The lid
+    mechanism's tip rise (~2.0mm) already fit under its 2.5mm cavity by
+    coincidence -- this formula makes that margin explicit instead of
+    accidental, and lets the drawer mechanism's cavity be sized correctly
+    too (see DESIGN.md's "Retention" section).
+    """
+    return engage * (1 + 3 * overhang / (2 * span))
+
+
 # --- Mechanism A: side-wall lid detent ---------------------------------------
 # The nub sits at the beam's FREE end (FIX2, red-team pass 2: the previous
 # revision put the nub mid-beam at X=20 with root at X=29, a 9mm root-to-nub
@@ -230,9 +255,28 @@ LID_DETENT_NUB_BASE_WIDTH = _nub_base_width(LID_DETENT_ENGAGE)   # ~7.70
 LID_DETENT_TIP_X = LID_DETENT_X - LID_DETENT_NUB_BASE_WIDTH / 2 - DETENT_SEVER_CLEARANCE  # ~14.65, free/severed end
 LID_DETENT_ROOT_X = LID_DETENT_X + LID_DETENT_NUB_TO_ROOT_SPAN                            # 42.0, solid anchor end
 
+# Free-tip rise at full LID_DETENT_ENGAGE deflection (F3, issue #20 pass-3):
+# the beam's severed free end sits DETENT_SEVER_WIDTH/2 past LID_DETENT_TIP_X
+# (the sever cut's own center), which is itself DETENT_SEVER_CLEARANCE +
+# half the nub's base outward of the nub -- that whole offset is the
+# "overhang" the tip rises through in ADDITION to the nub's own designed
+# rise. Cavity = tip rise + 0.5mm real margin so the beam can reach full
+# engagement without binding on the cavity's far wall.
+LID_DETENT_FREE_TIP_X = LID_DETENT_TIP_X + DETENT_SEVER_WIDTH / 2       # ~15.15
+LID_DETENT_TIP_OVERHANG = LID_DETENT_X - LID_DETENT_FREE_TIP_X          # ~4.85
+LID_DETENT_TIP_RISE = _tip_rise(
+    LID_DETENT_ENGAGE, LID_DETENT_TIP_OVERHANG, LID_DETENT_NUB_TO_ROOT_SPAN)  # ~2.00
+LID_DETENT_CAVITY = LID_DETENT_TIP_RISE + 0.5                           # ~2.50 (unchanged
+                                                                         # from the old shared
+                                                                         # DETENT_CLEARANCE --
+                                                                         # this mechanism's tip
+                                                                         # rise already had a
+                                                                         # real, if accidental,
+                                                                         # margin)
+
 LID_DETENT_NUB_TOP_Z = LID_SLOT_BOTTOM + LID_DETENT_ENGAGE          # 119.525
 LID_DETENT_BEAM_BOTTOM_Z = LID_SLOT_BOTTOM - DETENT_BEAM_WIDTH      # 115.525
-LID_DETENT_CAVITY_BOTTOM_Z = LID_DETENT_BEAM_BOTTOM_Z - DETENT_CLEARANCE  # 113.025
+LID_DETENT_CAVITY_BOTTOM_Z = LID_DETENT_BEAM_BOTTOM_Z - LID_DETENT_CAVITY  # ~113.03
 
 # Mating notch in the lid's side edges (DESIGN.md #8: closed lid front edge
 # sits at box X = LID_SLOT_X_END - SLIDING_LID["length"], "~0.4mm shy" of the
@@ -268,23 +312,88 @@ LID_NOTCH_CHAMFER = 1.0              # corner ease at the notch mouth (mm)
 # a real margin below the ~1.5-2% plywood cracking threshold.
 DRAWER_DETENT_NUB_TO_ROOT_SPAN = 26.0
 
-DRAWER_DETENT_NUB_BASE_WIDTH = _nub_base_width(DRAWER_DETENT_ENGAGE)  # ~10.12
+# Nub width at two different reference planes along its ramp (F4 rename,
+# issue #20 pass-3): the taper is linear (constant DETENT_RAMP_DEG), so its
+# half-width simply grows by ramp_run(x) for every mm `x` traveled back UP
+# the ramp from its narrow tip -- these are the same function evaluated at
+# two different depths, NOT the same number:
+# - NUB_WIDTH_AT_FLOOR_PLANE: width DRAWER_DETENT_ENGAGE above the very tip,
+#   i.e. at the drawer's TRUE exterior bottom (the plane the nub is 2.2mm
+#   proud of) -- this is the cross-section that actually threads through a
+#   catch hole, so catch-hole X-length must reference THIS value (below).
+#   The previous revision named this `DRAWER_DETENT_NUB_BASE_WIDTH` even
+#   though it is measured from the FLOOR plane, not the wall/base plane --
+#   renamed here, value unchanged (~10.12).
+# - NUB_WIDTH_AT_WALL_PLANE: width (T + DRAWER_DETENT_ENGAGE) above the tip,
+#   i.e. at the wall's own plain-zone baseline (local y=0), where the nub is
+#   still flush with the wall's bulk material -- this is the nub's WIDEST
+#   cross-section (~21.1 nominal, ~21.4 as-cut with BURN), and what the
+#   drawer's own Bottom panel clearance slot (below, F2) must actually
+#   clear, since the panel sits directly under this plane.
+NUB_WIDTH_AT_FLOOR_PLANE = _nub_base_width(DRAWER_DETENT_ENGAGE)          # ~10.12
+NUB_WIDTH_AT_WALL_PLANE = _nub_base_width(T + DRAWER_DETENT_ENGAGE)       # ~21.12
 
 # Nub position (drawer-local X, front/faceplate end): far enough from the
 # front finger joints (>=15mm clear, per issue instructions) even after
 # backing out DETENT_SEVER_CLEARANCE + the nub's own half-base for the sever
 # cut position below.
 DRAWER_DETENT_NUB_X = 24.0
-DRAWER_DETENT_TIP_X = DRAWER_DETENT_NUB_X - DRAWER_DETENT_NUB_BASE_WIDTH / 2 - DETENT_SEVER_CLEARANCE  # ~17.44
-DRAWER_DETENT_ROOT_X = DRAWER_DETENT_NUB_X + DRAWER_DETENT_NUB_TO_ROOT_SPAN                            # 50.0
+DRAWER_DETENT_TIP_X = DRAWER_DETENT_NUB_X - NUB_WIDTH_AT_FLOOR_PLANE / 2 - DETENT_SEVER_CLEARANCE  # ~17.44
+DRAWER_DETENT_ROOT_X = DRAWER_DETENT_NUB_X + DRAWER_DETENT_NUB_TO_ROOT_SPAN                         # 50.0
+
+# Free-tip rise at full DRAWER_DETENT_ENGAGE deflection (F3, issue #20
+# pass-3): same derivation as LID_DETENT_TIP_RISE above, but this
+# mechanism's overhang (nub to free tip) is proportionally larger relative
+# to its span, so tip rise (~2.97) EXCEEDS the old shared 2.5mm
+# DETENT_CLEARANCE -- the beam would bind against the cavity's far wall at
+# ~1.85mm of nub lift, short of the designed 2.2mm engagement. This
+# mechanism therefore needs its OWN, deeper cavity.
+DRAWER_DETENT_FREE_TIP_X = DRAWER_DETENT_TIP_X + DETENT_SEVER_WIDTH / 2   # ~17.94
+DRAWER_DETENT_TIP_OVERHANG = DRAWER_DETENT_NUB_X - DRAWER_DETENT_FREE_TIP_X  # ~6.06
+DRAWER_DETENT_TIP_RISE = _tip_rise(
+    DRAWER_DETENT_ENGAGE, DRAWER_DETENT_TIP_OVERHANG, DRAWER_DETENT_NUB_TO_ROOT_SPAN)  # ~2.97
+DRAWER_DETENT_CAVITY = DRAWER_DETENT_TIP_RISE + 0.5                       # ~3.47
+
+# --- Bottom-panel clearance slot (F2, issue #20 pass-3) ----------------------
+# The drawer's own Bottom panel sits flush across the drawer's FULL exterior
+# footprint, directly beneath the flexure zone, with no cutout there before
+# this fix -- but the nub must reach DRAWER_DETENT_ENGAGE (2.2mm) PAST that
+# panel to do anything useful, and at the flexure's plain zone the panel is
+# solid material in the nub's own swept path (its finger-hole row there is
+# already skipped, per DRAWER_DETENT_PLAIN_LO/HI below, but skipping a HOLE
+# ROW leaves the panel's own solid field untouched -- it doesn't cut a
+# clearance opening). Slot dims (generate_drawers.py cuts one per side wall):
+# - X-length: the nub's WIDEST cross-section (NUB_WIDTH_AT_WALL_PLANE, at
+#   the wall plane -- the widest point the nub sweeps through on its way
+#   down) plus 1mm margin on each end.
+# - Y-span: the wall's own seat zone (0 -> T, the side panel's thickness
+#   footprint) plus 0.5mm inboard margin -- see generate_drawers.py.
+# Hidden under the drawer once assembled (cosmetic underside cutout, same
+# visibility caveat as the shell's own catch holes).
+DRAWER_BOTTOM_SLOT_X_LENGTH = NUB_WIDTH_AT_WALL_PLANE + 2.0   # ~23.12
+DRAWER_BOTTOM_SLOT_Y_SPAN = T + 0.5                           # ~3.675
 
 # The side wall's bottom edge is finger-jointed to the drawer's own Bottom
-# panel along its ENTIRE length except a short PLAIN zone here, sized to
-# contain the flexure's tip-to-root span with margin (a finger-jointed edge
-# can't locally express the nub's protrusion -- see generate_drawers.py). The
-# Bottom panel's matching finger-hole row is split to skip this same zone.
-DRAWER_DETENT_PLAIN_LO = DRAWER_DETENT_TIP_X - 2.0    # ~15.44
-DRAWER_DETENT_PLAIN_HI = DRAWER_DETENT_ROOT_X + 2.0   # 52.0
+# panel along its ENTIRE length except a short PLAIN zone here (a finger-
+# jointed edge can't locally express the nub's protrusion -- see
+# generate_drawers.py). The Bottom panel's matching finger-hole row is split
+# to skip this same zone. The plain zone must be wide enough for BOTH: (a)
+# the flexure beam's own tip-to-root span (with 2mm margin, as before), AND
+# (b) the new clearance slot's X-length (F2, above) with >=3mm margin so the
+# slot doesn't clip the finger-hole row's own teeth where it resumes (same
+# principle CATCH_HOLE_PLAIN_MARGIN applies to the catch holes, below) --
+# whichever requirement is wider wins on each side.
+_DRAWER_BOTTOM_SLOT_MARGIN = 3.0
+_drawer_bottom_slot_lo = DRAWER_DETENT_NUB_X - DRAWER_BOTTOM_SLOT_X_LENGTH / 2
+_drawer_bottom_slot_hi = DRAWER_DETENT_NUB_X + DRAWER_BOTTOM_SLOT_X_LENGTH / 2
+DRAWER_DETENT_PLAIN_LO = min(
+    DRAWER_DETENT_TIP_X - 2.0,
+    _drawer_bottom_slot_lo - _DRAWER_BOTTOM_SLOT_MARGIN,
+)   # ~9.44 (was ~15.44 pre-F2 -- the slot is wider than the beam's own span)
+DRAWER_DETENT_PLAIN_HI = max(
+    DRAWER_DETENT_ROOT_X + 2.0,
+    _drawer_bottom_slot_hi + _DRAWER_BOTTOM_SLOT_MARGIN,
+)   # 52.0 (unchanged -- the beam's root-side margin already covers the slot)
 
 # --- Catch holes (bottom panel for the bottom drawer, shelf for the top
 # drawer): X position derived from existing datums (rear wall plane, the
@@ -298,8 +407,11 @@ DRAWER_FRONT_INNER_FACE_CLOSED_X = BAY_X1 - DRAWER_BAY_GAP - T   # 297.975,
                                    # drawer is fully closed
 CATCH_HOLE_X = DRAWER_FRONT_INNER_FACE_CLOSED_X - DRAWER_DETENT_NUB_X   # ~273.975
 
-# X-length: nub base + ramp clearance, keeping engaged X-slop <= 0.8mm total.
-CATCH_HOLE_X_LENGTH = DRAWER_DETENT_NUB_BASE_WIDTH + 0.8   # ~10.92
+# X-length: nub width AT THE FLOOR PLANE (F4 -- the cross-section that
+# actually threads through this hole, NOT the wider wall-plane cross-
+# section, which never reaches this deep) + ramp clearance, keeping engaged
+# X-slop <= 0.8mm total.
+CATCH_HOLE_X_LENGTH = NUB_WIDTH_AT_FLOOR_PLANE + 0.8   # ~10.92
 
 # Y-width: side thickness + both drawers' full lateral float + margin, so
 # the nub can't miss the hole even at worst-case drawer skew (DESIGN.md

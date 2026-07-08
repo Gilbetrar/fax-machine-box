@@ -1,23 +1,64 @@
 # HANDOFF — fax-machine-box
 
-Updated 2026-07-07 on branch `iter2-retention` by the session that ran the
-issue #20 red-team (3 critics) against the retention feature and fixed
-their findings. Do not treat this file's timestamp as "nothing has changed
-since v1" — issue #20 (lid + drawer retention) is now DONE on this branch,
-including a full mechanism replacement. Read DESIGN.md's "Retention
-(iteration 3)" section before touching any retention geometry.
+Updated 2026-07-07 on branch `iter2-retention` by the session that ran a
+THIRD retention red-team pass (pass-3) and fixed its findings on top of the
+earlier pass-2 fixes. Do not treat this file's timestamp as "nothing has
+changed since v1" — issue #20 (lid + drawer retention) is now DONE on this
+branch, including a full mechanism replacement AND a pass-3 fix round (see
+below). Read DESIGN.md's "Retention (iteration 3)" section before touching
+any retention geometry.
 
 ## TL;DR for the next agent
 
 The project is **cut-ready with retention included**: 21 parts nested on 3
-sheets + a kerf coupon + a 5-piece retention coupon, 189 tests green,
+sheets + a kerf coupon + a 5-piece retention coupon, 192 tests green,
 geometry adversarially reviewed (shell/drawer/lid geometry across 3 earlier
-red-team passes on `main`, retention across a 4th red-team pass on this
-branch). There is no unfinished code and no open TODO. Your job is
-wrap-up: sanity-check the final state, support Ben through cut day (see
-README's checklist — kerf coupon, THEN retention coupon, THEN real
+red-team passes on `main`, retention across a pass-2 AND pass-3 red-team
+pass on this branch). There is no unfinished code and no open TODO. Your
+job is wrap-up: sanity-check the final state, support Ben through cut day
+(see README's checklist — kerf coupon, THEN retention coupon, THEN real
 sheets), and merge this branch when Ben says go. Run
-`.venv/bin/python -m pytest tests/ -q` before and after any change.
+`.venv/bin/python -m pytest tests/ -q` before and after any change (no
+shell-level `PYTHONPATH` override needed — `tests/conftest.py` now puts
+this checkout's own `src/` at the front of `sys.path` at import time, so
+even a git-worktree checkout tests its OWN code in-process, not just in
+regeneration subprocesses — see pass-3 F1 below).
+
+## Pass-3 red-team fixes (this session, on top of pass-2)
+
+A pass-2 critic caught four more findings; all four are now fixed, with
+tests proving each catches its own regression (mutate -> red -> revert ->
+green):
+
+- **F1 (CRITICAL)**: `tests/conftest.py`'s `os.environ["PYTHONPATH"]`
+  assignment only affected subprocesses, not pytest's own in-process
+  imports — a worktree checkout's test run could silently exercise a
+  DIFFERENT checkout's `faxbox` code. Fixed with `sys.path.insert(0, ...)`
+  at conftest import time (before any `faxbox` import in the session).
+- **F2 (CRITICAL)**: the drawer's own Bottom panel is a solid sheet
+  directly under the flexure nub's swept path — no clearance opening
+  existed there before this fix, so the nub had nowhere to go. Fixed with
+  a rectangular clearance slot per side wall through `generate_drawers.py`'s
+  Bottom panel (`DRAWER_BOTTOM_SLOT_X_LENGTH` / `..._Y_SPAN` in config.py).
+- **F3 (MAJOR)**: the drawer flexure's free tip rises MORE than its own
+  designed nub engagement (it overhangs past the nub's load point), so the
+  shared `DETENT_CLEARANCE` (2.5mm) cavity was too shallow for the drawer
+  mechanism specifically — it would bind at ~1.85mm, short of the designed
+  2.2mm engagement. Fixed with a `config._tip_rise` formula and per-
+  mechanism cavities (`LID_DETENT_CAVITY` ≈2.5, unchanged;
+  `DRAWER_DETENT_CAVITY` ≈3.47, deeper).
+  - Verified: cavity has room within the drawer side's 53.5mm height, no
+    web thinner than `MIN_WEB` (3.0mm) introduced.
+- **F4 (MAJOR)**: catch-hole↔nub registration was untested end-to-end (a
+  `CATCH_HOLE_X += 5.0` mutation stayed green), and
+  `DRAWER_DETENT_NUB_BASE_WIDTH` was misnamed (its value is the nub's width
+  at the FLOOR plane, not its actual widest "base"). Fixed with a new
+  independent-datum registration test
+  (`test_catch_hole_registers_with_nub_via_independent_datums`) and a
+  rename/split into `NUB_WIDTH_AT_FLOOR_PLANE` / `NUB_WIDTH_AT_WALL_PLANE`.
+
+See DESIGN.md's "Retention (iteration 3)" section for the full derivation
+of each fix.
 
 ## What this project is
 
@@ -44,18 +85,26 @@ cardboard prototype**, so contents-fit is already physically validated.
   ramp genuinely cams). The lid mechanism's kinematics were always sound;
   only its beam strain was refit (nub moved from mid-beam to the beam's
   free end — see DESIGN.md).
-- Full suite: **189 passed, 0 failed, 0 xfail** (`.venv/bin/python -m
-  pytest tests/ -q`, ~17s). The suite regenerates all SVGs first, so it
-  always tests current code. `tests/conftest.py` now also forces this
-  checkout's own `src/` onto the regeneration subprocess's PYTHONPATH, so
-  running the suite from a git WORKTREE can't silently test a different
-  checkout's code.
+- Full suite: **192 passed, 0 failed, 0 xfail** (`.venv/bin/python -m
+  pytest tests/ -q`, ~17s — no shell-level `PYTHONPATH` override needed).
+  The suite regenerates all SVGs first, so it always tests current code.
+  `tests/conftest.py` forces this checkout's own `src/` onto BOTH the
+  regeneration subprocess's PYTHONPATH AND the front of pytest's own
+  in-process `sys.path` (pass-3 F1 — the env-var-only version could
+  silently test a different checkout's code from a git WORKTREE, since it
+  only affected subprocesses, not pytest's own already-resolved imports).
 - Mutation-gate re-validated for `test_retention.py` (rewritten wholesale
-  this session): 10/10 targeted mutations (wrong engagement depths, an
+  in the pass-2 session): 10/10 targeted mutations (wrong engagement depths, an
   inverted nub, a shifted notch, a broken mirror, a deleted release cut, a
   deleted coupon, a squared-off ramp, a plain-rectangle drawer side, a
   halved catch hole) each independently turn the suite red, then green
   again on revert. Full table in the PR description.
+- Pass-3 mutation-gate (this session, all verified red -> green on
+  revert): removing the F2 bottom-panel clearance slot, `CATCH_HOLE_X +=
+  5.0`, and reverting `DRAWER_DETENT_CAVITY` to the old shared 2.5mm value
+  (this last one required adding a new test — nothing previously caught
+  it, since the strain test only checks bending stress, not cavity depth).
+  See the PR #22 comment for the pass-3 summary.
 - Burn compensation (previously "burn-neutral by design" for all
   hand-drawn retention shapes) is now applied consistently — see
   `faxbox/detent.py`'s module docstring for the exact model; the kerf-test
@@ -109,7 +158,7 @@ cardboard prototype**, so contents-fit is already physically validated.
 
 ## Build/test baseline
 
-`.venv/bin/python -m pytest tests/ -q` → `189 passed in ~17s` on branch
+`.venv/bin/python -m pytest tests/ -q` → `192 passed in ~17s` on branch
 `iter2-retention` (verify current HEAD matches or is ahead). venv already
 exists; if rebuilding: `python3 -m venv .venv && .venv/bin/pip install -e
 ".[dev]"` (Boxes.py comes from GitHub — needs network; PyPI "boxes" is the
