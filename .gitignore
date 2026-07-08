@@ -29,3 +29,9 @@ Thumbs.db
 
 # Development tools
 .playwright-mcp/
+
+# Ponoko provider outputs (regenerated, like the default outputs)
+output/ponoko/
+
+# Agent worktrees (session-local)
+.claude/worktrees/
