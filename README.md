@@ -440,7 +440,11 @@ this checklist is current.
    **red = engrave**, **gray text = ignore** (reference-only part/sheet
    labels — not a cut or engrave instruction). The "FAX MACHINE" letters
    are hatched engrave strokes, not filled shapes — engrave them at vector
-   (stroke) settings, same as the other red lines.
+   (stroke) settings, same as the other red lines. If the SVG import gets
+   mangled, run `.venv/bin/python scripts/export_pdf.py` to export
+   PDF versions of the sheets and coupon (same folder, same names) as a
+   fallback — the PDF page size matches each SVG's declared mm dimensions
+   exactly, so physical scale carries over.
 5. **Cut order: engrave first, then interior holes, then part outlines
    (inside-out), and set this explicitly** — don't assume the driver
    preserves file order. Engrave the red "FAX MACHINE" text and faceplate
