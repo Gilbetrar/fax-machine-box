@@ -15,13 +15,11 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox import config
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
-    BURN,
-    CUT_COLOR,
     LID_GRIP_SLOT,
     MATERIAL_THICKNESS,
-    OUTPUT_DIR,
     SLIDING_LID,
 )
 
@@ -29,13 +27,17 @@ from faxbox.config import (
 class LidGenerator(Boxes):
     """Generate the sliding lid panel for the fax machine box."""
 
-    def __init__(self) -> None:
+    def __init__(self, provider: str | None = None) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
+        # Provider abstraction (config.PROVIDERS) -- see shell_generator.py's
+        # OuterShell.__init__ for the full rationale. Defaults to "nycr".
+        provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+        self.cut_color = provider_cfg["cut_color"]
 
     def render(self) -> None:
         """Render the sliding lid piece."""
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
 
         length = SLIDING_LID["length"]
         width = SLIDING_LID["width"]
@@ -54,22 +56,28 @@ class LidGenerator(Boxes):
         )
 
 
-def generate_lids() -> Path:
+def generate_lids(provider: str | None = None) -> Path:
     """Generate the lids SVG file.
+
+    `provider` selects a faxbox.config.PROVIDERS entry (see
+    shell_generator.generate_shell's docstring). Passing nothing reproduces
+    the original output/lids.svg exactly.
 
     Returns:
         Path to the generated SVG file.
     """
-    output_path = Path(OUTPUT_DIR)
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
     output_path.mkdir(parents=True, exist_ok=True)
 
     output_file = output_path / "lids.svg"
 
-    lids = LidGenerator()
+    lids = LidGenerator(provider=name)
     lids.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(BURN),
+        "--burn", str(provider_cfg["burn"]),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])
