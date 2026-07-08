@@ -8,6 +8,8 @@ Coordinate convention (DESIGN.md): origin at the exterior front-left-bottom
 corner. X+ rearward (length, 12"), Y+ rightward (width, 6.5"), Z+ up (5").
 """
 
+import os
+
 # --- Material & laser -------------------------------------------------------
 
 MATERIAL_THICKNESS = 3.175  # 1/8" plywood, uniform for ALL parts (SPEC)
@@ -260,3 +262,141 @@ ENGRAVE_CENTER = {"x": SHELL_EXT["length"] / 2, "z": 63.5}  # right wall exterio
 # --- Output ------------------------------------------------------------------
 
 OUTPUT_DIR = "output"
+
+# --- Provider abstraction (laser cutting service target, issue #ponoko) -----
+# A "provider" bundles everything that changes when the SAME geometry is
+# ordered from a different laser-cutting service: kerf compensation (BURN),
+# the cut/engrave SVG stroke colors, the sheet size limit to nest within, and
+# whether reference-only part-name labels are kept. Selected either via the
+# FAXBOX_PROVIDER env var or an explicit `provider=` kwarg passed to any
+# faxbox.generate_*()/faxbox.layout function (see resolve_provider() below).
+#
+# DEFAULT_PROVIDER = "nycr" and every PROVIDERS["nycr"] value below is
+# IDENTICAL to this project's pre-existing (pre-provider-abstraction)
+# constants -- BURN, CUT_COLOR, ENGRAVE_COLOR, OUTPUT_DIR -- so the default
+# code path (no env var, no provider arg) is byte-for-byte unchanged. Never
+# add a new PROVIDERS["nycr"] value that isn't already one of this file's
+# pre-existing constants.
+#
+# Ponoko values verified live against Ponoko's own current help/materials
+# pages, 2026-07-07 (see PONOKO_* constants below for each fact + its
+# source URL). Independently re-verified via a second live fetch the same
+# day after an initial research pass returned a color scheme that turned
+# out to be backwards -- see the color-convention comment below.
+
+# --- Ponoko-specific verified constants (birch plywood, 2026-07-07) --------
+
+# Kerf (total width removed by the laser's beam): published directly on
+# Ponoko's birch plywood material page.
+# Source: https://www.ponoko.com/materials/birch-plywood (fetched
+# 2026-07-07: "Kerf Width: 0.20mm").
+PONOKO_KERF = 0.20
+
+# BURN is Boxes.py's PER-SIDE kerf compensation (half the total kerf, since
+# the beam removes material symmetrically from both sides of the drawn
+# line) -- same relationship this project's own kerf coupon uses to derive
+# BURN from a measured cut (calibration.py: "BURN = (measured - 10.0) / 2").
+# Starting value for a first Ponoko order; recalibrate from the kerf-square
+# coupon nested onto the Ponoko sheet (see ponoko.py / README "Ordering
+# from Ponoko") the same way BURN itself is calibrated for NYC Resistor.
+PONOKO_BURN = PONOKO_KERF / 2   # 0.10
+
+# Color convention. IMPORTANT: an initial research pass returned "red=cut,
+# blue=vector-engrave, green=area-engrave" -- this was WRONG (an artifact of
+# stale/confused secondary sources) and was caught by a second, independent
+# live fetch of Ponoko's own current help article before being encoded here.
+# The CURRENT, verified convention is the OPPOSITE for cut/engrave, and uses
+# gray fill (not green) for area engrave, which this project doesn't use
+# (no filled/area-engrave content anywhere in this design):
+#   Blue stroke = cut, Red stroke = line/vector engrave, Gray fill = area engrave.
+# Source: https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions
+# (fetched live 2026-07-07: "Blue stroke = cutting / Red stroke = line
+# engraving / Gray fill = area engraving"). Corroborated by
+# https://help.ponoko.com/en/articles/2688477-what-design-software-file-type-should-i-use
+# (same fetch date).
+#
+# This happens to be IDENTICAL to this project's own NYC Resistor
+# convention (DESIGN.md: "blue #0000FF = cut, red #FF0000 = engrave") -- a
+# coincidence, not an assumption: both providers' cut/engrave RGB values
+# below are deliberately written as their own named constants (not reused
+# via a shared alias) so a future provider with a genuinely different
+# convention doesn't require restructuring this dict.
+PONOKO_CUT_COLOR = [0.0, 0.0, 1.0]       # blue = cut
+PONOKO_ENGRAVE_COLOR = [1.0, 0.0, 0.0]   # red = line/vector engrave
+
+# Text handling: Ponoko's file-prep docs require text be converted to
+# outlines/paths before upload or "it will not be read" as a laser
+# instruction at all (source: same "what design software / file type"
+# article above). Rather than outline part-name labels into engrave-red
+# vector paths (which would engrave every part name onto the real, visible
+# faceplates/walls -- nobody wants that), this project strips reference
+# labels entirely for the Ponoko path. Also: Ponoko does not hard-reject
+# stray colors (they're user-assignable per-color after upload -- same
+# source), but this project still emits ONLY the two colors above, with NO
+# other stroke/fill color and NO <text> elements, to keep the uploaded file
+# unambiguous.
+PONOKO_STRIP_LABELS = True
+
+# Sheet size to nest within. Ponoko publishes two different numbers for
+# birch plywood: a raw maximum SHEET size, and a smaller maximum DESIGN
+# (workable) area within that sheet -- the gap between them is Ponoko's own
+# sheet-edge margin, so designs must nest within the smaller (workable)
+# figure, not the raw sheet size.
+#   Raw max sheet size: 795.00mm x 395.00mm.
+#   Source: https://www.ponoko.com/materials/birch-plywood (fetched
+#   2026-07-07: "Maximum Sheet Size: 795.00 x 395.00mm").
+#   Max DESIGN/part size (this project's "P3"-equivalent workable area,
+#   applies to birch plywood as one of the "100+ materials" at this size):
+#   790mm x 384mm.
+#   Source: https://help.ponoko.com/en/articles/2688726-what-size-can-i-make-my-part-what-material-sizes-are-available
+#   (fetched 2026-07-07: "For 100+ materials the maximum material sheet
+#   size is 31.1\" x 15.1\" / 790mm x 384mm").
+# This project nests within the smaller (790 x 384) figure.
+PONOKO_SHEET_WIDTH = 790.0
+PONOKO_SHEET_HEIGHT = 384.0
+
+# Minimum gap Ponoko wants between design elements: "at least 0.040\" (1mm)
+# between elements," parts under 6mm can fall through the bed.
+# Source: https://help.ponoko.com/en/articles/2688741-how-do-i-design-for-highest-quality
+# (fetched 2026-07-07). This project's existing MARGIN_MM=10 /
+# SPACING_MM=5 (layout.py) are already well over this minimum, so the
+# Ponoko nesting pass reuses those same two constants rather than adding a
+# separate, looser pair.
+
+PONOKO_OUTPUT_DIR = f"{OUTPUT_DIR}/ponoko"
+
+PROVIDERS = {
+    "nycr": {
+        "burn": BURN,                    # 0.08, this file's pre-existing default
+        "cut_color": CUT_COLOR,          # blue, pre-existing
+        "engrave_color": ENGRAVE_COLOR,  # red, pre-existing
+        "strip_labels": False,           # keep gray reference-only part labels
+        "output_dir": OUTPUT_DIR,        # "output", pre-existing
+    },
+    "ponoko": {
+        "burn": PONOKO_BURN,
+        "cut_color": PONOKO_CUT_COLOR,
+        "engrave_color": PONOKO_ENGRAVE_COLOR,
+        "strip_labels": PONOKO_STRIP_LABELS,
+        "output_dir": PONOKO_OUTPUT_DIR,
+        "sheet_width": PONOKO_SHEET_WIDTH,
+        "sheet_height": PONOKO_SHEET_HEIGHT,
+    },
+}
+
+DEFAULT_PROVIDER = "nycr"
+
+
+def resolve_provider(explicit: str | None = None) -> str:
+    """Resolve which PROVIDERS entry to use: an explicit `provider=` kwarg
+    wins, then the FAXBOX_PROVIDER env var, then DEFAULT_PROVIDER ("nycr").
+
+    Every faxbox.generate_*() function and faxbox.layout.generate_layout()-
+    family function takes an optional `provider` kwarg that funnels through
+    this, so calling any of them with no arguments and no FAXBOX_PROVIDER
+    set reproduces this project's original (pre-provider-abstraction)
+    behavior exactly.
+    """
+    if explicit:
+        return explicit
+    return os.environ.get("FAXBOX_PROVIDER", DEFAULT_PROVIDER)

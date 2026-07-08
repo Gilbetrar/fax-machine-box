@@ -27,18 +27,15 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox import config
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
-    BURN,
-    CUT_COLOR,
     DRAWER_BODY,
     DRAWER_GRIP_SLOT,
-    ENGRAVE_COLOR,
     FACEPLATE,
     MAGNET_HOLE_DIA,
     MAGNET_Y_OFFSET,
     MATERIAL_THICKNESS,
-    OUTPUT_DIR,
 )
 
 T = MATERIAL_THICKNESS
@@ -75,9 +72,14 @@ class DrawerBox(Boxes):
     """One drawer's 6 pieces: Front, Back, Left Side, Right Side, Bottom,
     Faceplate (DESIGN.md #9)."""
 
-    def __init__(self) -> None:
+    def __init__(self, provider: str | None = None) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
+        # Provider abstraction (config.PROVIDERS) -- see shell_generator.py's
+        # OuterShell.__init__ for the full rationale. Defaults to "nycr".
+        provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+        self.cut_color = provider_cfg["cut_color"]
+        self.engrave_color = provider_cfg["engrave_color"]
 
     # -- grip slot: same formula for Front and Faceplate, so they align ---
     # (DESIGN.md: "slot top edge 8.0 below the part's top edge"). Each
@@ -112,7 +114,7 @@ class DrawerBox(Boxes):
         gap = 1.0
         x0, x1 = cx - width / 2, cx + width / 2
         y0, y1 = cy - height / 2, cy + height / 2
-        self.set_source_color(ENGRAVE_COLOR)
+        self.set_source_color(self.engrave_color)
         for (ax, ay), (bx, by) in (
             ((x0 + gap, y0), (x1 - gap, y0)),
             ((x1, y0 + gap), (x1, y1 - gap)),
@@ -122,7 +124,7 @@ class DrawerBox(Boxes):
             self.ctx.move_to(ax, ay)
             self.ctx.line_to(bx, by)
             self.ctx.stroke()
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
 
     # -- pieces ---------------------------------------------------------
 
@@ -215,7 +217,7 @@ class DrawerBox(Boxes):
     def render(self) -> None:
         """Render all 6 pieces, laid out in a single row (move='right'
         throughout) so bounding boxes never overlap."""
-        self.set_source_color(CUT_COLOR)
+        self.set_source_color(self.cut_color)
 
         self._build_front()
         self._build_back()
@@ -225,21 +227,27 @@ class DrawerBox(Boxes):
         self._build_faceplate()
 
 
-def generate_drawer() -> Path:
+def generate_drawer(provider: str | None = None) -> Path:
     """Generate a drawer SVG file (one drawer's 6 pieces; cut twice).
+
+    `provider` selects a faxbox.config.PROVIDERS entry (see
+    shell_generator.generate_shell's docstring). Passing nothing reproduces
+    the original output/drawer.svg exactly.
 
     Returns:
         Path to the generated SVG file.
     """
-    output_path = Path(OUTPUT_DIR)
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
     output_path.mkdir(parents=True, exist_ok=True)
     output_file = output_path / "drawer.svg"
 
-    drawer = DrawerBox()
+    drawer = DrawerBox(provider=name)
     drawer.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(BURN),
+        "--burn", str(provider_cfg["burn"]),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])

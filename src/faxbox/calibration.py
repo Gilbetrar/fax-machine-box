@@ -29,6 +29,7 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox import config
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
     BURN,
@@ -296,6 +297,138 @@ def generate_magnet_coupon() -> Path:
     print("  Then set MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter> in config.py and")
     print("  regenerate the shell/drawer SVGs (the magnet holes there ARE burn-compensated, so")
     print("  they need no further correction once MAGNET_PRESS_FIT itself is right).")
+    return output_file
+
+
+
+# =============================================================================
+# Ponoko calibration coupon: kerf square + magnet gauge row, combined into
+# ONE small panel nested onto a real Ponoko sheet (not standalone scrap like
+# the two coupons above) -- see faxbox/ponoko.py and README "Ordering from
+# Ponoko". This makes the FIRST Ponoko order self-calibrating: measure the
+# returned part, update config.PONOKO_BURN / MAGNET_PRESS_FIT, and every
+# subsequent Ponoko order is correct without a separate scrap test cut
+# (unlike NYC Resistor, Ponoko cuts real material sight-unseen -- there is
+# no "cut a coupon on scrap first" step available before the real order).
+# =============================================================================
+
+PONOKO_COUPON_WIDTH = 110.0   # X
+PONOKO_COUPON_HEIGHT = 25.0   # Y
+
+# Same technique as CalibrationCoupon's kerf square above: a RAW ctx square
+# path, exactly 10.0mm on the drawn tool path regardless of the current
+# PONOKO_BURN guess, so measuring the returned physical part reveals
+# Ponoko's REAL per-side kerf: PONOKO_BURN = (measured - 10.0) / 2 (same
+# formula as the NYCR kerf coupon; see that section's docstring for why
+# this one feature must stay burn-NEUTRAL, unlike everything else on this
+# panel).
+PONOKO_KERF_SQUARE_SIZE = 10.0
+
+# Same 4 gauge diameters as MagnetFitCoupon above, burn-COMPENSATED via
+# self.hole() (uses whatever --burn this panel is rendered with, i.e.
+# config.PROVIDERS["ponoko"]["burn"]) -- physically identical to a
+# same-labeled real part hole, exactly like MagnetFitCoupon's own holes.
+PONOKO_MAGNET_DIAMETERS = MAGNET_COUPON_DIAMETERS
+
+_PONOKO_ITEMS = [PONOKO_KERF_SQUARE_SIZE] + list(PONOKO_MAGNET_DIAMETERS)
+_PONOKO_GAP = (PONOKO_COUPON_WIDTH - sum(_PONOKO_ITEMS)) / (len(_PONOKO_ITEMS) + 1)
+PONOKO_COUPON_CENTER_Y = PONOKO_COUPON_HEIGHT / 2
+
+
+def _ponoko_item_centers() -> list[float]:
+    """X centers, left to right: kerf square first, then the 4 magnet
+    gauge holes."""
+    centers = []
+    cursor = _PONOKO_GAP
+    for w in _PONOKO_ITEMS:
+        centers.append(cursor + w / 2)
+        cursor += w + _PONOKO_GAP
+    return centers
+
+
+class PonokoCalibrationCoupon(Boxes):
+    """One small panel: kerf square (burn-neutral) + 4 magnet gauge holes
+    (burn-compensated), all CUT geometry, NO text/labels at all (Ponoko
+    path strips reference labels entirely -- see config.PONOKO_STRIP_LABELS
+    and README "Ordering from Ponoko": Ponoko's file-prep docs require text
+    be converted to outlines or "it will not be read" at all, and nobody
+    wants gauge labels engraved on a real part, so this coupon is drawn
+    without any self.text() call in the first place, rather than relying on
+    a later strip-labels step to remove one)."""
+
+    def __init__(self, provider: str | None = None) -> None:
+        Boxes.__init__(self)
+        self.addSettingsArgs(edges.FingerJointSettings)
+        provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+        self.cut_color = provider_cfg["cut_color"]
+
+    def render(self) -> None:
+        self.set_source_color(self.cut_color)
+        centers = _ponoko_item_centers()
+        square_center, hole_centers = centers[0], centers[1:]
+
+        def callback() -> None:
+            # Kerf square: raw ctx path, exactly 10.0mm regardless of burn.
+            half = PONOKO_KERF_SQUARE_SIZE / 2
+            x0, y0 = square_center - half, PONOKO_COUPON_CENTER_Y - half
+            x1, y1 = square_center + half, PONOKO_COUPON_CENTER_Y + half
+            self.ctx.move_to(x0, y0)
+            self.ctx.line_to(x1, y0)
+            self.ctx.line_to(x1, y1)
+            self.ctx.line_to(x0, y1)
+            self.ctx.line_to(x0, y0)
+            self.ctx.stroke()
+            # Magnet gauge holes: burn-compensated, same self.hole() path
+            # every real part magnet hole uses.
+            for cx, d in zip(hole_centers, PONOKO_MAGNET_DIAMETERS):
+                self.hole(cx, PONOKO_COUPON_CENTER_Y, d=d)
+
+        self.rectangularWall(
+            PONOKO_COUPON_WIDTH, PONOKO_COUPON_HEIGHT, "eeee",
+            callback=[callback, None, None, None],
+            move="right", label="",
+        )
+
+
+def generate_ponoko_coupon(provider: str | None = None) -> Path:
+    """Generate the combined Ponoko calibration coupon SVG file (kerf
+    square + magnet gauge row, one small panel, nested onto a real Ponoko
+    sheet by faxbox.ponoko / faxbox.layout.generate_ponoko_layout -- unlike
+    the two standalone NYCR coupons above, this one IS a real ordered part).
+
+    Returns:
+        Path to the generated SVG file.
+    """
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
+    output_path.mkdir(parents=True, exist_ok=True)
+    output_file = output_path / "calibration_coupon.svg"
+
+    coupon = PonokoCalibrationCoupon(provider=name)
+    coupon.parseArgs([
+        "--output", str(output_file),
+        "--thickness", str(MATERIAL_THICKNESS),
+        "--burn", str(provider_cfg["burn"]),
+        "--reference", "0",
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
+    ])
+
+    coupon.open()
+    coupon.render()
+    data = coupon.close()
+
+    with open(output_file, "wb") as f:
+        f.write(data.getvalue())
+
+    print(f"Generated Ponoko calibration coupon SVG: {output_file.absolute()}")
+    print(f"  Coupon blank: {PONOKO_COUPON_WIDTH}mm x {PONOKO_COUPON_HEIGHT}mm")
+    print(f"  Kerf square: tool path exactly {PONOKO_KERF_SQUARE_SIZE:.1f}mm x "
+          f"{PONOKO_KERF_SQUARE_SIZE:.1f}mm (burn-neutral). Measure the returned "
+          "physical hole with calipers: set config.PONOKO_BURN = (measured - 10.0) / 2.")
+    print(f"  Magnet gauge holes ({', '.join(f'{d:.2f}mm' for d in PONOKO_MAGNET_DIAMETERS)}): "
+          "press a real 6mm disc magnet into each; whichever seats snugly sets "
+          "MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter>.")
     return output_file
 
 
