@@ -130,3 +130,25 @@ def test_lids_have_no_engraving():
     """DESIGN.md's sliding lid has no engraved content; this already holds
     today and should keep holding through the #17 rebuild."""
     assert _pieces_with_red(OUTPUT_DIR / "lids.svg") == set()
+
+
+# =============================================================================
+# Text fill colors are live laser instructions (LEARNINGS.md) -- real parts
+# must label in reference-gray only. Red text is allowed solely as a coupon
+# title (calibration scrap, engraved deliberately for identification).
+# =============================================================================
+
+def _red_text_contents(svg_path):
+    root = su.get_svg_root(svg_path)
+    out = []
+    for el in root.iter(f"{su.SVG_NS}text"):
+        style = (el.get("style") or "") + (el.get("fill") or "")
+        if "rgb(255,0,0)" in style.replace(" ", ""):
+            out.append((el.text or "").strip())
+    return out
+
+
+def test_hardware_labels_never_engrave():
+    """The turn button is a real, visible part: any red-filled text on it
+    would be burned into the show face (the v1 red-label bug class)."""
+    assert _red_text_contents(OUTPUT_DIR / "hardware.svg") == []

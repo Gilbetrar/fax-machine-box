@@ -29,6 +29,7 @@ from pathlib import Path
 from boxes import Boxes
 from boxes import edges
 
+from faxbox.calibration import LABEL_GRAY
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
     BURN,
@@ -71,6 +72,15 @@ class TurnButton(Boxes):
 
         def callback() -> None:
             self.hole(CAP_RADIUS, CAP_RADIUS, d=PIVOT_HOLE_DIA)
+            # Reference-only label in gray, like the sheet labels layout.py
+            # produces. move(label=...) would emit it engrave-red -- this is
+            # a real visible part, and red text fill is a live laser
+            # instruction (see LEARNINGS.md; layout.py recolors sheet labels
+            # for the same reason, but hardware.svg bypasses layout.py).
+            self.text(
+                label, BUTTON_LENGTH / 2, BUTTON_WIDTH / 2,
+                align="middle center", fontsize=3.0, color=LABEL_GRAY,
+            )
             straight = BUTTON_LENGTH - 2 * CAP_RADIUS
             self.moveTo(CAP_RADIUS, 0, 0)
             self.polyline(straight, (180, CAP_RADIUS), straight, (180, CAP_RADIUS))
@@ -82,7 +92,7 @@ class TurnButton(Boxes):
         if self.move(BUTTON_LENGTH, BUTTON_WIDTH, "right", before=True):
             return
         callback()
-        self.move(BUTTON_LENGTH, BUTTON_WIDTH, "right", label=label)
+        self.move(BUTTON_LENGTH, BUTTON_WIDTH, "right")
 
     def render(self) -> None:
         """Render the single button (REV.B: one front-wall button, not two
