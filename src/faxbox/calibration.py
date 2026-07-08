@@ -25,7 +25,6 @@ All cut lines are CUT_COLOR (blue) -- nothing on either coupon is engraved.
 """
 
 from pathlib import Path
-import math
 
 from boxes import Boxes
 from boxes import edges
@@ -171,31 +170,42 @@ def generate_calibration() -> Path:
 
 
 # =============================================================================
-# Magnet press-fit coupon (iteration 2, issue #20)
+# Magnet press-fit coupon (iteration 2, issue #20; burn-compensation fixed
+# in adversarial review, finding #3)
 # =============================================================================
 # DESIGN.md "Retention (iteration 2)": MAGNET_PRESS_FIT (config.py) is a
 # starting guess, same status as BURN/FINGER_PLAY -- it needs a real-magnet
 # test cut before it's trusted for the drawer/divider retention holes.
 #
-# Unlike the drawer/divider holes (self.hole(), burn-compensated like every
-# other DESIGN.md hole -- see config.py's "Drawer retention" section for why
-# that's the right call there), these 4 gauge holes are drawn RAW (immune to
-# burn compensation, same technique as the kerf square above: plain ctx
-# move_to/line_to segments, approximating a circle with a many-sided polygon
-# since Boxes.py's own arc() primitive divides by zero for closed sweeps).
-# That is deliberate: the point of this coupon is to let Ben find the
-# snuggest-fitting DRAWN diameter directly against a real magnet on real
-# scrap, in one physical test that already bakes in the real kerf --
-# whatever the actual kerf turns out to be. A burn-compensated hole here
-# would only tell him how close the *current, unvalidated* BURN guess is to
-# reality, which is exactly the self-defeating trap the kerf square's own
-# burn-neutral design already avoids (see its comment above).
+# IMPORTANT DISTINCTION from the kerf square above: the kerf square is
+# burn-NEUTRAL on purpose -- it exists to MEASURE the kerf itself, so its
+# drawn tool path must equal its label exactly (see the kerf square's own
+# comment). The magnet gauge holes below are the opposite case: BURN is
+# already assumed calibrated (via the kerf square) by the time you're
+# reading this coupon, and the part holes these gauges stand in for (the
+# divider's and each drawer's Back-wall magnet holes, in shell_generator.py
+# / generate_drawers.py) are drawn via Boxes.py's `self.hole()`, which IS
+# burn-compensated -- a labeled-5.65mm part hole is drawn at 5.65 - 2*BURN
+# and cuts out, post-kerf, at physical 5.65mm (config.py's MAGNET_HOLE_DIA
+# is that physical target). A burn-NEUTRAL gauge hole labeled "5.65" would
+# instead cut out at 5.65 + 2*BURN (physically ~0.16mm oversize at
+# BURN=0.08) -- a DIFFERENT physical diameter than the part will ever get,
+# silently eating ~46% of the whole 0.35mm press-fit budget before you've
+# even pressed a magnet into it. So these 4 gauge holes are now drawn
+# through the SAME `self.hole()` burn-compensated path as the real part
+# holes (not the kerf square's raw-ctx technique) -- a labeled 5.65mm gauge
+# hole here is physically identical to what a labeled-5.65mm part hole
+# will be, so whichever gauge seats snugly tells you the real press-fit
+# diameter to put in MAGNET_HOLE_DIA/MAGNET_PRESS_FIT, not a number offset
+# by an uncorrected kerf.
 MAGNET_COUPON_WIDTH = 70.0   # X
 MAGNET_COUPON_HEIGHT = 28.0  # Y
 
-# 4 drawn (burn-neutral) diameters spanning the current MAGNET_HOLE_DIA
-# guess (config.py: MAGNET_DIA - MAGNET_PRESS_FIT = 6.0 - 0.35 = 5.65) so the
-# snuggest-fitting slot can land on either side of today's guess.
+# 4 burn-compensated (physical-target) diameters spanning the current
+# MAGNET_HOLE_DIA guess (config.py: MAGNET_DIA - MAGNET_PRESS_FIT =
+# 6.0 - 0.35 = 5.65) so the snuggest-fitting hole can land on either side
+# of today's guess. Each value is a LABEL/physical-target diameter, drawn
+# via self.hole() exactly like a real part hole of that same diameter.
 MAGNET_COUPON_DIAMETERS = (5.5, 5.65, 5.8, 5.95)
 
 _MAGNET_GAP = (
@@ -216,38 +226,26 @@ def _magnet_hole_centers() -> list[float]:
     return centers
 
 
-def _draw_raw_circle(boxes_obj: Boxes, cx: float, cy: float, d: float, n: int = 64) -> None:
-    """A closed circular path built from raw ctx line segments (immune to
-    burn compensation -- see module comment above). `n` segments is smooth
-    enough that the polygon's own faceting error is negligible next to the
-    0.1mm measurement tolerance these coupons are read to."""
-    r = d / 2
-    ctx = boxes_obj.ctx
-    ctx.move_to(cx + r, cy)
-    for i in range(1, n + 1):
-        angle = 2 * math.pi * i / n
-        ctx.line_to(cx + r * math.cos(angle), cy + r * math.sin(angle))
-    ctx.stroke()
-
-
 class MagnetFitCoupon(Boxes):
-    """A single small standalone panel: 4 raw-diameter magnet press-fit
-    gauge holes, each labeled in gray reference-only text."""
+    """A single small standalone panel: 4 burn-compensated magnet press-fit
+    gauge holes (same self.hole() code path as the real part holes), each
+    labeled in gray reference-only text."""
 
     def __init__(self) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
 
     def render(self) -> None:
-        """Render the coupon: a plain-edged blank with 4 burn-neutral
-        circular holes (blue) and 4 gray diameter labels underneath."""
+        """Render the coupon: a plain-edged blank with 4 burn-compensated
+        circular holes (blue), each physically equal to a same-diameter real
+        part hole, and 4 gray diameter labels underneath."""
         self.set_source_color(CUT_COLOR)
 
         centers = _magnet_hole_centers()
 
         def callback() -> None:
             for cx, d in zip(centers, MAGNET_COUPON_DIAMETERS):
-                _draw_raw_circle(self, cx, MAGNET_HOLE_ROW_Y, d)
+                self.hole(cx, MAGNET_HOLE_ROW_Y, d=d)
             for cx, d in zip(centers, MAGNET_COUPON_DIAMETERS):
                 self.text(
                     f"{d:.2f}", cx, MAGNET_LABEL_Y,
@@ -291,9 +289,10 @@ def generate_magnet_coupon() -> Path:
     print(f"  Coupon blank: {MAGNET_COUPON_WIDTH}mm x {MAGNET_COUPON_HEIGHT}mm")
     print(f"  Current config guess: MAGNET_DIA={MAGNET_DIA}, MAGNET_PRESS_FIT={MAGNET_PRESS_FIT} "
           f"(hole dia {MAGNET_DIA - MAGNET_PRESS_FIT:.2f}mm)")
-    print("  4 drawn (burn-neutral) gauge holes -- press a real 6mm disc magnet into each on")
-    print("  scrap; whichever seats snugly (not loose, not forced) sets the real press-fit hole")
-    print(f"  diameter. Gauge diameters: {', '.join(f'{d:.2f}mm' for d in MAGNET_COUPON_DIAMETERS)}.")
+    print("  4 burn-compensated gauge holes (same self.hole() path as the real part holes,")
+    print("  physically identical size to a same-labeled part hole) -- press a real 6mm disc")
+    print("  magnet into each on scrap; whichever seats snugly (not loose, not forced) sets the")
+    print(f"  real press-fit hole diameter. Gauge diameters: {', '.join(f'{d:.2f}mm' for d in MAGNET_COUPON_DIAMETERS)}.")
     print("  Then set MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter> in config.py and")
     print("  regenerate the shell/drawer SVGs (the magnet holes there ARE burn-compensated, so")
     print("  they need no further correction once MAGNET_PRESS_FIT itself is right).")

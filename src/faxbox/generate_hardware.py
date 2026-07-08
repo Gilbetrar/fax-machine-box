@@ -1,15 +1,17 @@
-"""Generate the lid-retention turn-buttons (DESIGN.md "Retention (iteration
-2)", issue #20): 2 identical rounded paddle/stadium pieces, one per side
-wall, each pivoting on an M3 bolt through the wall's TURN_BUTTON_PIVOT_X/Z
-hole (see shell_generator.py's side-wall callback and config.py's
-TURN_BUTTON* constants). Both walls use the same physical button -- the
-paddle is symmetric about its own long axis, so no left/right mirroring is
-needed (unlike the side walls themselves).
+"""Generate the lid-retention turn-button (DESIGN.md "Retention (iteration
+2)" section B, issue #20 + adversarial-review REV.B): ONE rounded
+paddle/stadium piece, pivoting on an M3 bolt through the FRONT WALL's
+TURN_BUTTON_PIVOT_BOX_Y/Z hole (see shell_generator.py's front-wall callback
+and config.py's TURN_BUTTON* constants). REV.A (2 buttons, one per side
+wall) was proven geometrically incapable of retention -- see config.py's
+"Lid retention (iteration 2 REV.B...)" comment for the disjoint-volume proof
+-- and was replaced with this single front-wall button before any part was
+cut.
 
-Output: 2 pieces in output/hardware.svg -- Turn Button 1, Turn Button 2.
-Standalone, like calibration.py's coupons: NOT part of any sheet_*.svg /
-final_layout.svg (see layout.py's module docstring: it only nests
-outer_shell.svg + drawer.svg + lids.svg).
+Output: 1 piece in output/hardware.svg -- Turn Button. Standalone, like
+calibration.py's coupons: NOT part of any sheet_*.svg / final_layout.svg
+(see layout.py's module docstring: it only nests outer_shell.svg +
+drawer.svg + lids.svg).
 
 Shape: a "stadium" (rectangle with full semicircular caps at both ends,
 radius = width/2) -- a simple, robust paddle shape built from Boxes.py's own
@@ -83,10 +85,10 @@ class TurnButton(Boxes):
         self.move(BUTTON_LENGTH, BUTTON_WIDTH, "right", label=label)
 
     def render(self) -> None:
-        """Render both identical buttons, laid out left to right."""
+        """Render the single button (REV.B: one front-wall button, not two
+        side-wall ones -- see module docstring)."""
         self.set_source_color(CUT_COLOR)
-        self._build_button("Turn Button 1")
-        self._build_button("Turn Button 2")
+        self._build_button("Turn Button")
 
 
 def generate_hardware() -> Path:
@@ -116,9 +118,9 @@ def generate_hardware() -> Path:
         f.write(data.getvalue())
 
     print(f"Generated turn-button hardware SVG: {output_file.absolute()}")
-    print(f"  2x Turn Button: {BUTTON_LENGTH}mm x {BUTTON_WIDTH}mm, pivot hole "
+    print(f"  1x Turn Button: {BUTTON_LENGTH}mm x {BUTTON_WIDTH}mm, pivot hole "
           f"Ø{PIVOT_HOLE_DIA}mm at {PIVOT_FROM_BLUNT_END}mm from the blunt end")
-    print("  Hardware per button (not cut, buy separately): 1x M3x12 button-head bolt, "
+    print("  Hardware (not cut, buy separately): 1x M3x12 button-head bolt, "
           "1x M3 nyloc nut, 2x M3 washer.")
     return output_file
 

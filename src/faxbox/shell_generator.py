@@ -58,8 +58,8 @@ from faxbox.config import (
     TOP_OPENING_Z1,
     TOP_PANEL_HOLE_Z,
     TURN_BUTTON,
-    TURN_BUTTON_PIVOT_X,
-    TURN_BUTTON_PIVOT_Z,
+    TURN_BUTTON_PIVOT_BOX_Y,
+    TURN_BUTTON_PIVOT_BOX_Z,
     WALL_HEIGHT,
 )
 
@@ -262,15 +262,6 @@ class OuterShell(Boxes):
                 top_x0 = mirror_start(top_x0, BAY_LENGTH)
             self.fingerHolesAt(top_x0, TOP_PANEL_HOLE_Z, BAY_LENGTH, angle=0)
 
-            # Turn-button pivot hole (DESIGN.md "Retention (iteration 2)"):
-            # a single M3-clearance hole on the wall's exterior face, just
-            # below/behind the lid slot mouth. Mirrored like every other
-            # per-wall feature above.
-            pivot_x = TURN_BUTTON_PIVOT_X - T
-            if mirror:
-                pivot_x = mirror_point(pivot_x)
-            self.hole(pivot_x, TURN_BUTTON_PIVOT_Z, d=TURN_BUTTON["pivot_hole_dia"])
-
             if engrave:
                 self._engrave_fax_machine()
 
@@ -284,10 +275,21 @@ class OuterShell(Boxes):
     def _build_front_wall(self) -> None:
         """Front wall: INTERIOR_WIDTH (local X = box Y - T) x
         FRONT_WALL_HEIGHT (local Y = box Z), Z = 0 -> FRONT_WALL_TOP
-        (DESIGN.md #3)."""
+        (DESIGN.md #3).
+
+        Also carries the sole lid-retention turn-button pivot hole
+        (DESIGN.md "Retention (iteration 2)" section B, adversarial-review
+        REV.B): a single M3-clearance hole on this wall's exterior face, at
+        box (Y, Z) = (TURN_BUTTON_PIVOT_BOX_Y, TURN_BUTTON_PIVOT_BOX_Z). No
+        mirroring needed -- there is only one front wall and only one
+        button. Local X = box Y - T, same mapping the bottom-panel hole
+        line above already uses; local Y = box Z directly (this wall's Z
+        axis is unextended -- see test_front_wall_blank_size)."""
 
         def callback() -> None:
             self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
+            pivot_local_x = TURN_BUTTON_PIVOT_BOX_Y - T
+            self.hole(pivot_local_x, TURN_BUTTON_PIVOT_BOX_Z, d=TURN_BUTTON["pivot_hole_dia"])
 
         self.rectangularWall(
             INTERIOR_WIDTH, FRONT_WALL_HEIGHT, "eFeF",

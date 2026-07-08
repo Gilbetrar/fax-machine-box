@@ -26,13 +26,14 @@ Generate every part, then nest them onto cut-ready sheets:
 .venv/bin/python -m faxbox.generate_lids      # sliding lid: 1 piece -> output/lids.svg
 .venv/bin/python -m faxbox.layout             # nests all of the above onto output/sheet_1.svg, sheet_2.svg, ...
 .venv/bin/python -m faxbox.calibration        # kerf/thickness coupon + magnet-fit coupon -> output/kerf_coupon.svg, output/magnet_coupon.svg (cut BOTH on scrap FIRST, see "Cut-day checklist")
-.venv/bin/python -m faxbox.generate_hardware  # iteration-2 lid turn-buttons: 2 pieces -> output/hardware.svg
+.venv/bin/python -m faxbox.generate_hardware  # iteration-2 lid turn-button: 1 piece -> output/hardware.svg
 ```
 
 **Iteration 2 (retention, issue #20):** `shell_generator.py`/`generate_drawers.py`
 also cut the retention holes described below (magnet holes in the divider +
-each drawer's leading wall, turn-button pivot holes in both side walls) —
-they're part of the same generator runs above, not a separate step.
+each drawer's leading wall, ONE turn-button pivot hole on the front wall —
+see "Know before you build" for why it's on the front wall and not the side
+walls) — they're part of the same generator runs above, not a separate step.
 `generate_hardware.py` and the magnet coupon are the only genuinely new
 outputs.
 
@@ -67,7 +68,7 @@ fax-machine-box/
 │   ├── generate_lids.py     # sliding lid (1 piece)
 │   ├── layout.py            # nests all parts onto bed-sized sheets for cutting
 │   ├── calibration.py       # kerf/ply-thickness coupon + magnet press-fit coupon
-│   └── generate_hardware.py # iteration-2 lid turn-buttons (2 pieces) -> output/hardware.svg
+│   └── generate_hardware.py # iteration-2 lid turn-button (1 piece) -> output/hardware.svg
 ├── tests/                   # pytest harness: geometry, laser-compliance, and layout checks
 ├── docs/service-comparison.md  # laser service comparison + verified NYC Resistor constraints
 ├── DESIGN.md                # canonical geometry — the source of truth for every number
@@ -94,7 +95,7 @@ details.
 ## Parts checklist
 
 21 pieces total, all cut from uniform 3.175mm (1/8") plywood, plus the
-iteration-2 retention hardware (2 turn-button pieces) and two standalone
+iteration-2 retention hardware (1 turn-button piece) and two standalone
 calibration coupons (none are box parts — see "Cut-day checklist"). Matches
 DESIGN.md's parts list exactly.
 
@@ -102,10 +103,10 @@ DESIGN.md's parts list exactly.
 `outer_shell.svg`):**
 
 - [ ] 1× Bottom panel (inset between the four walls)
-- [ ] 1× Left Wall (iteration 2: turn-button pivot hole)
-- [ ] 1× Right Wall (carries the "FAX MACHINE" engraving; iteration 2:
-  turn-button pivot hole)
-- [ ] 1× Front Wall
+- [ ] 1× Left Wall
+- [ ] 1× Right Wall (carries the "FAX MACHINE" engraving)
+- [ ] 1× Front Wall — iteration 2: carries the sole lid-retention
+  turn-button pivot hole (see "Know before you build")
 - [ ] 1× Rear Wall (two drawer openings)
 - [ ] 1× Vertical Divider (separates paper compartment from drawer bay;
   iteration 2: 2× magnet holes, one per drawer)
@@ -135,12 +136,11 @@ There is **no separate flat/tabbed lid** — that part doesn't exist in this
 design. The drawer bay is covered by the fixed Top Panel above, not a
 removable cover.
 
-**Iteration-2 hardware — 2 pieces (from `hardware.svg`), standalone, not
+**Iteration-2 hardware — 1 piece (from `hardware.svg`), standalone, not
 part of the shell/drawer/lid sheets:**
 
-- [ ] 2× Turn Button (identical, symmetric — no left/right distinction).
-  Pivot hole Ø3.2mm. See "Iteration-2 retention hardware" for the M3
-  hardware and install order.
+- [ ] 1× Turn Button (mounts on the front wall). Pivot hole Ø3.2mm. See
+  "Iteration-2 retention hardware" for the M3 hardware and install order.
 
 **Calibration — standalone, not part of the box:**
 
@@ -148,8 +148,9 @@ part of the shell/drawer/lid sheets:**
   ply-thickness gauge slots (3.05 / 3.175 / 3.30mm) and a 10mm reference
   square. Cut this on scrap *before* cutting any real part; see "Cut-day
   checklist" step 3.
-- [ ] 1× Magnet press-fit coupon (from `magnet_coupon.svg`) — 4 drawn gauge
-  holes (5.5 / 5.65 / 5.8 / 5.95mm). Cut on scrap right after the kerf
+- [ ] 1× Magnet press-fit coupon (from `magnet_coupon.svg`) — 4
+  burn-compensated gauge holes, physically identical to same-labeled real
+  part holes (5.5 / 5.65 / 5.8 / 5.95mm). Cut on scrap right after the kerf
   coupon; see "Cut-day checklist" step 3a.
 
 ## Wall identification (read this before assembly)
@@ -284,23 +285,36 @@ front-insert lid concept. None of these are bugs — they're documented so
 nobody "fixes" them mid-build or is surprised later:
 
 - **The sliding lid has no retention along its travel axis in v1** (no
-  turn-buttons installed yet). The divider stops it from sliding in too far
+  turn-button installed yet). The divider stops it from sliding in too far
   (rearward), but nothing stops it sliding back *out* the front. Tip the box
   front-down and the lid will slide out. This is an accepted cost of the
   front-insert design (the slots have to be open at the front edge for the
   lid to go in at all) — **carry the box level**, especially with the lid
-  closed, until the iteration-2 turn-buttons (below) are installed.
+  closed, until the iteration-2 turn-button (below) is installed.
 - **The drawers have no out-stop either in v1** (no magnets installed yet).
   Nothing prevents a drawer from sliding fully out its rear-wall opening.
   Tip the box rear-down and a drawer will slide free. Don't rely on friction
   to keep drawers seated in transit until the iteration-2 magnets (below)
   are installed.
 - **Iteration 2 (issue #20) adds retention for both**: a magnet pair per
-  drawer (drawer leading wall ↔ divider) and turn-buttons at the lid slot
-  mouths. See "Iteration-2 retention hardware" below for the shopping list
-  and install order — **install AFTER the full dry-fit and glue-up**, never
-  before (the magnet holes and pivot holes are already cut into the shell/
-  drawer parts above; only the hardware itself goes in later).
+  drawer (drawer leading wall ↔ divider) and a single turn-button mounted on
+  the FRONT WALL's exterior face (an earlier side-wall version was found in
+  review to be geometrically incapable of retention and was replaced before
+  any part was cut — see DESIGN.md's "Retention (iteration 2...)" section B
+  for the proof). See "Iteration-2 retention hardware" below for the
+  shopping list and install order — **install AFTER the full dry-fit and
+  glue-up**, never before (the magnet holes and the pivot hole are already
+  cut into the shell/drawer parts above; only the hardware itself goes in
+  later).
+- **Drawer magnet lateral float, honestly stated.** The drawer is guided by
+  its rear-wall opening, not the bay walls, so it has up to ±4.9mm of
+  lateral play in the bay — the two magnet holes (drawer Back wall ↔
+  divider) are not guaranteed dead-center-coaxial the instant the magnets
+  come close; true centering only happens in the drawer's final ~2.4mm of
+  travel, as the faceplate itself enters its snug rear-wall opening. See
+  "Iteration-2 retention hardware" below for the self-registering install
+  step this implies (mark the actual contact point before gluing, don't
+  just trust the two holes' nominal positions).
 - **Drawers close flush by bottoming out on the divider, not the rear
   wall.** The inset faceplate never bears against the rear-wall opening
   frame — the drawer body's front face is what stops against the divider
@@ -325,32 +339,44 @@ after the box is fully glued up and dry-fit (see "Assembly steps" above);
 the holes are already in the parts, this is a final, non-structural step.
 
 **Shopping list:**
-- 2× disc magnets, 6mm diameter × 2mm thick, N35 grade (recommended
-  starting point — gentler pull, ~0.5–0.7kg at contact, one-finger
-  openable). Force is tunable with no geometry change: buy N52 for a
-  stronger pull, or 3mm-thick discs for a slightly-proud fit (2mm sits
-  1.2mm recessed in the 3.175mm ply, glue backfills; 3mm sits near-flush).
-- 2× M3×12 button-head bolt (turn-button pivots).
-- 2× M3 nyloc nut.
-- 4× M3 washer.
+- 6× disc magnets, 6mm diameter × 2mm thick, N35 grade (4 needed — one
+  attracting pair per drawer, 2 drawers — **plus 2 spares** for a dropped/
+  chipped magnet or a scrap test-fit; recommended starting point — gentler
+  pull, ~0.5–0.7kg at contact, one-finger openable). Force is tunable with
+  no geometry change: buy N52 for a stronger pull, or 3mm-thick discs for a
+  slightly-proud fit (2mm sits 1.2mm recessed in the 3.175mm ply, glue
+  backfills; 3mm sits near-flush).
+- 1× M3×12 button-head bolt (turn-button pivot).
+- 1× M3 nyloc nut.
+- 2× M3 washer.
 
 **Install order:**
 1. Full dry-fit and glue-up first (see "Assembly steps"). The magnet holes
-   (divider + each drawer's leading wall) and the turn-button pivot holes
-   (both side walls) are already cut into those parts — nothing extra to
-   drill.
-2. **Magnets**: stick the two magnets for each drawer together first, mark
-   the OUTWARD-facing sides with a sharpie, then separate and press-fit one
-   into the drawer's leading (Back) wall hole and one into the matching
-   divider hole, marked sides facing out (so they attract when the drawer
-   closes). CA glue after test-fitting the drawer closed a few times.
-3. **Turn-buttons**: bolt each `Turn Button` piece (`output/hardware.svg`)
-   through its side wall's pivot hole with the M3 bolt, washer on each side,
-   nyloc nut snugged just tight enough that the button holds a rotated
-   position by friction alone (not spring-loaded) — don't overtighten to the
-   point it can't rotate by hand.
+   (divider + each drawer's leading wall) and the turn-button pivot hole
+   (front wall) are already cut into those parts — nothing extra to drill.
+2. **Magnets — self-registering install (don't just trust the nominal
+   hole positions):** with the box fully assembled and each drawer's
+   faceplate seated in its opening (fully closed, dry — no glue yet), glue
+   the DIVIDER-side magnet into its divider hole first. Then, with the
+   drawer held fully closed against the divider, reach through the
+   drawer's own Back-wall hole and mark the magnet's true contact point
+   (a pencil/scribe mark, or press a bit of clay/putty through to record
+   it) — this accounts for the drawer's own lateral float in the bay
+   (up to ±4.9mm, only narrowed down once the faceplate enters its
+   opening in the final ~2.4mm of travel), rather than assuming the two
+   holes are dead-center-coaxial on paper. THEN press-fit and CA-glue the
+   drawer-side magnet at the marked/confirmed position, polarity oriented
+   to attract (test with the two magnets before gluing either). Repeat per
+   drawer.
+3. **Turn-button**: bolt the `Turn Button` piece (`output/hardware.svg`)
+   through the front wall's pivot hole with the M3 bolt (button head on the
+   OUTSIDE, so it's the piece you turn), a washer on each side, nyloc nut
+   snugged just tight enough that the button holds a rotated position by
+   friction alone (not spring-loaded) — don't overtighten to the point it
+   can't rotate by hand. The nut lands INSIDE the paper compartment — it's
+   reachable with the lid off, before the lid is slid in for the last time.
 4. Test both mechanisms: drawers should pull closed and require a
-   deliberate one-finger pull to open; the turn-buttons, rotated up, should
+   deliberate one-finger pull to open; the turn-button, rotated up, should
    block the lid from sliding out the front, and rotated down, should swing
    fully clear so the lid slides freely.
 5. **Magnet press-fit calibration**: `MAGNET_PRESS_FIT` in `config.py` (and
@@ -429,7 +455,7 @@ this checklist is current.
 7. **Take the laser class first** if you haven't (required for the $1/min
    self-serve rate; runs ~monthly). Operator-assisted time is $75/hr +
    $2/min if you skip it.
-8. **Cut all sheets, both coupons, and `output/hardware.svg` (2 turn-button
-   pieces), then dry-fit before gluing anything** — see "Assembly steps"
+8. **Cut all sheets, both coupons, and `output/hardware.svg` (1 turn-button
+   piece), then dry-fit before gluing anything** — see "Assembly steps"
    above. Don't fit the magnets/turn-button bolts until after glue-up (see
    "Iteration-2 retention hardware" above).

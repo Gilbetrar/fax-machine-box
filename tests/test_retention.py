@@ -1,7 +1,9 @@
 """Tests for iteration-2 retention (DESIGN.md "Retention (iteration 2,
-magnets + turn-buttons)", issue #20): the drawer magnet-pair holes (drawer
-Back wall <-> divider), the side-wall turn-button pivot holes, the turn-
-button hardware pieces, and the magnet press-fit coupon.
+magnets + turn-buttons)", issue #20, REV.B after adversarial review): the
+drawer magnet-pair holes (drawer Back wall <-> divider), the FRONT-WALL
+turn-button pivot hole (REV.B; REV.A's side-wall pivot holes are now a
+regression guard, not a feature under test), the turn-button hardware
+piece, and the magnet press-fit coupon.
 
 Style follows test_svg_geometry.py: parse the real SVGs with
 tests/svg_utils.py, existence-first, literal bounds -- and, for the
@@ -13,6 +15,7 @@ the generator agrees with itself).
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -290,11 +293,17 @@ def test_drawer_back_magnet_hole_clears_edges():
 
 
 # =============================================================================
-# B. Turn-button pivot holes on the side walls
+# B. Turn-button pivot hole: FRONT WALL only (REV.B, adversarial-review
+# finding #1). REV.A put a pivot + paddle on each side wall; that mechanism
+# was proven geometrically incapable of retention (the paddle's sweep plane
+# and the lid's travel band never intersect -- see config.py's "Lid
+# retention (iteration 2 REV.B...)" comment for the disjoint-volume proof)
+# and was replaced, before any part was cut, with a single pivot on the
+# FRONT WALL's exterior face, positioned so the paddle sweeps directly
+# across the lid's own exit cross-section.
 # =============================================================================
 
 EXPECTED_PIVOT_DRAWN_DIA = c.TURN_BUTTON["pivot_hole_dia"] - 2 * c.BURN
-WALL_SIDES = [("right wall", False), ("left wall", True)]
 
 
 def _pivot_holes(piece):
@@ -304,122 +313,279 @@ def _pivot_holes(piece):
     ]
 
 
-DIVIDER_LINE_NOMINAL = c.DIVIDER_HEIGHT
-DIVIDER_MID_BOX_X = (c.DIVIDER_X0 + c.DIVIDER_X1) / 2
+# --- B1. Existence + regression guard: exactly one pivot hole, and it's on
+# the front wall ONLY -- REV.A's side-wall pivot holes must never come back.
+
+def test_front_wall_has_one_pivot_hole():
+    wall = _piece(SHELL_SVG, "front wall")
+    holes = _pivot_holes(wall)
+    assert len(holes) == 1, f"expected 1 turn-button pivot hole on the front wall, found {len(holes)}"
 
 
-def _wall_divider_row(wall):
-    """Same anchor as test_svg_geometry.py: the wall's own vertical divider
-    finger-hole column, independently re-derived here rather than imported,
-    so this test doesn't share code with the generator's existing coverage."""
-    rows = su.hole_line_rows(_blue_holes(wall), T, axis="y")
-    hits = [r for r in rows if 0.75 * DIVIDER_LINE_NOMINAL <= r.span <= DIVIDER_LINE_NOMINAL + 1.0]
-    assert len(hits) == 1
+@pytest.mark.parametrize("side", ["left wall", "right wall"])
+def test_side_walls_have_zero_pivot_holes(side):
+    """Regression guard for adversarial-review finding #1: REV.A drilled a
+    pivot hole into each side wall for a mechanism that could never have
+    retained the lid (disjoint sweep/travel volumes -- see config.py). If a
+    future change reintroduces a side-wall pivot hole, this must fail."""
+    wall = _piece(SHELL_SVG, side)
+    holes = _pivot_holes(wall)
+    assert holes == [], (
+        f"{side}: expected ZERO turn-button pivot holes (REV.B moved the sole "
+        f"pivot to the front wall), found {len(holes)}"
+    )
+
+
+def test_exactly_one_pivot_hole_across_whole_shell():
+    """Sum across all 8 shell pieces: exactly 1 pivot hole total (front
+    wall), not 2 (the old REV.A side-wall pair) or 0 (dropped entirely)."""
+    total = sum(len(_pivot_holes(p)) for p in su.design_pieces(SHELL_SVG))
+    assert total == 1, f"expected exactly 1 turn-button pivot hole shell-wide, found {total}"
+
+
+# --- B2. Side walls are byte-identical to `main` (v1, pre-REV.A/REV.B): the
+# fix for finding #1 must not have touched anything else on the side walls
+# -- literally diff the regenerated side-wall geometry against `main`'s own
+# generated output, not just eyeball the source diff.
+
+@pytest.fixture(scope="session")
+def main_shell_svg(tmp_path_factory):
+    """Regenerate `main`'s outer_shell.svg from the actual `main`-branch
+    source (via `git show`), in an isolated temp tree, so the comparison
+    below is against real generated output -- not a hand-copied assumption
+    about what v1 looked like."""
+    tmp_root = tmp_path_factory.mktemp("main_shell")
+    src_dir = tmp_root / "src" / "faxbox"
+    src_dir.mkdir(parents=True)
+
+    for name in ("__init__.py", "config.py", "shell_generator.py"):
+        result = subprocess.run(
+            ["git", "show", f"main:src/faxbox/{name}"],
+            check=True, cwd=REPO_ROOT, capture_output=True, text=True,
+        )
+        (src_dir / name).write_text(result.stdout)
+
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(tmp_root / "src") + (
+        (os.pathsep + env["PYTHONPATH"]) if env.get("PYTHONPATH") else ""
+    )
+    subprocess.run(
+        [sys.executable, "-m", "faxbox.shell_generator"],
+        check=True, cwd=tmp_root, capture_output=True, env=env,
+    )
+    path = tmp_root / "output" / "outer_shell.svg"
+    assert path.exists(), "failed to regenerate main's outer_shell.svg for comparison"
+    return path
+
+
+def _path_signature(p):
+    """A path's own geometry, independent of draw order: rounded bbox +
+    stroke color (ignores label text, which can legitimately differ)."""
+    b = p.bbox
+    return (
+        su.normalize_color(p.stroke),
+        round(b.xmin, 3), round(b.xmax, 3), round(b.ymin, 3), round(b.ymax, 3),
+    )
+
+
+@pytest.mark.parametrize("side", ["left wall", "right wall"])
+def test_side_wall_matches_main_footprint(main_shell_svg, side):
+    """Every path (outer boundary + every hole/engrave stroke) on this side
+    wall must have an exact counterpart in `main`'s own generated side wall
+    -- i.e. REV.B's fix (deleting the side-wall pivot-hole callback) did not
+    change anything else about the side walls. A stray leftover pivot hole,
+    a shifted finger-hole row, or any other regression would show up as a
+    mismatched signature set."""
+    main_piece = _piece(main_shell_svg, side)
+    cur_piece = _piece(SHELL_SVG, side)
+
+    main_sigs = sorted(_path_signature(p) for p in main_piece.all_paths())
+    cur_sigs = sorted(_path_signature(p) for p in cur_piece.all_paths())
+
+    assert len(cur_sigs) == len(main_sigs), (
+        f"{side}: path count changed vs. main: main={len(main_sigs)}, current={len(cur_sigs)}"
+    )
+    assert cur_sigs == main_sigs, (
+        f"{side}: geometry differs from main's v1 output -- REV.B must leave "
+        f"the side walls byte-identical to v1"
+    )
+
+
+# --- B3. Front-wall pivot position, from INDEPENDENT datums (the wall's own
+# bottom finger-hole row as the X/Y calibration anchor, and the wall's own
+# unextended Z axis -- neither imported from the TURN_BUTTON_PIVOT_BOX_*
+# constants the generator itself used).
+
+def _front_wall_bottom_row(wall):
+    """The front wall's bottom-panel finger-hole row spans local x
+    0..INTERIOR_WIDTH (box Y T..T+INTERIOR_WIDTH) -- an independent anchor
+    for mapping measured SVG x back to box Y, distinct from the pivot hole
+    itself."""
+    rows = su.hole_line_rows(_blue_holes(wall), T, axis="x")
+    hits = [r for r in rows if r.span > 0.9 * c.INTERIOR_WIDTH]
+    assert len(hits) == 1, "expected the front wall's own bottom-panel finger-hole row"
     return hits[0]
 
 
-def _wall_frame(wall, mirror):
-    col = _wall_divider_row(wall).center
-    sign = -1.0 if mirror else 1.0
-    return lambda x: DIVIDER_MID_BOX_X + sign * (x - col)
+def _front_wall_to_box_y(wall):
+    row = _front_wall_bottom_row(wall)
+    scale = c.INTERIOR_WIDTH / (row.hi - row.lo)
+    return lambda x: T + (x - row.lo) * scale
 
 
-def _wall_box_z(wall, y):
-    return c.WALL_HEIGHT - (y - wall.bbox.ymin)
+def _front_wall_box_z(wall, y):
+    """Front wall's Z axis is unextended (0 jointed edges -- see
+    test_front_wall_blank_size), so its bbox top/bottom map straight to box
+    Z=FRONT_WALL_HEIGHT/0 with no correction."""
+    return c.FRONT_WALL_HEIGHT - (y - wall.bbox.ymin)
 
 
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_side_wall_has_one_pivot_hole(side, mirror):
-    wall = _piece(SHELL_SVG, side)
-    holes = _pivot_holes(wall)
-    assert len(holes) == 1, f"expected 1 turn-button pivot hole on {side}, found {len(holes)}"
-
-
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_side_wall_pivot_hole_position(side, mirror):
-    wall = _piece(SHELL_SVG, side)
-    to_box_x = _wall_frame(wall, mirror)
+def test_front_wall_pivot_hole_position():
+    wall = _piece(SHELL_SVG, "front wall")
+    to_box_y = _front_wall_to_box_y(wall)
     holes = _pivot_holes(wall)
     assert len(holes) == 1
     hole = holes[0]
     cx = (hole.bbox.xmin + hole.bbox.xmax) / 2
     cy = (hole.bbox.ymin + hole.bbox.ymax) / 2
-    box_x = to_box_x(cx)
-    box_z = _wall_box_z(wall, cy)
-    assert abs(box_x - c.TURN_BUTTON_PIVOT_X) <= 0.6, (
-        f"{side}: pivot hole box X={box_x:.2f}, expected {c.TURN_BUTTON_PIVOT_X}"
+    box_y = to_box_y(cx)
+    box_z = _front_wall_box_z(wall, cy)
+    assert abs(box_y - c.TURN_BUTTON_PIVOT_BOX_Y) <= 0.6, (
+        f"front wall: pivot hole box Y={box_y:.2f}, expected {c.TURN_BUTTON_PIVOT_BOX_Y}"
     )
-    assert abs(box_z - c.TURN_BUTTON_PIVOT_Z) <= 0.6, (
-        f"{side}: pivot hole box Z={box_z:.2f}, expected {c.TURN_BUTTON_PIVOT_Z}"
+    assert abs(box_z - c.TURN_BUTTON_PIVOT_BOX_Z) <= 0.6, (
+        f"front wall: pivot hole box Z={box_z:.2f}, expected {c.TURN_BUTTON_PIVOT_BOX_Z}"
     )
-    # Literal clearances (DESIGN.md): >=3mm past the front-edge finger-joint
-    # zone (box X 0->T) and >=3mm below the slot floor.
-    assert box_x - T >= MIN_CLEARANCE, (
-        f"{side}: pivot hole only {box_x - T:.2f}mm past the front joint zone (need >= 3mm)"
+    # Literal clearances (DESIGN.md): >=3mm from either vertical (side-wall)
+    # joint zone and below the wall's own plain top edge.
+    assert box_y - T >= MIN_CLEARANCE, (
+        f"front wall: pivot hole only {box_y - T:.2f}mm past the left joint zone (need >= 3mm)"
     )
-    assert c.LID_SLOT_BOTTOM - box_z >= MIN_CLEARANCE, (
-        f"{side}: pivot hole only {c.LID_SLOT_BOTTOM - box_z:.2f}mm below the slot floor (need >= 3mm)"
+    assert (c.SHELL_EXT["width"] - T) - box_y >= MIN_CLEARANCE, (
+        f"front wall: pivot hole only {(c.SHELL_EXT['width'] - T) - box_y:.2f}mm past the "
+        f"right joint zone (need >= 3mm)"
     )
-
-
-def test_side_wall_pivot_holes_are_true_mirrors():
-    """Both walls' pivot holes must map to the SAME box (X, Z) once each
-    wall's own mirror transform is applied -- otherwise the two buttons
-    wouldn't sit at corresponding positions on the two walls."""
-    positions = {}
-    for side, mirror in WALL_SIDES:
-        wall = _piece(SHELL_SVG, side)
-        to_box_x = _wall_frame(wall, mirror)
-        hole = _pivot_holes(wall)[0]
-        cx = (hole.bbox.xmin + hole.bbox.xmax) / 2
-        cy = (hole.bbox.ymin + hole.bbox.ymax) / 2
-        positions[side] = (to_box_x(cx), _wall_box_z(wall, cy))
-
-    (rx, rz), (lx, lz) = positions["right wall"], positions["left wall"]
-    assert abs(rx - lx) <= 0.6, f"pivot holes not mirrored in X: right={rx:.2f}, left={lx:.2f}"
-    assert abs(rz - lz) <= 0.6, f"pivot holes not mirrored in Z: right={rz:.2f}, left={lz:.2f}"
-
-
-def test_pivot_hole_clear_of_engraving_zone():
-    """DESIGN.md explicitly calls for this assertion even though the two
-    features are far apart: engrave center (152.4, 63.5) vs pivot (8.0,
-    112.0) on the right wall (the only wall carrying the engraving)."""
-    wall = _piece(SHELL_SVG, "right wall")
-    to_box_x = _wall_frame(wall, mirror=False)
-    reds = [h for h in wall.holes if su.normalize_color(h.stroke) == "red"]
-    assert reds, "expected red engraving paths on the right wall"
-    xs = [p.bbox.xmin for p in reds] + [p.bbox.xmax for p in reds]
-    ys = [p.bbox.ymin for p in reds] + [p.bbox.ymax for p in reds]
-    engrave_x0, engrave_x1 = to_box_x(min(xs)), to_box_x(max(xs))
-    engrave_z0, engrave_z1 = _wall_box_z(wall, max(ys)), _wall_box_z(wall, min(ys))
-
-    pivot_x, pivot_z = c.TURN_BUTTON_PIVOT_X, c.TURN_BUTTON_PIVOT_Z
-    outside_x = pivot_x < min(engrave_x0, engrave_x1) or pivot_x > max(engrave_x0, engrave_x1)
-    outside_z = pivot_z < min(engrave_z0, engrave_z1) or pivot_z > max(engrave_z0, engrave_z1)
-    assert outside_x or outside_z, (
-        f"pivot hole ({pivot_x}, {pivot_z}) falls inside the engrave zone "
-        f"X=[{engrave_x0:.1f},{engrave_x1:.1f}] Z=[{engrave_z0:.1f},{engrave_z1:.1f}]"
-    )
-    # DESIGN.md wants this asserted explicitly even though the two features
-    # are obviously far apart -- require a comfortable literal margin, not
-    # just "doesn't overlap".
-    x_margin = min(abs(pivot_x - engrave_x0), abs(pivot_x - engrave_x1))
-    z_margin = min(abs(pivot_z - engrave_z0), abs(pivot_z - engrave_z1))
-    assert max(x_margin, z_margin) >= 10.0, (
-        f"pivot hole only {min(x_margin, z_margin):.1f}mm from the engrave zone on "
-        f"its nearest axis (want >= 10mm clear margin)"
+    assert c.FRONT_WALL_TOP - box_z >= MIN_CLEARANCE, (
+        f"front wall: pivot hole only {c.FRONT_WALL_TOP - box_z:.2f}mm below the wall's top edge "
+        f"(need >= 3mm)"
     )
 
 
-# =============================================================================
-# C. Turn-button hardware pieces
-# =============================================================================
+# --- B4. THE BLOCKING TEST. This is the assertion whose absence let REV.A
+# ship: it does not just check "a pivot hole exists at the documented spot"
+# (B3 above already does that) -- it independently computes whether the
+# button, rotated up, actually GEOMETRICALLY OVERLAPS the lid's own exit
+# cross-section, in both Y and Z, with real margin. Moving the pivot to a
+# non-blocking Z, shrinking the paddle so its measured reach is too short,
+# or re-siting the whole mechanism onto a wall the lid doesn't cross would
+# all make this fail -- unlike a purely positional check, which would have
+# happily passed for REV.A's side-wall pivot too.
 
-def test_hardware_has_two_button_pieces(hardware_svg):
+def _measured_button_reach(piece):
+    """Real pivot-to-tip distance, measured from the actual drawn hardware
+    piece (not assumed from the TURN_BUTTON config dict)."""
+    holes = [
+        h for h in piece.holes
+        if h.bbox.dims_match(EXPECTED_PIVOT_DRAWN_DIA, EXPECTED_PIVOT_DRAWN_DIA, tol=0.1)
+    ]
+    assert len(holes) == 1
+    hole = holes[0]
+    pivot_x = (hole.bbox.xmin + hole.bbox.xmax) / 2
+    return max(abs(pivot_x - piece.bbox.xmin), abs(piece.bbox.xmax - pivot_x))
+
+
+def _measured_button_cap_radius(piece):
+    """Half the piece's own measured cross-axis (Y) width -- the paddle's
+    blunt-end cap radius, i.e. how far it spans off the pivot's own
+    coordinate when rotated to point straight along its axis."""
+    return piece.bbox.height / 2
+
+
+BLOCKING_MARGIN = 1.0
+
+
+def test_button_up_envelope_blocks_lid_exit(hardware_svg):
+    """Independent datums, per DESIGN.md's explicit call for this test:
+    - lid Y-span: SHELL_EXT width and SLIDE_CLEARANCE (not SLIDING_LID,
+      which is the same constant generate_lids.py itself consumes).
+    - lid Z-band: LID_SLOT_BOTTOM (slot floor the lid rests on under
+      gravity) .. + T (the lid's own thickness) -- not LID_SLOT_TOP, which
+      includes the slot's extra vertical *clearance* above the lid, not
+      lid material itself.
+    - button pivot: config's TURN_BUTTON_PIVOT_BOX_Y/Z (cross-checked
+      against the actual cut hole position by test_front_wall_pivot_hole_
+      position above) plus the MEASURED reach/width of the actual drawn
+      hardware piece (not the TURN_BUTTON dict the generator used).
+    """
     pieces = su.design_pieces(hardware_svg)
-    assert len(pieces) == 2, f"expected 2 turn-button pieces, found {len(pieces)}"
-    for p in pieces:
-        assert len(p.holes) == 1, f"{p.label!r} should carry exactly its own pivot hole"
+    assert len(pieces) == 1
+    button = pieces[0]
+    reach = _measured_button_reach(button)
+    cap_radius = _measured_button_cap_radius(button)
+
+    # Independent lid Y-span (box Y).
+    lid_width = c.SHELL_EXT["width"] - c.SLIDE_CLEARANCE
+    lid_y0 = (c.SHELL_EXT["width"] - lid_width) / 2
+    lid_y1 = lid_y0 + lid_width
+
+    # Independent lid Z-band (box Z): the lid's own physical thickness,
+    # resting on the slot floor.
+    lid_z0 = c.LID_SLOT_BOTTOM
+    lid_z1 = lid_z0 + T
+
+    # Button-up envelope (rotated so its long axis points toward +Z): Y
+    # spans +-cap_radius around the pivot; Z spans from (pivot - cap_radius)
+    # -- the blunt cap's rear -- up to (pivot + reach) -- the tip.
+    pivot_y = c.TURN_BUTTON_PIVOT_BOX_Y
+    pivot_z = c.TURN_BUTTON_PIVOT_BOX_Z
+    button_y0, button_y1 = pivot_y - cap_radius, pivot_y + cap_radius
+    button_z0, button_z1 = pivot_z - cap_radius, pivot_z + reach
+
+    y_margin = min(button_y1, lid_y1) - max(button_y0, lid_y0)
+    z_margin = min(button_z1, lid_z1) - max(button_z0, lid_z0)
+
+    assert y_margin >= BLOCKING_MARGIN, (
+        f"button-up envelope Y=[{button_y0:.2f},{button_y1:.2f}] overlaps the lid's "
+        f"Y=[{lid_y0:.2f},{lid_y1:.2f}] exit span by only {y_margin:.2f}mm "
+        f"(need >= {BLOCKING_MARGIN}mm) -- the button would not reliably block the lid"
+    )
+    assert z_margin >= BLOCKING_MARGIN, (
+        f"button-up envelope Z=[{button_z0:.2f},{button_z1:.2f}] overlaps the lid's "
+        f"Z=[{lid_z0:.2f},{lid_z1:.2f}] exit band by only {z_margin:.2f}mm "
+        f"(need >= {BLOCKING_MARGIN}mm) -- the button would not reliably block the lid"
+    )
+
+
+def test_button_down_clears_lid_travel(hardware_svg):
+    """Rotated fully DOWN (180 deg from the up/blocking orientation), the
+    whole paddle must sit below the front wall's own top edge
+    (FRONT_WALL_TOP) so the lid can slide freely when the button is
+    disengaged -- with a real (not zero) clearance margin."""
+    pieces = su.design_pieces(hardware_svg)
+    assert len(pieces) == 1
+    button = pieces[0]
+    cap_radius = _measured_button_cap_radius(button)
+
+    pivot_z = c.TURN_BUTTON_PIVOT_BOX_Z
+    button_down_top_z = pivot_z + cap_radius  # blunt cap, now the near/top end
+    clearance = c.FRONT_WALL_TOP - button_down_top_z
+    assert clearance >= BLOCKING_MARGIN, (
+        f"button rotated down reaches box Z={button_down_top_z:.2f}, only "
+        f"{clearance:.2f}mm below FRONT_WALL_TOP={c.FRONT_WALL_TOP} "
+        f"(need >= {BLOCKING_MARGIN}mm so the lid slides freely when disengaged)"
+    )
+
+
+# =============================================================================
+# C. Turn-button hardware piece(s)
+# =============================================================================
+# REV.B (adversarial-review finding #1): ONE button now, not two -- the
+# side-wall mechanism (2 pieces) was replaced by a single front-wall button.
+
+def test_hardware_has_one_button_piece(hardware_svg):
+    pieces = su.design_pieces(hardware_svg)
+    assert len(pieces) == 1, f"expected 1 turn-button piece (REV.B), found {len(pieces)}"
+    assert len(pieces[0].holes) == 1, f"{pieces[0].label!r} should carry exactly its own pivot hole"
 
 
 def test_button_pivot_hole_present_and_sized(hardware_svg):
@@ -432,20 +598,15 @@ def test_button_pivot_hole_present_and_sized(hardware_svg):
 
 
 def test_button_reach_is_sufficient(hardware_svg):
-    """Measured tip-to-pivot distance must be >= (LID_SLOT_TOP + 3) -
-    TURN_BUTTON_PIVOT_Z (DESIGN.md: rotated to vertical, the tip must clear
-    the slot's top edge by >= 3mm)."""
-    required_reach = (c.LID_SLOT_TOP + 3.0) - c.TURN_BUTTON_PIVOT_Z
+    """Measured tip-to-pivot distance must be >= (LID_FRONT_BAND_Z1 + 1) -
+    TURN_BUTTON_PIVOT_BOX_Z (DESIGN.md: rotated to vertical, the tip must
+    clear the lid band's top by >= 1mm). This is a simpler, narrower check
+    than test_button_up_envelope_blocks_lid_exit above (1-D reach only, no
+    Y-span or independent-datum cross-check) -- kept as a focused regression
+    guard on the reach number alone."""
+    required_reach = (c.LID_FRONT_BAND_Z1 + 1.0) - c.TURN_BUTTON_PIVOT_BOX_Z
     for piece in su.design_pieces(hardware_svg):
-        hole = [
-            h for h in piece.holes
-            if h.bbox.dims_match(EXPECTED_PIVOT_DRAWN_DIA, EXPECTED_PIVOT_DRAWN_DIA, tol=0.1)
-        ][0]
-        pivot_x = (hole.bbox.xmin + hole.bbox.xmax) / 2
-        # The tip is the piece's own farthest point from the pivot along its
-        # long (X) axis -- the paddle's blunt end is at the pivot, the tip
-        # is the opposite end.
-        reach = max(abs(pivot_x - piece.bbox.xmin), abs(piece.bbox.xmax - pivot_x))
+        reach = _measured_button_reach(piece)
         assert reach >= required_reach, (
             f"{piece.label!r}: measured reach {reach:.2f}mm < required {required_reach:.2f}mm"
         )
@@ -471,20 +632,49 @@ def test_magnet_coupon_has_one_piece_and_four_holes(magnet_coupon_svg):
 
 
 def test_magnet_coupon_hole_diameters(magnet_coupon_svg):
+    """Adversarial-review finding #3: the coupon's gauge holes must be
+    burn-COMPENSATED the same way the real part holes (divider/drawer Back)
+    are -- NOT burn-neutral like the kerf square. A burn-neutral gauge
+    labeled 5.65mm would cut out at physical 5.65 + 2*BURN (~5.81mm at
+    BURN=0.08), a different physical size than a same-labeled PART hole
+    (which is burn-compensated: drawn at 5.65 - 2*BURN, cuts out at
+    physical 5.65) -- silently eating ~46% of the 0.35mm press-fit budget
+    before a magnet is ever pressed in. Do NOT touch the kerf square in
+    test_layout.py: that one measures the kerf itself and must stay
+    burn-neutral -- this distinction is the whole point of finding #3."""
     from faxbox import calibration as cal
 
     piece = su.get_pieces(magnet_coupon_svg)[0]
     holes = sorted(piece.holes, key=lambda h: h.bbox.xmin)
     assert len(cal.MAGNET_COUPON_DIAMETERS) == 4
     for hole, nominal in zip(holes, cal.MAGNET_COUPON_DIAMETERS):
-        # Burn-neutral (raw ctx circle), unlike the drawer/divider magnet
-        # holes -- see calibration.py's module comment for why.
-        assert abs(hole.bbox.width - nominal) <= 0.05, (
-            f"magnet coupon hole nominal {nominal}mm measured {hole.bbox.width:.3f}mm "
-            f"(expected burn-neutral, +/-0.05)"
+        expected_drawn = nominal - 2 * c.BURN
+        assert abs(hole.bbox.width - expected_drawn) <= 0.05, (
+            f"magnet coupon hole labeled {nominal}mm measured {hole.bbox.width:.3f}mm, "
+            f"expected burn-COMPENSATED drawn size {expected_drawn:.3f}mm (label - 2*BURN)"
         )
     assert min(cal.MAGNET_COUPON_DIAMETERS) < c.MAGNET_HOLE_DIA < max(cal.MAGNET_COUPON_DIAMETERS), (
         "coupon should span the current MAGNET_HOLE_DIA guess"
+    )
+
+
+def test_magnet_coupon_matches_part_hole_for_nominal_gauge(magnet_coupon_svg):
+    """Cross-check (finding #3): the coupon's gauge hole labeled exactly
+    MAGNET_HOLE_DIA (5.65mm, the current config guess) must measure the
+    IDENTICAL drawn diameter as the real divider/drawer magnet holes
+    (EXPECTED_MAGNET_DRAWN_DIA, defined in section A above from the SAME
+    self.hole()-burn-compensation relationship) -- proving the coupon and
+    the real parts now share one code path, not two diverging ones."""
+    from faxbox import calibration as cal
+
+    piece = su.get_pieces(magnet_coupon_svg)[0]
+    holes = sorted(piece.holes, key=lambda h: h.bbox.xmin)
+    nominal_index = cal.MAGNET_COUPON_DIAMETERS.index(c.MAGNET_HOLE_DIA)
+    nominal_hole = holes[nominal_index]
+    assert abs(nominal_hole.bbox.width - EXPECTED_MAGNET_DRAWN_DIA) <= 0.05, (
+        f"coupon's {c.MAGNET_HOLE_DIA}mm gauge hole measures {nominal_hole.bbox.width:.3f}mm, "
+        f"but the real part hole of the same label measures {EXPECTED_MAGNET_DRAWN_DIA:.3f}mm -- "
+        f"the coupon no longer matches what the part actually gets"
     )
 
 

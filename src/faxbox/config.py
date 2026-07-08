@@ -173,40 +173,69 @@ MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 122.55
 MAGNET_BOTTOM_DRAWER_Z = FLOOR_TOP + DRAWER_BODY["height"] / 2   # 29.925
 MAGNET_TOP_DRAWER_Z = SHELF_Z1 + DRAWER_BODY["height"] / 2       # 91.8375
 
-# --- Lid retention (iteration 2, issue #20): turn-buttons at the slot mouths -
-# DESIGN.md "Retention (iteration 2)": a rounded paddle pivots on a bolt
-# through each side wall, just below/behind its lid slot mouth, and turns up
-# to physically block the slot's own cut opening (caging the lid between the
-# button and the divider stop) or down to clear it entirely.
+# --- Lid retention (iteration 2 REV.B, issue #20 + adversarial review
+# finding #1): ONE turn-button on the FRONT WALL's exterior face.
+#
+# REV.A (a pivot + paddle on each SIDE wall, just below/behind the lid slot
+# mouth) was proven geometrically incapable of retention and was caught in
+# adversarial review before any part was cut: a side-wall paddle sweeps that
+# wall's own exterior plane (e.g. the left wall's exterior sits at box
+# Y -T..0), while the lid edge riding in that wall's through-slot occupies
+# box Y 0..SLIDE_CLEARANCE/2-ish (the lid's own thickness band, box Y
+# 0.75..3.175 for the left wall) and exits by travelling along X -- the
+# paddle's sweep plane and the lid's travel band are disjoint volumes at
+# every pivot position and paddle length, so no parameter tweak could have
+# fixed it; the mechanism retained nothing. REV.B replaces it with a single
+# button mounted on the FRONT WALL's exterior face (box X=0 plane), which
+# the lid's own front edge physically crosses on its way out -- see
+# DESIGN.md "Retention (iteration 2)" section B for the full geometry and
+# the disjoint-volume proof for why REV.A could never have worked.
 TURN_BUTTON = {
-    "length": 22.0,               # X
-    "width": 9.0,                 # Y; half-width doubles as the blunt-end
-                                   # cap radius for the stadium/paddle shape
+    "length": 22.0,               # paddle axis (pivot -> tip)
+    "width": 9.0,                 # cross-axis; half-width doubles as the
+                                   # blunt-end cap radius for the paddle's
+                                   # stadium shape
     "pivot_from_blunt_end": 4.5,  # = width/2: pivot sits at the blunt end's
                                    # own rounded-cap center
     "pivot_hole_dia": 3.2,        # M3 clearance
 }
-# Pivot position on each side wall (box X, box Z). X=8.0 sits inside the lid
-# slot's own X-span (T..LID_SLOT_X_END = 3.175..79.375) rather than at its
-# mouth -- rotating the button up sweeps its paddle across the slot's actual
-# cut opening (where the lid rides), not just the boundary notch at the very
-# front edge, which is what lets the button block the lid without ever
-# needing to overhang past the wall's own front edge. X=8.0 clears the
-# front-edge finger-joint zone (box X 0->T) by 8.0-T=4.825mm (>= the required
-# 3mm); Z=112.0 clears the slot floor (LID_SLOT_BOTTOM=118.025) by 6.025mm
-# (>= 3mm).
-TURN_BUTTON_PIVOT_X = 8.0
-TURN_BUTTON_PIVOT_Z = 112.0
+# Pivot position on the FRONT WALL's exterior face, in BOX coordinates
+# (Y = wall center, Z = 110.0). Checked >=3mm from every other front-wall
+# feature: the bottom-panel hole line sits at Z~1.5875 (>100mm clear); the
+# two vertical edges finger-joint to the side walls over a ~T-wide zone at
+# each end, and the pivot sits at the wall's own Y-center
+# (INTERIOR_WIDTH/2 = 79.375mm local, i.e. box Y=82.55) -- 79.375mm from
+# either jointed edge, far past the 3mm minimum; the wall's own plain top
+# edge (Z=FRONT_WALL_TOP=118.025) is 8.025mm above the pivot.
+TURN_BUTTON_PIVOT_BOX_Y = SHELL_EXT["width"] / 2   # 82.55, front wall center
+TURN_BUTTON_PIVOT_BOX_Z = 110.0
+
+# The lid's own physical Z-band where it crosses the front wall's plane on
+# exit: the lid rests on the slot floor under gravity, so it occupies the
+# bottom T of the slot's vertical clearance band (LID_SLOT_BOTTOM ->
+# LID_SLOT_BOTTOM + T = 118.025 -> 121.2), not the full
+# LID_SLOT_BOTTOM..LID_SLOT_TOP clearance span (that extra 0.8mm is slop
+# above the lid, not lid material). The lid's front edge itself sits
+# recessed ~0.4mm behind the front-wall plane at full rearward travel
+# (SLIDING_LID length 79.0 vs. the 79.375mm to the divider stop), so there
+# is a small (~0.4mm) free-slide gap before the button makes contact -- see
+# DESIGN.md for the full blocking-slop note.
+LID_FRONT_BAND_Z0 = LID_SLOT_BOTTOM                  # 118.025
+LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
+
 # Reach (pivot -> tip) needed for the button, rotated to vertical, to clear
-# the slot's top edge (LID_SLOT_TOP=122.0) by >=3mm:
-# TURN_BUTTON_MIN_REACH = (LID_SLOT_TOP + 3) - TURN_BUTTON_PIVOT_Z = 13.0.
+# the lid band's top (LID_FRONT_BAND_Z1) by >=1mm:
+# TURN_BUTTON_MIN_REACH_UP = (LID_FRONT_BAND_Z1 + 1) - TURN_BUTTON_PIVOT_BOX_Z
+#                          = 122.2 - 110.0 = 12.2mm.
 # The button's actual reach (length - pivot_from_blunt_end = 22 - 4.5 = 17.5)
-# exceeds this, so rotated fully vertical the tip lands at box Z = 112 +
-# 17.5 = 129.5 -- 2.5mm above the wall's own top edge (127.0), into open air
-# above the box. DESIGN.md explicitly allows overhang above the slot into
-# the rail zone when the button is up (it presses flat against the wall
-# face and needs nothing to touch at the tip); a knob poking slightly above
-# the box when engaged is normal turn-button behavior, not a defect.
+# exceeds this, so rotated fully vertical the tip lands at box Z = 110 +
+# 17.5 = 127.5 -- 6.3mm past the required 122.2mm margin, standing proud in
+# open air above/in front of the lid slot region (nothing else is there to
+# hit). Rotated fully DOWN (180 deg from vertical), the button's near
+# (blunt-cap) edge lands at box Z = 110 + pivot_from_blunt_end = 114.5,
+# comfortably (3.525mm) below FRONT_WALL_TOP=118.025 -- the whole paddle
+# clears the lid's travel path so the lid slides freely when the button is
+# disengaged.
 
 # --- Sliding lid -------------------------------------------------------------
 
