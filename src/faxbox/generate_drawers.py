@@ -107,11 +107,17 @@ class DrawerBox(Boxes):
         consecutive same-style strokes into one `<path>` when one segment's
         endpoint exactly matches the next segment's start point (verified
         empirically), so a *connected* 4-segment loop collapses right back
-        into one big closed path -- a small corner gap (well under the
-        engraving's own visual tolerance) keeps every segment a distinct
-        near-zero-area path, each safely clustered as Faceplate decoration.
+        into one big closed path -- a small corner gap keeps every segment a
+        distinct near-zero-area path, each safely clustered as Faceplate
+        decoration.
+
+        Gap size: 0.3mm, not more. Any nonzero gap defeats Cairo's
+        exact-endpoint merging, but the original 1.0mm gap + round line-caps
+        rendered as "corners don't close / dots at the corners" and was
+        flagged as a defect by the first outside human to inspect a sheet
+        (Clark, 2026-07-09). 0.3mm is invisible at normal viewing zoom.
         """
-        gap = 1.0
+        gap = 0.3
         x0, x1 = cx - width / 2, cx + width / 2
         y0, y1 = cy - height / 2, cy + height / 2
         self.set_source_color(self.engrave_color)

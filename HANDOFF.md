@@ -1,71 +1,78 @@
 # HANDOFF — fax-machine-box
 
-**Date:** 2026-07-08 (evening pause) · **Branch:** `main` (in `~/AI/Projects/fax-machine-box`)
-**Tracking:** issue #20 (decision record in comments, incl. today's), PR #22 open-experimental (do not touch)
+**Date:** 2026-07-09 (evening) · **Branch:** `main` (in `~/AI/Projects/fax-machine-box`)
+**Tracking:** issue #20 (decision record), **issue #25 (THE next agent's job — deep QA)**, PR #22 open-experimental (do not touch)
 **Pushed:** yes → origin
 
 ## TL;DR for the next agent
 
-`main` is complete and green (**200 tests**); nothing has been physically cut. Today the artwork workstream went live: the face map is SETTLED (all decisions in `art/FACES.md`), a parrot-face line-trace pilot produced 3 candidates (`art/pilot/`), and clean uncropped-pixel crops of all 12 prototype photos were made for Ben to share with **other image models** (`art/trimmed/`, mirrored to `~/Desktop/Mini/Fax Machine Illuistrations/trimmed/`). **Fabrication is PAUSED, gated on artwork** — Clark path dropped, ordering will be online (Ponoko) only after the engrave art is final. The immediate wait: Ben saw the pilot candidates, said **"OK, but I think we can probably do a lot better,"** and is gathering opinions/outputs from other image models. Do NOT start batch-tracing the other faces with the current pilot settings — wait for Ben's verdict and whatever the other models suggest, then iterate the pipeline.
+**Your job is issue #25: intense, adversarial, ground-up QA of the generated cut files.** Read it first — it has the full mandate, attack plan, and constraints. Why it exists: on 2026-07-09 the first outside human to view our sheets (Clark, friend with a laser) instantly spotted a real visual defect (faceplate's red registration outline drawn with 1.0mm open corners + round caps) that had survived 200 green tests and multiple red-team passes. That specific defect is fixed (0.3mm setback now — the gap is DELIBERATE, read the `_draw_engraved_rect_outline` docstring before "improving" it), but Ben's trust in our QA is broken and he wants files proven correct, not assumed correct. Do NOT start fabrication, do NOT integrate art, do NOT anchor on any fabrication provider — just make the geometry bulletproof and the QA repeatable.
+
+Everything else (art, fabrication path, Clark reply) is **paused on Ben** — status below so you don't re-derive it.
 
 ## What this project is
 
-A laser-cut 3.175mm-birch-ply box for Ben's "Fax Machine" pen-and-paper game (telephone-pictionary as "faxes" — https://press.invincible.ink/game-pile-fax-machine/). The box IS the game kit: front vertical compartment for pre-cut paper, two rear drawers for pens/pencils, sliding lid, "FAX MACHINE" engraving. Ben's hand-drawn cardboard prototype provided dimensions and carries dense colorful artwork he wants reproduced on the wood as **high-quality B&W engraving (vector line layer + raster tone layer)**. Endgame: several boxes as gifts, with pen kits and paper pre-cut.
+A laser-cut 3.175mm-birch-ply box for Ben's "Fax Machine" pen-and-paper game (telephone-pictionary as "faxes" — https://press.invincible.ink/game-pile-fax-machine/). The box IS the game kit: front vertical compartment for pre-cut paper, two rear drawers for pens/pencils, sliding lid, engraved artwork on 10 faces reproducing Ben's hand-drawn cardboard prototype. Endgame: several boxes as gifts. `src/faxbox/config.py` is the single source of truth for all dimensions (mm).
 
 ## Current state (honest ledger)
 
-- **Done & verified:** main = v1 geometry + magnet/turn-button retention + PDF export + Ponoko provider mode. **200 tests green** (`.venv/bin/python -m pytest tests/ -q`, ~18s, re-verified today at pickup AND at this handoff). Default outputs byte-stable.
-- **Done today (all committed on main):**
-  - `art/FACES.md` — photo→face catalog **with Ben's final decisions** (see below).
-  - `art/pilot/` — parrot-face (IMG_4228) line-trace pilot: perspective-corrected original, linework mask, 3 traced candidates (A=potrace smooth/clean, B=potrace more specks, C=vtracer polygon style), `PARAMS.md` (full pipeline doc — READ IT before redoing any tracing), `extract_lines.py`. The big `compare_*.png` montages are gitignored (recreatable; copies at `~/Desktop/Mini/fax-pilot/`).
-  - `art/trimmed/` — **plain crops** (NO perspective correction — Ben explicitly forbade warping for these) of all 12 photos, full res, artwork never clipped. Mirrored to `~/Desktop/Mini/Fax Machine Illuistrations/trimmed/` for Ben to share with other image models.
-  - README Ponoko section now carries a **⏸️ FABRICATION PAUSED** banner; Asana order task rewritten (see Gotchas).
-- **Awaiting Ben (the only blockers):**
-  1. **Pilot verdict** — he rated the candidates "OK, but we can probably do a lot better" and is consulting other image models using the trimmed crops. Expect him to return with ideas/outputs; iterate the trace pipeline against that.
-  2. Nothing else — Clark is moot, Ponoko is deliberately parked.
-- **Untested (physical):** everything — kerf values (nycr 0.08 / ponoko 0.10) are book values; magnet press-fit; retention force. Coupons are nested on the sheets and self-calibrate at first cut.
-- **Open-experimental:** PR #22 spring detents — experimental, physical coupon validation mandatory, do not resume without Ben.
-
-## Decisions made TODAY (do not relitigate — recorded in FACES.md + issue #20 comment)
-
-- **Face map (Ben, 2026-07-08):** writers panel (IMG_4230) = second main-box long side; the four scene panels — turkeys (4233), alligator (4235), gallery (4237), bookshelf (4239) — = the four **drawer sides**, assignment among sides doesn't matter; drawer fronts = "COLORS" (4236) / "Lines" (4238), either drawer; **drawer backs get no art**; main-box back: none assigned.
-- **Lid:** IMG_4231 panorama transposed onto the sliding lid top; the mosaic snake/dragon head may run off the retracting edge — Ben accepts it won't read like the flip lid. Lid-interior mosaic + edge trims **dropped**.
-- **Fabrication: Clark DROPPED; online (Ponoko) AFTER art is final.** The held ~$153 quote's uploaded files have NO artwork — when art is done, regenerate sheets with engrave layers and configure a **fresh** quote (blue=cut, red=line-engrave via their dropdowns; verify the 2D proof). Never order before art sign-off.
-- **Standing artwork rules (from 7/8 handoff, still binding):** LLMs must NOT freehand-generate vectors — tracing tools only (potrace/vtracer); model does prep, parameters, judging. Never engrave the photos directly. Raster tone layer waits for the target machine (Ponoko = CO2, Speedy-class).
-- For these SHARE files Ben wants zero warping; but geometric normalization for the ENGRAVE pipeline is a separate, still-open decision to make per-face with Ben looking at results.
+- **Geometry/code:** main is green (**200 tests**, re-verified 2026-07-09 after the registration-outline fix). Outputs regenerate deterministically. NOTHING has been physically cut. **Ben explicitly does not trust the QA level** — that's issue #25.
+- **Registration-outline fix (2026-07-09, committed):** `generate_drawers.py::_draw_engraved_rect_outline` corner setback 1.0mm → 0.3mm. The setback exists on purpose (Cairo merges exactly-touching same-style segments into one path; the clustering test harness would misread a closed rect covering ~99% of the faceplate as a nested piece). Sheets regenerated.
+- **Artwork: GENERATION COMPLETE, awaiting Ben's sign-off.** All 10 faces exist as hand-drawn-style B&W hatch images (Ben's chosen style: NO halftone dots, NO stylization — direct translation of his originals). Canonical set: `art/ai-versions/final/` (11 files, committed), mirrored to `~/Desktop/Mini/Fax Machine/final-set/`. Full pipeline documentation + per-face learnings: `art/ai-versions/SPECS.md` (READ IT before regenerating anything — sequential conditioning for split faces is mandatory). Post-processing (1-bit threshold, deskew of the lid master, exact-ratio crops, panel-overlay proofs, tracing, sheet integration) has NOT started — see `art/ai-versions/BRIEF.md` for that pipeline. ~282MB of intermediate candidates live UNCOMMITTED in `art/ai-versions/` (gitignored; regenerable via Gemini for ~$5; some mirrored in `~/Desktop/Mini/Fax Machine/proofs-archive/`).
+- **Gemini image API:** key installed at `~/.config/gemini/api_key` + `GEMINI_API_KEY` in `~/.zshenv`; prepaid credits topped up; model `gemini-3-pro-image` at 4K. Total art spend so far <$10.
+- **Fabrication: DELIBERATELY UNDECIDED (Ben, 2026-07-09 — supersedes "Ponoko only").** Do not anchor on Ponoko vs friend-cut. Requirement instead: rebuilding sheets for a differently-sized bed must be verified easy (part of issue #25). Held Ponoko quote ~$153 still parked; **no ordering until art sign-off AND QA (#25) done AND Ben picks a path.**
+- **Clark/Pete thread: awaiting Ben.** Clark (friend, small laser) got the 7/8-era ponoko-order sheet bundle by email, caught the registration-outline defect, and says "Pete" (identity unknown, in no record) is busy with Edinburgh Fringe (Aug 7–31) but could maybe make boxes September+. Open questions ONLY Ben can answer: who is Pete / whose laser / bed size (largest panel 298.45mm — a small bed may not fit it); reopen friend path or not; what to reply. A reply gist was suggested to Ben 2026-07-09; he hasn't sent/decided anything.
+- **Untested (physical):** everything — kerf values (ponoko 0.10 / nycr 0.08) are book values; magnet press-fit; retention force. Calibration coupons are nested on the sheets.
+- **Open-experimental:** PR #22 spring detents — do not resume without Ben.
 
 ## Next concrete steps (in order)
 
-1. **When Ben returns with other-model feedback / pilot verdict:** iterate the line-trace pipeline. Known headroom: cleaner masks, stroke-width preservation, centerline vs outline tracing, per-region parameters (lettering vs feather hatching). If he picks a candidate as-is: clean the known mask artifacts (taped-hole blob top-left, tape-glare specks top-right, bottom frame-edge line — all documented in `art/pilot/PARAMS.md`), then batch the remaining faces with the settled map in FACES.md.
-2. **After line art is approved per face:** build the raster tone layer (color→burn-tone map, hand-tuned: yellow→near-white, feather texture→mid dither, marker→solid dark) — needs machine known (Ponoko CO2 if ordering online).
-3. **Art done →** integrate engrave layers into the Ponoko sheets (`src/faxbox/ponoko.py` / layout), regenerate, configure fresh Ponoko quote, un-pause the Asana task, Ben orders.
-4. **After the physical cut:** record measured kerf + magnet fit (coupons are on the sheets) into the provider entry; lessons → LEARNINGS.md.
-5. Iteration-2 hardware install (magnets/M3) per README once parts exist.
+1. **Do issue #25** (deep QA). Fresh agent, fresh eyes, adversarial. Build the render-based visual QA class that actually catches things; re-derive geometry independently; simulate assembly; audit the engrave layer; verify bed-size portability. Fix what's wrong, add regression tests, write the QA report.
+2. **When Ben signs off on art** (`~/Desktop/Mini/Fax Machine/final-set/`): run the BRIEF.md post-processing pipeline (threshold → deskew lid master → exact crops per SPECS.md table → panel-overlay proofs with keep-outs → Ben gate → trace with potrace ONLY → integrate into sheets).
+3. **When Ben answers the Clark/Pete questions:** he replies to Clark himself (he can't paste — never hand him text to copy); if friend path reopens, get bed size and add a provider entry.
+4. **When 1–3 done:** regenerate sheets with art, fresh quote (or friend files), Ben orders/arranges. After the cut: record measured kerf + magnet fit into the provider entry; lessons → LEARNINGS.md.
 
 ## Build / test baseline
 
-`.venv/bin/python -m pytest tests/ -q` → **200 passed** (re-run at this handoff, 2026-07-08 evening). Ponoko outputs regenerate via `FAXBOX_PROVIDER=ponoko .venv/bin/python -m faxbox.ponoko` → `output/ponoko/sheet_{1,2,3}.svg`. Note: `opencv-python-headless` was pip-installed into `.venv` today (for line extraction); tests unaffected.
+`.venv/bin/python -m pytest tests/ -q` → **200 passed, ~18s** (verified 2026-07-09 after the gap fix). Outputs: `.venv/bin/python -m faxbox.generate_drawers` (and sibling modules); Ponoko sheets: `FAXBOX_PROVIDER=ponoko .venv/bin/python -m faxbox.ponoko` → `output/ponoko/sheet_{1,2,3}.svg`. Blue-path closure spot-check: `python3 scripts/check_closure.py` (20/20 clean — but READ ITS LIMITS, listed in issue #25).
+
+## Decisions made (do not relitigate without Ben)
+
+- **Art style (Ben, 2026-07-09):** loose hand-drawn hatching, solid-black display lettering, DIRECT translation of the originals only — he explicitly rejected halftone-dot renderings ("polka dot-y") and all stylized variants. Style anchor: `art/ai-versions/final/IMG_4230_ai_vH2.png`.
+- **Drawer sides use split-generate-merge** (Ben's own idea, validated): cut source at a quiet column, generate halves sequentially (right half conditioned on finished left + full original + exclusion list), butt-join. Cut fractions + all learnings in SPECS.md.
+- **Lid art spans BOTH the sliding lid and the fixed top panel** as one continuous panorama (field 301.25×158.75mm, seam at 26.22% from front, 5.8mm vertical step at the seam — geometry derivation in SPECS.md STATUS block). Master: `final/IMG_4231_ai_vT1_master.png` + seam preview.
+- **Face map settled 2026-07-08** (`art/FACES.md`); drawer backs and box rear get no art; bottom out of scope.
+- **Fabrication method: open** (2026-07-09) — supersedes the 7/8 "Clark DROPPED, Ponoko only" record in issue #20.
+- **Standing artwork rules:** LLMs never freehand vectors — tracing tools only (potrace/vtracer); never engrave source photos directly; model does prep/parameters/judging.
 
 ## Gotchas & environment quirks
 
-- **File delivery to Ben: copy files to `~/Desktop/Mini/<subfolder>/`** — he views that folder from another computer; in-chat file sends do NOT reach him. Desktop is TCC-protected: wrap in loopback SSH, e.g. `ssh -o BatchMode=yes localhost 'cp ... "$HOME/Desktop/Mini/X/"'` (see ~/AI/CLAUDE.md). Note the existing folder is spelled **"Fax Machine Illuistrations"** (sic).
-- **Ben's terminal cannot copy-paste** — never hand him commands; run them yourself or write files.
-- **Subagents + mid-flight spec changes:** a SendMessage relayed into a running subagent's transcript got flagged BY THE SUBAGENT as prompt injection and ignored (it finished with the outdated spec; 7 files had to be redone by a fresh agent). If a task's spec changes mid-flight, prefer killing and respawning with the new spec, or expect to verify compliance afterwards.
-- **Image tooling (installed today):** ImageMagick + potrace via brew; **vtracer has NO brew formula** — installed via `cargo install vtracer` → `~/.cargo/bin/vtracer` (0.6.5). ImageMagick `-annotate`/`montage -label` needs explicit `-font /System/Library/Fonts/Helvetica.ttc` (empty font list on this machine).
-- **Thresholding lesson (will bite on every face):** naive local-mean adaptive threshold makes thick marker strokes come out HOLLOW (stroke interiors read as background). Fix: estimate background with a large (251px) grayscale morphological close, then diff. Full detail in `art/pilot/PARAMS.md`.
-- **Ponoko flow:** colors are NOT auto-mapped — laser actions assigned per-file via dropdowns at quote time; wood cuts ON the drawn line (only metals get auto kerf comp), so our baked-in BURN compensation is correct.
-- **Asana:** order task gid `1216374505254377`, renamed "⏸️ PAUSED — Fax box: order cut online (Ponoko) AFTER artwork is final", due pushed to **2026-07-31 as a revisit marker** (the MCP tool cannot clear due dates — only overwrite them). Hardware-buy task `1216374505535107` (magnets/M3) still valid. Old note: an unsent NYCR Gmail draft may exist — ignore, never send.
-- Boxes.py `move(label=)` emits engrave-red text; standalone SVGs bypass layout.py's gray recolor (guard test exists).
-- 2D-geometry lesson (bit us 3×): flexure/cam works only if ONE part's plane contains BOTH travel and deflection axes; "blocking" needs swept-volume overlap in 3D that per-panel 2D tests can't see — render + eyeball + red-team novel geometry.
-- Ben works manager-style: delegate high-token work to sonnet subagents, red-team important outputs (see ~/AI/CLAUDE.md).
+- **File delivery to Ben: copy to `~/Desktop/Mini/<subfolder>/`** via loopback SSH (`ssh -o BatchMode=yes localhost 'cp ... "$HOME/Desktop/Mini/..."'`) — in-chat sends don't reach him; Desktop is TCC-protected for direct reads (see ~/AI/CLAUDE.md). All fax material on the Mini is consolidated under `~/Desktop/Mini/Fax Machine/` (Ben's request).
+- **Ben's terminal cannot copy-paste** — never hand him commands or reply text to paste; run things yourself or write files.
+- **Screenshot filenames** from macOS contain a narrow no-break space before "AM/PM" — glob (`Screenshot*3.16*`) instead of typing the name.
+- **Gemini generation learnings** (hard-won, in SPECS.md, binding): padded-canvas direct translation beats instruction-following; NEVER pass a style-anchor image alongside simple/lettering-only sources (content bleed — it happened 3×); single-change fix passes work; model CANNOT reliably straighten a tilted composition (deskew deterministically in post instead); residual color tints die at threshold time — don't chase them with re-rolls.
+- **Google MCP:** ben.bateman account auth is EXPIRED (re-auth flow was triggered 2026-07-09, port 8001; Ben may or may not have completed it). gilbetrar account works. Clark's email thread lives in ben.bateman — unauditable until re-auth.
+- **iMessage MCP works** and is the record of the Ben↔Clark outreach (2026-07-08, handle +12097285785).
+- **Thresholding lesson:** naive local-mean adaptive threshold hollows thick marker strokes; fix = large (251px) morphological-close background estimate then diff (`art/pilot/extract_lines.py`, PARAMS.md).
+- **Ponoko flow:** colors NOT auto-mapped — laser ops assigned per-file via dropdowns at quote time; wood cuts ON the line (no auto kerf comp for wood), our baked-in BURN compensation is correct. Text must be outlined; Ponoko sheets carry no reference labels (parts identified via `data-part` attrs).
+- **Boxes.py 'f'/'F' edges** both protrude up to one thickness (phase complements) — size-band tests account for it.
+- **2D-geometry lesson (bit us 3×):** flexure/cam works only if ONE part's plane contains BOTH travel and deflection axes; per-panel 2D tests can't see 3D swept-volume blocking — render + eyeball + red-team novel geometry.
+- **Subagents + mid-flight spec changes:** don't SendMessage a running subagent a spec change (it read one as prompt injection once); kill and respawn.
+- **Asana:** order task gid `1216374505254377` "⏸️ PAUSED — Fax box: order cut online (Ponoko) AFTER artwork is final", due 2026-07-31 as revisit marker (MCP can't clear due dates). NOTE: task wording predates the 7/9 "provider undecided" decision. Hardware-buy task `1216374505535107` (6× 6mm N35 magnets, M3×12 bolt, nyloc, washers) still open.
+- Ben works manager-style: delegate high-token work to sonnet/haiku subagents; red-team important outputs (`~/AI/CLAUDE.md`).
 
 ## Hard constraints
 
-- DESIGN.md is the geometry authority; change it first or not at all. **Never weaken a test.** Kerf square stays burn-neutral. FingerJoint `play` is thickness-relative (`FINGER_PLAY_RELATIVE`). Default provider outputs stay byte-stable unless deliberately changed. **No LLM-freehand vector art.** **No fabrication ordering until art sign-off.**
+1. **No fabrication ordering** until: art sign-off + issue #25 QA done + Ben picks a provider.
+2. **No LLM-freehand vector art** — tracing tools only.
+3. **Do not touch PR #22.**
+4. **Never claim QA confidence from the existing test suite alone** — that's the failure mode that created issue #25.
 
 ## Where everything lives
 
-- Repo `Gilbetrar/fax-machine-box`, local `~/AI/Projects/fax-machine-box`, `main` (this handoff commit). Geometry: `DESIGN.md`; dims+providers: `src/faxbox/config.py`; generators: `src/faxbox/*.py`; tests incl. `test_retention.py`, `test_ponoko_export.py`, `test_laser_requirements.py`.
-- Artwork: originals `art/originals/`, face map + decisions `art/FACES.md`, pilot `art/pilot/` (read `PARAMS.md`), clean crops `art/trimmed/`.
-- Ben-visible mirrors: `~/Desktop/Mini/Fax Machine Illuistrations/trimmed/` (12 crops), `~/Desktop/Mini/fax-pilot/` (pilot comparisons).
-- History/rationale: SESSION_LOG.md, LEARNINGS.md, issues #12–#20 (today's decision comment on #20), PR #22 (detent saga), PR #23/#24 bodies; auto-memory `fax-machine-box-project.md`.
+- Branch: `main`, pushed. This file: repo root.
+- Art: `art/ai-versions/final/` (canonical, committed) · `art/ai-versions/SPECS.md` (specs + pipeline learnings) · `art/ai-versions/BRIEF.md` (post-processing pipeline) · `art/FACES.md` (face map) · `art/trimmed/` (sources) · `art/pilot/` (old potrace pilot — superseded for style, tooling still relevant).
+- Uncommitted-by-design: `art/ai-versions/*.png` top level (intermediates, gitignored, ~282MB) · `scratch/` (renders/analysis from QA sessions, gitignored).
+- Tools: `scripts/check_closure.py` (blue-path closure checker, committed).
+- Ben-visible mirror: `~/Desktop/Mini/Fax Machine/{final-set,proofs-archive,source-drawings,pilot-traces,specs,ponoko-order}/`.
+- Gemini key: `~/.config/gemini/api_key`; generation scripts from this session are in the session scratchpad (not the repo) — SPECS.md carries everything needed to rewrite them.
