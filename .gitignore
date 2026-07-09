@@ -35,3 +35,10 @@ output/ponoko/
 
 # Agent worktrees (session-local)
 .claude/worktrees/
+
+# QA-session intermediates (regenerable; see HANDOFF.md)
+art/ai-versions/*.png
+art/ai-versions/*.jpg
+!art/ai-versions/final
+scratch/
+!art/ai-versions/IMG_4228_ai_v1.jpg
