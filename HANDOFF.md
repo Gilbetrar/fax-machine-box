@@ -1,12 +1,20 @@
 # HANDOFF — fax-machine-box
 
-**Date:** 2026-07-09 (evening) · **Branch:** `main` (in `~/AI/Projects/fax-machine-box`)
-**Tracking:** issue #20 (decision record), **issue #25 (THE next agent's job — deep QA)**, PR #22 open-experimental (do not touch)
+**Date:** 2026-07-09 (late night) · **Branch:** `main` @ 56e24fd (in `~/AI/Projects/fax-machine-box`)
+**Tracking:** issue #20 (decision record), issue #25 (deep QA — **DONE**, comment posted, awaiting Ben's decisions), PR #22 open-experimental (do not touch)
 **Pushed:** yes → origin
 
 ## TL;DR for the next agent
 
-**Your job is issue #25: intense, adversarial, ground-up QA of the generated cut files.** Read it first — it has the full mandate, attack plan, and constraints. Why it exists: on 2026-07-09 the first outside human to view our sheets (Clark, friend with a laser) instantly spotted a real visual defect (faceplate's red registration outline drawn with 1.0mm open corners + round caps) that had survived 200 green tests and multiple red-team passes. That specific defect is fixed (0.3mm setback now — the gap is DELIBERATE, read the `_draw_engraved_rect_outline` docstring before "improving" it), but Ben's trust in our QA is broken and he wants files proven correct, not assumed correct. Do NOT start fabrication, do NOT integrate art, do NOT anchor on any fabrication provider — just make the geometry bulletproof and the QA repeatable.
+**Issue #25 (deep adversarial QA) is COMPLETE — commit 56e24fd, full report in `docs/QA-REPORT-2026-07-09.md`** (also on Ben's Desktop: `~/Desktop/Mini/Fax Machine/qa-2026-07-09/`). Two-pass red-team (8 critics → fixes → 4 verifiers → final check). Verdict: **the cut geometry is clean** — independently re-derived and measured to <0.01mm on all 23 parts, both providers; Ponoko sheets conformance-verified as acceptable as-is. The defects were peripheral and are all fixed + regression-guarded (suite 200 → **217 green**): red engrave labels on standalone files (systemic fix `src/faxbox/svglabels.py` + guard tests), real bed-size portability (`FAXBOX_SHEET_WIDTH/HEIGHT` env, provider sheet sizes, stale-sheet purge, README procedure — **min viable bed 324.96×185.26mm; largest DRAWN part is 304.96×165.26, NOT the oft-quoted 298.45**), coupon upgrades (5 thickness gauges 2.95–3.40, tick-marked ponoko magnet gauges), ~15 doc/number corrections, new red-vs-blue clearance test class, repeatable render harness `scripts/qa_render.py`.
+
+**What the next agent must NOT do:** re-litigate the QA, "fix" the pinned right-wall collision without Ben's decision (see below), start fabrication, integrate art, or touch PR #22.
+
+**Waiting on Ben (all pinned in the QA report §Open items + issue #25 comment):**
+1. **THE finding: "FAX MACHINE" engraving is crossed by real through-cuts** (shelf finger-hole row through the letters' waist — text center Z=63.5 == shelf midplane exactly; divider column through the "X"). Recommended: drop the pixel text (art/FACES.md gives that wall full-panel art anyway). Pinned by `tests/test_engrave_cut_clearance.py::test_right_wall_known_collision_still_present` — whichever way Ben decides, update that test + EXPECTED_VIOLATIONS in the same change.
+2. Game-component dims (paper W×H, stack height, longest pen) → then add the missing acceptance test (nothing in-repo verifies the box fits the GAME).
+3. Turn-button bolt tail ~5mm into the paper compartment at Z=110 (accept / re-spec).
+4. v1 ergonomics accepted (README warnings added): no drawer out-stop, lid pulls out pre-button, never-lift-by-lid.
 
 Everything else (art, fabrication path, Clark reply) is **paused on Ben** — status below so you don't re-derive it.
 
