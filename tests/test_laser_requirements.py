@@ -15,6 +15,8 @@ it.
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -23,7 +25,9 @@ import svg_utils as su
 
 pytestmark = [pytest.mark.usefixtures("regenerate_svgs")]
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+OUTPUT_DIR = REPO_ROOT / "output"
+PONOKO_DIR = OUTPUT_DIR / "ponoko"
 ALL_SVGS = [OUTPUT_DIR / "outer_shell.svg", OUTPUT_DIR / "drawer.svg", OUTPUT_DIR / "lids.svg"]
 
 
@@ -133,9 +137,14 @@ def test_lids_have_no_engraving():
 
 
 # =============================================================================
-# Text fill colors are live laser instructions (LEARNINGS.md) -- real parts
-# must label in reference-gray only. Red text is allowed solely as a coupon
-# title (calibration scrap, engraved deliberately for identification).
+# Text fill colors are live laser instructions (LEARNINGS.md) -- a <text>
+# fill is read by a laser driver exactly like a <path> stroke, so red
+# (rgb(255,0,0), this project's engrave color) is banned on every <text>
+# element, everywhere, with NO exceptions -- including coupon/panel title
+# labels (an earlier version of this comment carved those out as
+# deliberately-engraved; that was itself an instance of the v1 red-label bug
+# class, confirmed by adversarial QA, and is fixed project-wide by
+# faxbox.svglabels.enforce_reference_labels -- see that module's docstring).
 # =============================================================================
 
 def _red_text_contents(svg_path):
@@ -152,3 +161,73 @@ def test_hardware_labels_never_engrave():
     """The turn button is a real, visible part: any red-filled text on it
     would be burned into the show face (the v1 red-label bug class)."""
     assert _red_text_contents(OUTPUT_DIR / "hardware.svg") == []
+
+
+# =============================================================================
+# Generalized guard (issue #25 adversarial QA finding): the check above only
+# ever covered hardware.svg, and every OTHER standalone generator (drawers,
+# lids, shell, calibration coupons) was still shipping Boxes.py's raw
+# engrave-red part-name/title label untouched. This block regenerates every
+# generator this project has, in BOTH provider trees (default NYCR
+# output/*.svg and output/ponoko/*.svg), and scans every *.svg that comes
+# out -- so a future generator that forgets to call
+# faxbox.svglabels.enforce_reference_labels fails here immediately, project-
+# wide, rather than needing its own hand-added test like the one above.
+# =============================================================================
+
+# final_layout.svg is the one file this project deliberately never sends to
+# a laser (layout.py's _write_reference_layout: "NOT sized to any real laser
+# bed and must NOT be sent for cutting"). Unlike every other <text> in this
+# project, its "REFERENCE ONLY" warning banner (fill="#cc0000") and per-sheet
+# dimension captions (fill="#333333") are written directly by
+# _write_reference_layout, not through _emit_piece_group's per-piece label
+# path -- they are not part names and were never Boxes.py's red engrave
+# color to begin with, so the data-purpose="reference-label" convention
+# (which exists to protect a *laser driver* from misreading a label as an
+# engrave) doesn't apply to them. Named explicitly here, with this comment,
+# rather than silently skipped -- and the red-fill ban two tests below still
+# applies to this file with no carve-out at all.
+_FINAL_LAYOUT_EXEMPT_FILLS = {"#cc0000", "#333333"}
+
+
+@pytest.fixture(scope="session")
+def all_generated_svgs(regenerate_svgs):
+    """Regenerate every standalone generator not already covered by
+    conftest.py's `regenerate_svgs` (shell/drawer/lids only), plus both
+    nesting passes, then return every *.svg under output/ and
+    output/ponoko/ -- the full set a human could ever open or send to a
+    laser."""
+    for module in ("faxbox.generate_hardware", "faxbox.calibration", "faxbox.layout", "faxbox.ponoko"):
+        subprocess.run([sys.executable, "-m", module], check=True, cwd=REPO_ROOT, capture_output=True)
+    paths = sorted(OUTPUT_DIR.glob("*.svg")) + sorted(PONOKO_DIR.glob("*.svg"))
+    assert paths, "no *.svg files found under output/ or output/ponoko/"
+    return paths
+
+
+def test_no_text_anywhere_has_red_engrave_fill(all_generated_svgs):
+    """No <text> element in ANY generated SVG may carry the engrave-red
+    fill (rgb(255,0,0)) -- banned with no exceptions, including
+    final_layout.svg (reference-only, but still checked here defensively:
+    it should never even come close to this color)."""
+    offenders = []
+    for svg_path in all_generated_svgs:
+        for content in _red_text_contents(svg_path):
+            offenders.append((svg_path.relative_to(REPO_ROOT).as_posix(), content))
+    assert not offenders, f"red-filled <text> element(s) found: {offenders}"
+
+
+def test_every_text_element_is_flagged_reference_label(all_generated_svgs):
+    """Every <text> element anywhere must carry
+    data-purpose="reference-label", except final_layout.svg's own literal
+    warning banner/sheet captions (see _FINAL_LAYOUT_EXEMPT_FILLS docstring
+    above)."""
+    offenders = []
+    for svg_path in all_generated_svgs:
+        root = su.get_svg_root(svg_path)
+        for el in root.iter(f"{su.SVG_NS}text"):
+            if el.get("data-purpose") == "reference-label":
+                continue
+            if svg_path.name == "final_layout.svg" and el.get("fill") in _FINAL_LAYOUT_EXEMPT_FILLS:
+                continue
+            offenders.append((svg_path.relative_to(REPO_ROOT).as_posix(), el.attrib))
+    assert not offenders, f"<text> missing data-purpose=reference-label: {offenders}"

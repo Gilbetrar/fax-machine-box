@@ -11,7 +11,7 @@ any sheet_*.svg / final_layout.svg (see layout.py's module docstring: it only
 nests outer_shell.svg + drawer.svg + lids.svg). Cut kerf_coupon.svg on scrap
 BEFORE the real sheets, then:
 
-  1. Try to press a scrap of the actual plywood stock into each of the three
+  1. Try to press a scrap of the actual plywood stock into each of the five
      slots. Whichever slot it seats into snugly (not loose, not forced) says
      how thick your stock is actually measuring -- use that to sanity-check
      MATERIAL_THICKNESS / FINGER_PLAY in config.py before cutting joints.
@@ -39,6 +39,7 @@ from faxbox.config import (
     MATERIAL_THICKNESS,
     OUTPUT_DIR,
 )
+from faxbox.svglabels import enforce_reference_labels
 
 # Reference-only label color (see LEARNINGS.md: "<text> fill color is a real
 # laser instruction -- reference-only labels must use a color the cut/engrave
@@ -51,13 +52,26 @@ LABEL_GRAY = [128 / 255, 128 / 255, 128 / 255]
 COUPON_WIDTH = 90.0   # X
 COUPON_HEIGHT = 25.0  # Y
 
-# Three "which slot does my ply fit snugly" through-slots, narrowest to
+# Five "which slot does my ply fit snugly" through-slots, narrowest to
 # widest, straddling the nominal material thickness (config.MATERIAL_THICKNESS
 # = 3.175mm) since nominal 1/8" ply commonly measures 3.0-3.4mm in practice
-# (see DESIGN.md's kerf/play note).
-SLOT_WIDTHS = (3.05, MATERIAL_THICKNESS, 3.30)
+# (see DESIGN.md's kerf/play note). Widened from the original 3-slot
+# (3.05 / T / 3.30) gauge in adversarial QA (Clark, 2026-07-09): the
+# documented stock band runs 3.0-3.4mm, so real stock measuring 3.35-3.4mm
+# -- squarely inside that documented band -- fit NO slot at all, going
+# silent exactly where finger joints get tightest and matter most. The two
+# added slots (2.95, 3.40) push the gauge's own coverage strictly past both
+# ends of the documented 3.0-3.4mm band, so every stock reading inside that
+# band now seats snugly in *some* slot.
+SLOT_WIDTHS = (2.95, 3.05, MATERIAL_THICKNESS, 3.30, 3.40)
 SLOT_HEIGHT = 15.0
-SLOT_LABELS = ("undersize (3.05mm)", "nominal (3.175mm = T)", "oversize (3.30mm)")
+SLOT_LABELS = (
+    "undersize (2.95mm)",
+    "undersize (3.05mm)",
+    "nominal (3.175mm = T)",
+    "oversize (3.30mm)",
+    "oversize (3.40mm)",
+)
 
 # Kerf-calibration through-hole: the TOOL PATH must be exactly 10.0mm square
 # for the measurement to mean anything, so it is drawn with raw ctx line
@@ -70,8 +84,8 @@ SLOT_LABELS = ("undersize (3.05mm)", "nominal (3.175mm = T)", "oversize (3.30mm)
 # a trap that zeroes out BURN (red-team pass-2 catch).
 KERF_HOLE_SIZE = 10.0
 
-# Even spacing across COUPON_WIDTH for the 3 slots + 1 hole (4 items -> 5
-# gaps: left margin, 3 inter-item gaps, right margin), comfortably over the
+# Even spacing across COUPON_WIDTH for the 5 slots + 1 hole (6 items -> 7
+# gaps: left margin, 5 inter-item gaps, right margin), comfortably over the
 # >=6mm-apart requirement.
 _ITEM_WIDTHS = list(SLOT_WIDTHS) + [KERF_HOLE_SIZE]
 _GAP = (COUPON_WIDTH - sum(_ITEM_WIDTHS)) / (len(_ITEM_WIDTHS) + 1)
@@ -80,7 +94,7 @@ CENTER_Y = COUPON_HEIGHT / 2
 
 
 def _item_centers() -> list[float]:
-    """X centers, left to right, for the 3 slots then the kerf hole."""
+    """X centers, left to right, for the 5 slots then the kerf hole."""
     centers = []
     cursor = _GAP
     for w in _ITEM_WIDTHS:
@@ -90,19 +104,32 @@ def _item_centers() -> list[float]:
 
 
 class CalibrationCoupon(Boxes):
-    """A single small standalone panel: 3 fit-test slots + 1 kerf-test hole."""
+    """A single small standalone panel: 5 fit-test slots + 1 kerf-test hole."""
 
     def __init__(self) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
 
     def render(self) -> None:
-        """Render the coupon: a plain-edged blank with the 3 slots and 1
-        square hole cut through it (all CUT_COLOR)."""
+        """Render the coupon: a plain-edged blank with the 5 slots and 1
+        square hole cut through it (all CUT_COLOR).
+
+        No tick marks here (contrast the magnet gauge holes below): these
+        slots have never had an on-SVG <text> label to begin with (their
+        SLOT_LABELS strings are only ever printed to the console by
+        generate_calibration(), never drawn via self.text()), so there is
+        no PONOKO_STRIP_LABELS-style stripping step that could make them
+        indistinguishable -- their fixed left-to-right draw order (see
+        _item_centers) plus the console printout already identifies each
+        slot's width, unaffected by this widening from 3 to 5 slots. (The
+        thickness gauge also never appears on the Ponoko coupon at all --
+        see PonokoCalibrationCoupon below -- so there is no stripped-label
+        case to cover for it there either.)"""
         self.set_source_color(CUT_COLOR)
 
         centers = _item_centers()
-        slot_centers, hole_center = centers[:3], centers[3]
+        n = len(SLOT_WIDTHS)
+        slot_centers, hole_center = centers[:n], centers[n]
 
         def callback() -> None:
             for cx, width in zip(slot_centers, SLOT_WIDTHS):
@@ -151,12 +178,18 @@ def generate_calibration() -> Path:
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
 
+    # rectangularWall(..., label="Kerf Coupon") draws that label in the
+    # same red used for real engraves (see faxbox.svglabels module
+    # docstring) -- neutralize before this file is ever considered
+    # laser-ready.
+    enforce_reference_labels(output_file)
+
     print(f"Generated kerf/fit calibration coupon SVG: {output_file.absolute()}")
     print(f"  Coupon blank: {COUPON_WIDTH}mm x {COUPON_HEIGHT}mm")
     print("  Cut this alone on scrap BEFORE the real sheets. Slots (left to right):")
     for label, width in zip(SLOT_LABELS, SLOT_WIDTHS):
         print(f"    - {width:.3f}mm slot: {label} -- press a scrap of the actual ply into all")
-        print("      three; whichever it seats into snugly tells you the real stock thickness.")
+        print(f"      {len(SLOT_WIDTHS)}; whichever it seats into snugly tells you the real stock thickness.")
     print(
         f"  Square hole: tool path exactly {KERF_HOLE_SIZE:.1f}mm x {KERF_HOLE_SIZE:.1f}mm "
         "(burn-neutral). Measure the physical hole with calipers: "
@@ -286,6 +319,13 @@ def generate_magnet_coupon() -> Path:
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
 
+    # Each gauge's self.text(..., color=LABEL_GRAY) diameter label is
+    # already gray, but rectangularWall(..., label="Magnet Fit Coupon")
+    # still draws that own panel label in real-engrave red (see
+    # faxbox.svglabels module docstring) -- neutralize before this file is
+    # ever considered laser-ready.
+    enforce_reference_labels(output_file)
+
     print(f"Generated magnet press-fit coupon SVG: {output_file.absolute()}")
     print(f"  Coupon blank: {MAGNET_COUPON_WIDTH}mm x {MAGNET_COUPON_HEIGHT}mm")
     print(f"  Current config guess: MAGNET_DIA={MAGNET_DIA}, MAGNET_PRESS_FIT={MAGNET_PRESS_FIT} "
@@ -346,6 +386,55 @@ def _ponoko_item_centers() -> list[float]:
     return centers
 
 
+# --- Magnet gauge tick-mark disambiguation (adversarial QA finding) --------
+# PonokoCalibrationCoupon draws NO self.text() at all (see the class
+# docstring), so its 4 magnet gauge holes -- diameters stepping by only
+# 0.15mm (5.50/5.65/5.80/5.95) -- are visually identical once cut: nothing
+# on the physical part says which hole is which, so there is no way to read
+# off which one seated snugly. A NYCR-side coupon (MagnetFitCoupon above)
+# doesn't have this problem since it always carries gray self.text()
+# diameter labels that are never stripped -- this defect is specific to the
+# Ponoko panel's text-free design.
+#
+# Fix: a small engrave-RED tick mark cluster next to each hole, ascending
+# small -> large (1 tick by the smallest/5.50mm hole ... 4 ticks by the
+# largest/5.95mm hole), mirroring PONOKO_MAGNET_DIAMETERS' own ascending
+# order (see _ponoko_item_centers: kerf square, then the 4 holes smallest-
+# diameter first). "Count the ticks" identifies a gauge without relying on
+# any text at all, so it survives PONOKO_STRIP_LABELS untouched (it was
+# never text to begin with). Ticks are drawn engrave-red, never cut-blue --
+# they carry no dimensional meaning of their own, so a laser instructed to
+# CUT them would put a spurious 2mm slit next to every gauge hole.
+GAUGE_TICK_LENGTH = 2.0     # mm, each tick mark's own length
+GAUGE_TICK_GAP = 1.0        # mm clearance from the hole's own edge to the
+                             # nearest tick, well clear of the hole's cut path
+GAUGE_TICK_SPACING = 2.0    # mm between adjacent ticks' centers (same hole)
+
+
+def _draw_gauge_ticks(box: Boxes, cx: float, cy: float, hole_dia: float, count: int) -> None:
+    """Draw `count` short vertical tick marks centered under (cx, cy),
+    clear of a hole_dia-diameter gauge hole also centered there.
+
+    Caller is responsible for setting the source color (engrave-red) before
+    calling this and restoring it (cut-blue) after -- same convention as
+    generate_drawers.py's `_draw_engraved_rect_outline`. Each tick is its
+    own independent move_to/line_to/stroke() call (not one connected
+    polyline) so it lands in the SVG as its own small, near-zero-width
+    closed-enough path -- consistent with how this project already draws
+    disjoint engraved segments elsewhere (see
+    generate_drawers._draw_engraved_rect_outline's own comment on why
+    Cairo would otherwise merge touching segments into one bigger path).
+    """
+    y0 = cy + hole_dia / 2 + GAUGE_TICK_GAP
+    y1 = y0 + GAUGE_TICK_LENGTH
+    start_offset = -(count - 1) * GAUGE_TICK_SPACING / 2
+    for i in range(count):
+        tx = cx + start_offset + i * GAUGE_TICK_SPACING
+        box.ctx.move_to(tx, y0)
+        box.ctx.line_to(tx, y1)
+        box.ctx.stroke()
+
+
 class PonokoCalibrationCoupon(Boxes):
     """One small panel: kerf square (burn-neutral) + 4 magnet gauge holes
     (burn-compensated), all CUT geometry, NO text/labels at all (Ponoko
@@ -354,13 +443,19 @@ class PonokoCalibrationCoupon(Boxes):
     be converted to outlines or "it will not be read" at all, and nobody
     wants gauge labels engraved on a real part, so this coupon is drawn
     without any self.text() call in the first place, rather than relying on
-    a later strip-labels step to remove one)."""
+    a later strip-labels step to remove one).
+
+    Since it carries no text at all, the 4 magnet gauge holes would
+    otherwise be visually indistinguishable (see the GAUGE_TICK_* comment
+    above) -- each hole gets an engrave-red tick-mark count (1..4, small to
+    large) next to it as non-text disambiguation."""
 
     def __init__(self, provider: str | None = None) -> None:
         Boxes.__init__(self)
         self.addSettingsArgs(edges.FingerJointSettings)
         provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
         self.cut_color = provider_cfg["cut_color"]
+        self.engrave_color = provider_cfg["engrave_color"]
 
     def render(self) -> None:
         self.set_source_color(self.cut_color)
@@ -382,6 +477,14 @@ class PonokoCalibrationCoupon(Boxes):
             # every real part magnet hole uses.
             for cx, d in zip(hole_centers, PONOKO_MAGNET_DIAMETERS):
                 self.hole(cx, PONOKO_COUPON_CENTER_Y, d=d)
+            # Non-text tick-mark disambiguation (see GAUGE_TICK_* comment
+            # above): ascending 1..4 ticks, small-diameter gauge first,
+            # engrave-red so a laser never cuts a spurious slit next to a
+            # gauge hole.
+            self.set_source_color(self.engrave_color)
+            for i, (cx, d) in enumerate(zip(hole_centers, PONOKO_MAGNET_DIAMETERS)):
+                _draw_gauge_ticks(self, cx, PONOKO_COUPON_CENTER_Y, d, i + 1)
+            self.set_source_color(self.cut_color)
 
         self.rectangularWall(
             PONOKO_COUPON_WIDTH, PONOKO_COUPON_HEIGHT, "eeee",
@@ -421,6 +524,12 @@ def generate_ponoko_coupon(provider: str | None = None) -> Path:
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
 
+    # label="" above means Boxes.py draws no text at all on this panel, but
+    # run the same guard as every other coupon anyway (harmless no-op here,
+    # future-proof if a label is ever added) -- see faxbox.svglabels module
+    # docstring.
+    enforce_reference_labels(output_file)
+
     print(f"Generated Ponoko calibration coupon SVG: {output_file.absolute()}")
     print(f"  Coupon blank: {PONOKO_COUPON_WIDTH}mm x {PONOKO_COUPON_HEIGHT}mm")
     print(f"  Kerf square: tool path exactly {PONOKO_KERF_SQUARE_SIZE:.1f}mm x "
@@ -429,6 +538,14 @@ def generate_ponoko_coupon(provider: str | None = None) -> Path:
     print(f"  Magnet gauge holes ({', '.join(f'{d:.2f}mm' for d in PONOKO_MAGNET_DIAMETERS)}): "
           "press a real 6mm disc magnet into each; whichever seats snugly sets "
           "MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter>.")
+    print(
+        "  This panel has no text labels at all (Ponoko strips them) -- each gauge "
+        "hole instead carries an engrave-red tick-mark count (1 tick by the "
+        f"smallest/{min(PONOKO_MAGNET_DIAMETERS):.2f}mm hole, ascending to "
+        f"{len(PONOKO_MAGNET_DIAMETERS)} ticks by the largest/"
+        f"{max(PONOKO_MAGNET_DIAMETERS):.2f}mm hole) so the snug gauge is still "
+        "identifiable without any text."
+    )
     return output_file
 
 

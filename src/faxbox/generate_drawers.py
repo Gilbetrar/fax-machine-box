@@ -37,13 +37,14 @@ from faxbox.config import (
     MAGNET_Y_OFFSET,
     MATERIAL_THICKNESS,
 )
+from faxbox.svglabels import enforce_reference_labels
 
 T = MATERIAL_THICKNESS
 
-# Body interior (DESIGN.md #9: "Body interior: 142.65 x 211.65 x 50.325").
+# Body interior (DESIGN.md #9: "Body interior: 142.65 x 212.25 x 50.325").
 # Width/length lose a thickness on each of their two jointed (vertical
 # corner) edges; height only loses the bottom -- the top is open.
-BODY_INTERIOR_LENGTH = DRAWER_BODY["length"] - 2 * T   # 211.65, X
+BODY_INTERIOR_LENGTH = DRAWER_BODY["length"] - 2 * T   # 212.25, X
 BODY_INTERIOR_WIDTH = DRAWER_BODY["width"] - 2 * T     # 142.65, Y
 BODY_INTERIOR_HEIGHT = DRAWER_BODY["height"] - T       # 50.325, Z (floor -> open top)
 
@@ -264,6 +265,11 @@ def generate_drawer(provider: str | None = None) -> Path:
 
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
+
+    # Boxes.py's own move(label=...) draws "Front"/"Back"/etc. in the same
+    # red used for real engraves (see faxbox.svglabels module docstring) --
+    # neutralize before this file is ever considered laser-ready.
+    enforce_reference_labels(output_file)
 
     print(f"Generated drawer SVG: {output_file.absolute()}")
     print(f"  Body external: {DRAWER_BODY['width']}mm x {DRAWER_BODY['length']}mm x {DRAWER_BODY['height']}mm")

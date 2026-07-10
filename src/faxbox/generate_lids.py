@@ -22,6 +22,7 @@ from faxbox.config import (
     MATERIAL_THICKNESS,
     SLIDING_LID,
 )
+from faxbox.svglabels import enforce_reference_labels
 
 
 class LidGenerator(Boxes):
@@ -88,6 +89,11 @@ def generate_lids(provider: str | None = None) -> Path:
 
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
+
+    # Boxes.py's own move(label=...) draws "Sliding Lid" in the same red
+    # used for real engraves (see faxbox.svglabels module docstring) --
+    # neutralize before this file is ever considered laser-ready.
+    enforce_reference_labels(output_file)
 
     print(f"Generated lids SVG: {output_file.absolute()}")
     print(f"  Sliding lid: {SLIDING_LID['length']}mm x {SLIDING_LID['width']}mm")

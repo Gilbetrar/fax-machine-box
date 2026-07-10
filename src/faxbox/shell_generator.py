@@ -59,6 +59,7 @@ from faxbox.config import (
     TURN_BUTTON_PIVOT_BOX_Z,
     WALL_HEIGHT,
 )
+from faxbox.svglabels import enforce_reference_labels
 
 T = MATERIAL_THICKNESS
 
@@ -434,6 +435,12 @@ def generate_shell(provider: str | None = None) -> Path:
 
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
+
+    # Boxes.py's own move(label=...) draws each wall's part name in the
+    # same red used for real engraves (see faxbox.svglabels module
+    # docstring) -- neutralize before this file is ever considered
+    # laser-ready.
+    enforce_reference_labels(output_file)
 
     print(f"Generated outer shell SVG: {output_file.absolute()}")
     print(f"  Interior dimensions: {INTERIOR_LENGTH}mm x {INTERIOR_WIDTH}mm")

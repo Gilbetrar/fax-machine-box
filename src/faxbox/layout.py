@@ -30,6 +30,7 @@ as a single rigid rectangle.
 from __future__ import annotations
 
 import math
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -51,10 +52,13 @@ SVG_NS = "{http://www.w3.org/2000/svg}"
 # ambiguous bed size, this project falls back to a conservative planning
 # size rather than trusting either disputed number. See
 # docs/service-comparison.md ("NYC Resistor cutting constraints", verified
-# 2026-07-07) for the full writeup and sources; update these two constants
-# if the real bed is confirmed before cut day.
-SHEET_WIDTH_MM = 609.6  # 24in, conservative fallback
-SHEET_HEIGHT_MM = 457.2  # 18in, conservative fallback
+# 2026-07-07) for the full writeup and sources; update
+# config.NYCR_SHEET_WIDTH/NYCR_SHEET_HEIGHT (the two constants below are
+# just this module's own name for them, kept for every existing caller/test
+# that reads fl.SHEET_WIDTH_MM/SHEET_HEIGHT_MM) if the real bed is confirmed
+# before cut day.
+SHEET_WIDTH_MM = config.NYCR_SHEET_WIDTH  # 609.6mm / 24in, conservative fallback
+SHEET_HEIGHT_MM = config.NYCR_SHEET_HEIGHT  # 457.2mm / 18in, conservative fallback
 MARGIN_MM = 10.0  # clearance from sheet edge (issue #19 requirement)
 SPACING_MM = 5.0  # clearance between parts (issue #19 requirement)
 
@@ -406,6 +410,32 @@ never this file.
 
 # --- Orchestration ------------------------------------------------------------
 
+def _resolve_dimension(
+    explicit: float | None,
+    env_var: str,
+    provider_cfg: dict | None,
+    key: str,
+    default: float,
+) -> float:
+    """Resolve one bed-size parameter: explicit kwarg > env var > the
+    resolved provider's config entry (if it carries `key`) > `default`.
+
+    Used only for sheet_width/sheet_height (env_var = FAXBOX_SHEET_WIDTH /
+    FAXBOX_SHEET_HEIGHT); margin/spacing have no env or provider layer --
+    every provider this project ships keeps the same margin/spacing -- so
+    generate_layout() resolves those two as a plain explicit-kwarg-or-default
+    choice instead of calling this helper.
+    """
+    if explicit is not None:
+        return explicit
+    env_val = os.environ.get(env_var)
+    if env_val is not None:
+        return float(env_val)
+    if provider_cfg is not None and key in provider_cfg:
+        return provider_cfg[key]
+    return default
+
+
 def _require_source_svgs(output_path: Path) -> tuple[Path, Path, Path]:
     shell_svg = output_path / "outer_shell.svg"
     drawer_svg = output_path / "drawer.svg"
@@ -423,12 +453,50 @@ def _require_source_svgs(output_path: Path) -> tuple[Path, Path, Path]:
     return shell_svg, drawer_svg, lids_svg
 
 
-def generate_layout() -> list[Path]:
+def generate_layout(
+    provider: str | None = None,
+    *,
+    sheet_width: float | None = None,
+    sheet_height: float | None = None,
+    margin: float | None = None,
+    spacing: float | None = None,
+) -> list[Path]:
     """Nest outer_shell.svg + drawer.svg (x2, cut twice) + lids.svg onto
     sheet_1.svg, sheet_2.svg, ... plus a reference-only final_layout.svg.
 
+    Bed-size parameters let this rebuild for a different laser bed without
+    editing source. Each of `sheet_width`/`sheet_height` resolves
+    independently as: explicit kwarg > FAXBOX_SHEET_WIDTH/FAXBOX_SHEET_HEIGHT
+    env var > the resolved provider's config.PROVIDERS[...]["sheet_width"/
+    "sheet_height"] (if that provider defines one) > this module's
+    SHEET_WIDTH_MM/SHEET_HEIGHT_MM conservative-fallback default. `margin`/
+    `spacing` have no env var or provider layer (every provider this project
+    ships keeps the same margin/spacing), so each resolves as explicit kwarg
+    > this module's MARGIN_MM/SPACING_MM default.
+
+    `provider` selects a faxbox.config.PROVIDERS entry the same way every
+    faxbox.generate_*() function does (falls back to the FAXBOX_PROVIDER env
+    var, then "nycr" -- see config.resolve_provider); an unknown provider
+    name raises KeyError immediately, before any file is touched. Note this
+    is independent of generate_ponoko_layout() below: passing
+    provider="ponoko" here only borrows that provider's sheet size for
+    packing -- it still nests the plain NYCR-flavored source SVGs, not a
+    Ponoko-regenerated set (use generate_ponoko_layout() for a real Ponoko
+    order).
+
+    Calling with no arguments and no FAXBOX_PROVIDER/FAXBOX_SHEET_WIDTH/
+    FAXBOX_SHEET_HEIGHT env vars set reproduces this project's original
+    (pre-bed-size-parameterization) behavior exactly.
+
     Returns the list of sheet_N.svg paths, in order.
     """
+    provider_cfg = config.PROVIDERS[config.resolve_provider(provider)]
+
+    resolved_width = _resolve_dimension(sheet_width, "FAXBOX_SHEET_WIDTH", provider_cfg, "sheet_width", SHEET_WIDTH_MM)
+    resolved_height = _resolve_dimension(sheet_height, "FAXBOX_SHEET_HEIGHT", provider_cfg, "sheet_height", SHEET_HEIGHT_MM)
+    resolved_margin = MARGIN_MM if margin is None else margin
+    resolved_spacing = SPACING_MM if spacing is None else spacing
+
     output_path = Path(OUTPUT_DIR)
     output_path.mkdir(parents=True, exist_ok=True)
 
@@ -440,12 +508,27 @@ def generate_layout() -> list[Path]:
     pieces += _load_pieces(drawer_svg, "Drawer 2")
     pieces += _load_pieces(lids_svg, "Lid")
 
-    sheets = _pack_pieces(pieces)
+    sheets = _pack_pieces(
+        pieces,
+        sheet_width=resolved_width,
+        sheet_height=resolved_height,
+        margin=resolved_margin,
+        spacing=resolved_spacing,
+    )
+
+    # Purge sheet files from any previous run FIRST: a rebuild for a smaller
+    # bed writes MORE sheets (e.g. sheet_1..7), and a later default rebuild
+    # writes only sheet_1..3 -- without this purge the stale sheet_4..7 would
+    # sit next to the fresh ones, numbered as if they belonged to the current
+    # set. A stale sheet is a real fabrication hazard (it LOOKS cut-ready)
+    # and it also contaminates every test that globs output/sheet_*.svg.
+    for stale in output_path.glob("sheet_*.svg"):
+        stale.unlink()
 
     sheet_paths: list[Path] = []
     sheet_dims: list[tuple[float, float]] = []
     for i, placements in enumerate(sheets, start=1):
-        width, height = _sheet_content_bounds(placements)
+        width, height = _sheet_content_bounds(placements, margin=resolved_margin)
         sheet_path = output_path / f"sheet_{i}.svg"
         _write_sheet_svg(placements, width, height, sheet_path, i, len(sheets))
         sheet_paths.append(sheet_path)
@@ -459,8 +542,9 @@ def generate_layout() -> list[Path]:
         print(f"  {path.name}: {w:.1f}mm x {h:.1f}mm ({w / 25.4:.1f}in x {h / 25.4:.1f}in)")
     print(f"Total parts placed: {total_parts} (expected 21: 8 shell + 12 drawer + 1 lid)")
     print(
-        f"Bed limit used for packing: {SHEET_WIDTH_MM:.1f}mm x {SHEET_HEIGHT_MM:.1f}mm "
-        f"(conservative fallback -- see docs/service-comparison.md)"
+        f"Bed limit used for packing: {resolved_width:.1f}mm x {resolved_height:.1f}mm "
+        f"(conservative fallback -- see docs/service-comparison.md -- unless overridden "
+        f"via provider/env/kwarg)"
     )
     print(f"Reference-only combined view: {(output_path / 'final_layout.svg').absolute()}")
     print("NOTE: final_layout.svg is for visual review ONLY -- it is larger than the")
@@ -561,6 +645,12 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
         sheet_height=provider_cfg["sheet_height"],
     )
 
+    # Same stale-sheet purge as generate_layout (see the comment there): a
+    # previous run with a different nesting must not leave extra sheet_N.svg
+    # files that look like part of the current order.
+    for stale in output_path.glob("sheet_*.svg"):
+        stale.unlink()
+
     sheet_paths: list[Path] = []
     sheet_dims: list[tuple[float, float]] = []
     for i, placements in enumerate(sheets, start=1):
@@ -596,7 +686,13 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
 
 
 if __name__ == "__main__":
-    if config.resolve_provider() == "ponoko":
+    # Fail loudly (same as every faxbox.generate_*() entry point) on an
+    # unknown FAXBOX_PROVIDER rather than silently falling through to the
+    # default nycr path -- this dict lookup raises KeyError for a bad name
+    # before either generator below ever runs.
+    _provider_name = config.resolve_provider()
+    _ = config.PROVIDERS[_provider_name]
+    if _provider_name == "ponoko":
         generate_ponoko_layout()
     else:
-        generate_layout()
+        generate_layout(provider=_provider_name)

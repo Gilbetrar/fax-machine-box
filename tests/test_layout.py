@@ -15,6 +15,8 @@ importing this module.
 
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 import sys
 from collections import Counter
@@ -23,6 +25,7 @@ from pathlib import Path
 import pytest
 
 import svg_utils as su
+from faxbox import config
 from faxbox import layout as fl
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -250,21 +253,41 @@ def kerf_coupon_svg():
 
 
 def test_kerf_coupon_piece_and_hole_count(kerf_coupon_svg):
+    from faxbox import calibration as cal
+
     pieces = su.get_pieces(kerf_coupon_svg)
     assert len(pieces) == 1, f"expected exactly 1 piece on the coupon, found {len(pieces)}"
-    assert len(pieces[0].holes) == 4, (
-        f"expected 3 fit-test slots + 1 kerf-test hole = 4 holes, found {len(pieces[0].holes)}"
+    expected_holes = len(cal.SLOT_WIDTHS) + 1  # 5 fit-test slots + 1 kerf-test hole
+    assert len(pieces[0].holes) == expected_holes, (
+        f"expected {len(cal.SLOT_WIDTHS)} fit-test slots + 1 kerf-test hole = "
+        f"{expected_holes} holes, found {len(pieces[0].holes)}"
     )
 
 
+def test_kerf_coupon_slot_widths_widened_to_five_gauges():
+    """Adversarial-QA fix: the original 3-slot gauge (3.05 / T / 3.30) left
+    real stock measuring 3.35-3.4mm -- squarely inside the documented
+    3.0-3.4mm plywood band (DESIGN.md) -- fitting NO slot at all. The gauge
+    now spans strictly past both ends of that documented band."""
+    from faxbox import calibration as cal
+    from faxbox import config as c
+
+    assert cal.SLOT_WIDTHS == (2.95, 3.05, c.MATERIAL_THICKNESS, 3.30, 3.40)
+
+
 def test_kerf_coupon_slot_widths_match_burn_compensated_nominal(kerf_coupon_svg):
+    """5 thickness slots, each measured flat-to-flat on the generated SVG,
+    must equal (label - 2*burn) -- i.e. the physical (post-kerf) width
+    equals the labeled nominal, same burn-compensated-hole relationship the
+    magnet gauge coupon uses (see calibration.py's magnet-coupon docstring)."""
     from faxbox import calibration as cal
     from faxbox import config as c
 
     T = c.MATERIAL_THICKNESS
     piece = su.get_pieces(kerf_coupon_svg)[0]
-    slot_holes = sorted(piece.holes, key=lambda h: h.bbox.xmin)[:3]
-    assert len(cal.SLOT_WIDTHS) == 3
+    slot_holes = sorted(piece.holes, key=lambda h: h.bbox.xmin)[: len(cal.SLOT_WIDTHS)]
+    assert len(cal.SLOT_WIDTHS) == 5
+    assert len(slot_holes) == 5
     for hole, nominal in zip(slot_holes, cal.SLOT_WIDTHS):
         measured = hole.bbox.width
         expected = nominal - 2 * c.BURN
@@ -286,3 +309,191 @@ def test_kerf_coupon_dims_in_mm(kerf_coupon_svg):
     width, height = su.get_svg_dimensions_mm(kerf_coupon_svg)
     assert width > 0
     assert height > 0
+
+
+# =============================================================================
+# Bed-size parameterization (defect: generate_layout() used to hardcode the
+# NYC Resistor bed and take no arguments, so rebuilding for a different laser
+# bed required editing source). generate_layout() now resolves
+# sheet_width/sheet_height/margin/spacing as: explicit kwarg >
+# FAXBOX_SHEET_WIDTH/FAXBOX_SHEET_HEIGHT env var (width/height only) >
+# resolved provider's config.PROVIDERS[...] entry (width/height only) > this
+# module's SHEET_WIDTH_MM/SHEET_HEIGHT_MM/MARGIN_MM/SPACING_MM defaults --
+# see generate_layout()'s docstring.
+#
+# Largest single part (Shell: Bottom) measures 304.96mm x 165.26mm (three
+# panels -- Bottom, Left Wall, Right Wall -- share the 304.96mm length,
+# confirmed by direct measurement below); with this module's 10mm margins on
+# both sides, 324.96mm x 185.26mm is the smallest bed that can cut every
+# part at all. _pack_pieces must keep failing loudly (ValueError naming the
+# offending part) below that, per its own docstring contract.
+# =============================================================================
+
+MIN_VIABLE_BED_WIDTH = 324.96
+MIN_VIABLE_BED_HEIGHT = 185.26
+
+
+def _all_source_pieces() -> list[fl.Piece]:
+    """Load all 21 real pieces (no packing/nesting) straight from the
+    regenerated source SVGs -- for tests that only care about _pack_pieces'
+    behavior at a given bed size, not the full sheet_*.svg pipeline."""
+    shell_svg, drawer_svg, lids_svg = fl._require_source_svgs(OUTPUT_DIR)
+    pieces: list[fl.Piece] = []
+    pieces += fl._load_pieces(shell_svg, "Shell")
+    pieces += fl._load_pieces(drawer_svg, "Drawer 1")
+    pieces += fl._load_pieces(drawer_svg, "Drawer 2")
+    pieces += fl._load_pieces(lids_svg, "Lid")
+    return pieces
+
+
+def _assert_no_overlaps_and_margins_held(sheets: list[list[fl.Placement]], margin: float) -> None:
+    tol = 1e-6
+    for placements in sheets:
+        for p in placements:
+            assert p.x >= margin - tol, f"{p.piece.label!r} x={p.x} violates {margin}mm margin"
+            assert p.y >= margin - tol, f"{p.piece.label!r} y={p.y} violates {margin}mm margin"
+        for i in range(len(placements)):
+            a = placements[i]
+            a_box = (a.x, a.y, a.x + a.piece.width, a.y + a.piece.height)
+            for j in range(i + 1, len(placements)):
+                b = placements[j]
+                b_box = (b.x, b.y, b.x + b.piece.width, b.y + b.piece.height)
+                overlap = not (
+                    a_box[2] <= b_box[0] + tol
+                    or b_box[2] <= a_box[0] + tol
+                    or a_box[3] <= b_box[1] + tol
+                    or b_box[3] <= a_box[1] + tol
+                )
+                assert not overlap, f"overlap: {a.piece.label!r} vs {b.piece.label!r}"
+
+
+def test_largest_part_measures_304_96_by_165_26mm(regenerate_svgs):
+    pieces = _all_source_pieces()
+    largest = max(pieces, key=lambda p: p.width * p.height)
+    assert largest.source == "Shell" and largest.label == "Bottom"
+    assert largest.width == pytest.approx(304.96, abs=0.01)
+    assert largest.height == pytest.approx(165.26, abs=0.01)
+
+
+def test_pack_pieces_at_reduced_bed_places_all_21_no_overlap(regenerate_svgs):
+    pieces = _all_source_pieces()
+    sheets = fl._pack_pieces(pieces, sheet_width=458.0, sheet_height=304.0)
+    assert sum(len(s) for s in sheets) == 21
+    _assert_no_overlaps_and_margins_held(sheets, fl.MARGIN_MM)
+
+
+def test_pack_pieces_at_exact_minimum_viable_bed_places_all_21_no_overlap(regenerate_svgs):
+    pieces = _all_source_pieces()
+    sheets = fl._pack_pieces(pieces, sheet_width=MIN_VIABLE_BED_WIDTH, sheet_height=MIN_VIABLE_BED_HEIGHT)
+    assert sum(len(s) for s in sheets) == 21
+    _assert_no_overlaps_and_margins_held(sheets, fl.MARGIN_MM)
+
+
+def test_pack_pieces_one_epsilon_below_minimum_bed_raises_naming_part(regenerate_svgs):
+    pieces = _all_source_pieces()
+    with pytest.raises(ValueError, match="Bottom"):
+        fl._pack_pieces(pieces, sheet_width=MIN_VIABLE_BED_WIDTH - 0.1, sheet_height=MIN_VIABLE_BED_HEIGHT)
+
+
+def test_pack_pieces_300x200_bed_raises(regenerate_svgs):
+    pieces = _all_source_pieces()
+    with pytest.raises(ValueError):
+        fl._pack_pieces(pieces, sheet_width=300.0, sheet_height=200.0)
+
+
+def test_resolve_dimension_precedence_explicit_beats_env_beats_provider_beats_default(monkeypatch):
+    provider_cfg = {"sheet_width": 111.0}
+    monkeypatch.setenv("FAXBOX_SHEET_WIDTH", "222.0")
+    # explicit kwarg wins over everything
+    assert fl._resolve_dimension(333.0, "FAXBOX_SHEET_WIDTH", provider_cfg, "sheet_width", 999.0) == 333.0
+    # env wins over provider
+    assert fl._resolve_dimension(None, "FAXBOX_SHEET_WIDTH", provider_cfg, "sheet_width", 999.0) == 222.0
+    monkeypatch.delenv("FAXBOX_SHEET_WIDTH")
+    # provider wins over default
+    assert fl._resolve_dimension(None, "FAXBOX_SHEET_WIDTH", provider_cfg, "sheet_width", 999.0) == 111.0
+    # default when nothing else is set
+    assert fl._resolve_dimension(None, "FAXBOX_SHEET_WIDTH", {}, "sheet_width", 999.0) == 999.0
+
+
+def test_generate_layout_bed_size_precedence_explicit_beats_env_beats_provider(tmp_path, monkeypatch, regenerate_svgs):
+    """End-to-end version of the precedence test above: drives the real
+    generate_layout() (redirected to a scratch output dir so this never
+    touches the shared output/ directory other tests read) and checks which
+    sheet_width/sheet_height/margin/spacing actually reach _pack_pieces."""
+    for name in ("outer_shell.svg", "drawer.svg", "lids.svg"):
+        shutil.copy(OUTPUT_DIR / name, tmp_path / name)
+    monkeypatch.setattr(fl, "OUTPUT_DIR", str(tmp_path))
+
+    orig_pack = fl._pack_pieces
+    captured: dict[str, float] = {}
+
+    def fake_pack(pieces, sheet_width=fl.SHEET_WIDTH_MM, sheet_height=fl.SHEET_HEIGHT_MM,
+                  margin=fl.MARGIN_MM, spacing=fl.SPACING_MM):
+        captured.update(sheet_width=sheet_width, sheet_height=sheet_height, margin=margin, spacing=spacing)
+        return orig_pack(pieces, sheet_width=sheet_width, sheet_height=sheet_height, margin=margin, spacing=spacing)
+
+    monkeypatch.setattr(fl, "_pack_pieces", fake_pack)
+
+    fake_providers = dict(config.PROVIDERS)
+    fake_providers["_test_provider"] = {**config.PROVIDERS["nycr"], "sheet_width": 500.0, "sheet_height": 400.0}
+    monkeypatch.setattr(config, "PROVIDERS", fake_providers)
+
+    # provider only (no explicit kwarg, no env var)
+    fl.generate_layout(provider="_test_provider")
+    assert (captured["sheet_width"], captured["sheet_height"]) == (500.0, 400.0)
+
+    # env var beats provider
+    monkeypatch.setenv("FAXBOX_SHEET_WIDTH", "550.0")
+    monkeypatch.setenv("FAXBOX_SHEET_HEIGHT", "450.0")
+    fl.generate_layout(provider="_test_provider")
+    assert (captured["sheet_width"], captured["sheet_height"]) == (550.0, 450.0)
+
+    # explicit kwarg beats env var; margin/spacing are explicit-or-default only
+    fl.generate_layout(provider="_test_provider", sheet_width=600.0, sheet_height=490.0, margin=12.0, spacing=6.0)
+    assert (captured["sheet_width"], captured["sheet_height"]) == (600.0, 490.0)
+    assert (captured["margin"], captured["spacing"]) == (12.0, 6.0)
+
+
+# =============================================================================
+# Unknown provider fails loudly (defect: layout.py's __main__ used to
+# silently ignore an unrecognized FAXBOX_PROVIDER and run the default nycr
+# path instead of raising, unlike every faxbox.generate_*() entry point).
+# =============================================================================
+
+def test_generate_layout_unknown_provider_raises_keyerror():
+    with pytest.raises(KeyError):
+        fl.generate_layout(provider="definitely-not-a-real-provider")
+
+
+def test_main_fails_loudly_on_unknown_provider():
+    env = dict(os.environ)
+    env["FAXBOX_PROVIDER"] = "definitely-not-a-real-provider"
+    result = subprocess.run(
+        [sys.executable, "-m", "faxbox.layout"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        env=env,
+    )
+    assert result.returncode != 0, "unknown provider must fail loudly, not silently fall back to nycr"
+    assert "definitely-not-a-real-provider" in result.stderr.decode()
+
+
+# =============================================================================
+# Stale-sheet purge (defect found in adversarial pass 2: a rebuild for a
+# smaller bed writes MORE sheets, and a later default rebuild wrote only
+# sheet_1..3 while leaving sheet_4..N from the previous run on disk --
+# stale, cut-ready-looking files next to fresh ones, which also
+# contaminated every test that globs output/sheet_*.svg).
+# =============================================================================
+
+def test_generate_layout_purges_stale_sheets_from_previous_run():
+    out = REPO_ROOT / "output"
+    # A small bed legitimately produces more than 3 sheets...
+    many = fl.generate_layout(sheet_width=458.0, sheet_height=304.0)
+    assert len(many) > 3
+    # ...and a subsequent default run must leave ONLY its own sheets behind.
+    default = fl.generate_layout()
+    on_disk = sorted(p.name for p in out.glob("sheet_*.svg"))
+    assert on_disk == sorted(p.name for p in default), (
+        f"stale sheets from a previous nesting survived a rebuild: {on_disk}"
+    )

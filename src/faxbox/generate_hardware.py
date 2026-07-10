@@ -36,6 +36,7 @@ from faxbox.config import (
     MATERIAL_THICKNESS,
     TURN_BUTTON,
 )
+from faxbox.svglabels import enforce_reference_labels
 
 BUTTON_LENGTH = TURN_BUTTON["length"]
 BUTTON_WIDTH = TURN_BUTTON["width"]
@@ -134,6 +135,12 @@ def generate_hardware(provider: str | None = None) -> Path:
 
     with open(output_file, "wb") as f:
         f.write(data.getvalue())
+
+    # This piece already draws its label in LABEL_GRAY directly (see
+    # _build_button above), so this is a harmless no-op today -- run it
+    # anyway for the same systemic guarantee every other standalone
+    # generator gets (see faxbox.svglabels module docstring).
+    enforce_reference_labels(output_file)
 
     print(f"Generated turn-button hardware SVG: {output_file.absolute()}")
     print(f"  1x Turn Button: {BUTTON_LENGTH}mm x {BUTTON_WIDTH}mm, pivot hole "
