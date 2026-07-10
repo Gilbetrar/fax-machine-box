@@ -437,31 +437,82 @@ def process_4231():
     top_row = int(np.median(top_rows))
     bot_row = int(np.median(bot_rows))
 
-    field_ratio = (79.0 + 222.25) / 158.75  # 301.25 / 158.75
-    field_h = int(round(w / field_ratio))
-    center_row = (top_row + bot_row) / 2.0
-    ftop = int(round(center_row - field_h / 2))
-    ftop = max(0, min(ftop, h - field_h))
-    fbottom = ftop + field_h
-    field = sheared[ftop:fbottom, :]  # the deskewed "field" canvas, full width
+    # --- Capsule-registered placement (rev 2, 2026-07-10 proof-gate fix) ---
+    # The generation composed the panorama as a ~2.87:1 CONTENT BAND inside
+    # a 1.79:1 canvas (21% white margin top AND bottom, 3.5% each side).
+    # Mapping the whole canvas onto the 301.25x158.75 field (rev 1) put the
+    # art's reserved grip capsule 14.2mm rear of the REAL grip slot and left
+    # a bare, lean-edged strip at the lid's front. The physical registration
+    # that matters is capsule==slot (slot center: 25.0mm from the lid front
+    # edge, width-centered at 79.375mm; slot 30x10mm). So: scale the CONTENT
+    # band fit-to-width (its capsule then measures 30.6x9.9mm -- a 2% match
+    # to the real slot, confirming this scale), then TRANSLATE so the
+    # measured capsule center lands exactly on the slot center. The art
+    # becomes a full-length band with clear wood above/below (~27mm each),
+    # and the ~6mm forward shift crops most of the leaning drawn front
+    # border off the lid's front edge as a side effect.
+    mask_sheared = sheared < 245
+    cols_any = mask_sheared.any(axis=0)
+    rows_any = mask_sheared.any(axis=1)
+    cx0 = int(np.argmax(cols_any)); cx1 = int(w - np.argmax(cols_any[::-1]))
+    cy0 = int(np.argmax(rows_any)); cy1 = int(h - np.argmax(rows_any[::-1]))
+    content = sheared[cy0:cy1, cx0:cx1]
 
-    split_x = int(round(w * (79.0 / 301.25)))
+    FIELD_W_MM, FIELD_H_MM = 301.25, 158.75
+    SPLIT_MM = 79.0
+    field_w_px = int(mm_to_px(SPLIT_MM)) + int(mm_to_px(FIELD_W_MM - SPLIT_MM))  # 933 + 2625
+    field_h_px = int(mm_to_px(FIELD_H_MM))                                       # 1875
+    px_per_mm_field = field_w_px / FIELD_W_MM
 
-    lid_src = field[:, :split_x]          # portrait: depth(narrow) x width(tall)
-    panel_src = field[:, split_x:]        # landscape: depth x width, matches panel's own convention
+    band_w_px = field_w_px
+    band_h_px = int(round(content.shape[0] * band_w_px / content.shape[1]))
+    band = cv2.resize(content, (band_w_px, band_h_px), interpolation=cv2.INTER_AREA)
+    band_bit = threshold_bit(band, 128)
 
-    # Threshold once, on the deskewed field, before the lid's 90 rotation
-    # (thresholding after an axis-swap would be identical since it's a pure
-    # relabeling of a 2D transform + resample chain that hasn't resampled
-    # yet; done here for clarity).
-    lid_bit = threshold_bit(lid_src, 128)
+    # Locate the reserved capsule in the resized band: the largest solid
+    # white blob whose bbox is 22-40mm x 6-16mm (stadium ~30x10).
+    from scipy import ndimage as _ndi
+    lbl, _n = _ndi.label(band_bit == 255)
+    capsule = None
+    for i, sl in enumerate(_ndi.find_objects(lbl)):
+        if sl is None:
+            continue
+        bh = (sl[0].stop - sl[0].start) / px_per_mm_field
+        bw = (sl[1].stop - sl[1].start) / px_per_mm_field
+        if 22 < bw < 40 and 6 < bh < 16:
+            blob = (lbl[sl] == i + 1)
+            if blob.mean() > 0.7:  # solid, stadium-like
+                capsule = ((sl[1].start + sl[1].stop) / 2 / px_per_mm_field,
+                           (sl[0].start + sl[0].stop) / 2 / px_per_mm_field,
+                           bw, bh)
+    assert capsule is not None, "4231: reserved grip capsule not found in band; placement cannot be registered"
+    cap_x_mm, cap_y_band_mm, cap_w_mm, cap_h_mm = capsule
+
+    SLOT_X_MM, SLOT_Y_MM = 25.0, FIELD_H_MM / 2  # slot center in field coords
+    dx_px = int(round((SLOT_X_MM - cap_x_mm) * px_per_mm_field))
+    band_top_mm = SLOT_Y_MM - cap_y_band_mm
+    dy_px = int(round(band_top_mm * px_per_mm_field))
+
+    field_bit = np.full((field_h_px, field_w_px), 255, dtype=np.uint8)
+    src_x0 = max(0, -dx_px); dst_x0 = max(0, dx_px)
+    n_cols = min(band_w_px - src_x0, field_w_px - dst_x0)
+    src_y0 = max(0, -dy_px); dst_y0 = max(0, dy_px)
+    n_rows = min(band_h_px - src_y0, field_h_px - dst_y0)
+    field_bit[dst_y0:dst_y0 + n_rows, dst_x0:dst_x0 + n_cols] = \
+        band_bit[src_y0:src_y0 + n_rows, src_x0:src_x0 + n_cols]
+
+    split_x = int(mm_to_px(SPLIT_MM))  # 933px at 300dpi
+
+    lid_bit = field_bit[:, :split_x]      # portrait: depth(narrow) x width(tall)
+    panel_bit = field_bit[:, split_x:]    # landscape, matches panel convention
+
     lid_bit, removed_lid = remove_speckle(lid_bit, min_area=4)
-    panel_bit = threshold_bit(panel_src, 128)
     panel_bit, removed_panel = remove_speckle(panel_bit, min_area=4)
 
-    # --- top panel: same orientation as the field, direct resize ---
+    # --- top panel: same orientation as the field, already at target px ---
     w_mm_p, h_mm_p, tw_p, th_p = FACE_TARGETS["top_panel"]
-    panel_final = resize_area_rethreshold(panel_bit, tw_p, th_p)
+    assert panel_bit.shape == (th_p, tw_p), f"panel px {panel_bit.shape} != target {(th_p, tw_p)}"
+    panel_final = panel_bit
     save_bit_png(panel_final, os.path.join(OUT, "top_panel.png"))
     pos_p, neg_p = feature_audit(panel_final)
 
@@ -518,19 +569,22 @@ def process_4231():
         "not a rotation (rotation would tilt the already-level top/bottom). "
         f"Applied shear x'=x+{k:.5f}*(y-{y_ref:.0f}), INTER_CUBIC, white fill. "
         "Verified visually post-shear: left edge vertical, top/bottom level.",
-        f"Field crop: height {field_h}px = round(width/{field_ratio:.6f}) "
-        f"(301.25/158.75mm), centered on measured content vertical center "
-        f"(row {center_row:.0f}); box rows [{ftop}:{fbottom}], full width kept "
-        "(JUDGMENT CALL: treated the generation canvas, after deskew + this "
-        "small height trim, as the 301.25x158.75mm field itself -- consistent "
-        "with 'compress the sequence, not shrink it' and the pipeline's usual "
-        "generate-with-slack/small-crop pattern -- rather than the tight "
-        "content bbox, which has large intentional white margins baked in "
-        "post the 'lightened shading' edit and would otherwise imply "
-        "discarding the mosaic-head content entirely).",
-        f"Split at 26.22% from front: split_x={split_x}px "
-        f"(={79.0}/{301.25}={79.0/301.25:.5f} of field width {w}px).",
-        "global threshold @128 (0=ink) applied to each half of the deskewed field",
+        f"CAPSULE-REGISTERED placement (rev 2): content band bbox "
+        f"x[{cx0},{cx1}] y[{cy0},{cy1}] of desheared canvas, scaled "
+        f"fit-to-width to {band_w_px}px = 301.25mm ({band_h_px}px = "
+        f"{band_h_px / px_per_mm_field:.1f}mm tall band). Reserved grip "
+        f"capsule measured in-band at ({cap_x_mm:.1f}, {cap_y_band_mm:.1f})mm, "
+        f"size {cap_w_mm:.1f}x{cap_h_mm:.1f}mm (physical slot: 30x10 at "
+        f"x=25.0 from lid front, width-centered 79.375 -- 2% dim match "
+        f"confirms the scale). Band translated dx={dx_px}px "
+        f"dy={dy_px}px so capsule center == slot center exactly; art "
+        f"band top at {band_top_mm:.1f}mm, clear wood above/below "
+        f"~{(158.75 - band_h_px / px_per_mm_field) / 2:.0f}mm; front "
+        f"{abs(min(0, (SLOT_X_MM - cap_x_mm))):.1f}mm of the leaning drawn "
+        "front border cropped off the lid front edge by the shift.",
+        f"Split at 79.0mm from front: split_x={split_x}px of field "
+        f"{field_w_px}px (both at 300dpi -- no further resize).",
+        "global threshold @128 (0=ink) applied to the band before compositing",
         f"speckle cleanup: lid dropped {removed_lid}, panel dropped {removed_panel} components <4px^2",
     ]
 
