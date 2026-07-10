@@ -205,14 +205,21 @@ def test_ponoko_no_overlapping_pieces(ponoko_sheets):
 
 # =============================================================================
 # Engrave (red) content only where DESIGN.md places it: the right wall's
-# "FAX MACHINE" text and each drawer's faceplate registration outline --
-# same rule test_laser_requirements.py enforces for the NYCR default.
+# "FAX MACHINE" text, each drawer's faceplate registration outline -- same
+# rule test_laser_requirements.py enforces for the NYCR default -- plus the
+# Calibration coupon's own magnet-gauge tick marks (adversarial-QA fix:
+# PonokoCalibrationCoupon draws no text at all, so its 4 magnet gauge holes
+# need a non-text, engrave-red tick-mark count to stay distinguishable once
+# cut -- see calibration.py's GAUGE_TICK_* comment).
 # =============================================================================
 
 def test_ponoko_engrave_only_on_right_wall_and_faceplates(ponoko_sheets):
     pieces = _all_sheet_pieces(ponoko_sheets)
     red_labels = {p.label for p in pieces if "red" in p.colors}
-    assert red_labels == {"Shell: Right Wall", "Drawer 1: Faceplate", "Drawer 2: Faceplate"}
+    non_coupon_red = {label for label in red_labels if not label.startswith("Calibration")}
+    assert non_coupon_red == {"Shell: Right Wall", "Drawer 1: Faceplate", "Drawer 2: Faceplate"}
+    coupon_red = {label for label in red_labels if label.startswith("Calibration")}
+    assert coupon_red, "expected the Calibration coupon's magnet-gauge tick marks to be engrave-red"
 
 
 # =============================================================================
@@ -271,6 +278,69 @@ def test_ponoko_magnet_gauge_holes_present(ponoko_sheets):
         assert abs(m - expected) <= 0.05, (
             f"gauge hole measured {m:.3f}mm, expected ~{expected:.3f}mm (nominal - 2*ponoko_burn)"
         )
+
+
+# =============================================================================
+# Magnet gauge tick-mark disambiguation (adversarial-QA finding): Ponoko
+# strips ALL text (config.PONOKO_STRIP_LABELS), and PonokoCalibrationCoupon
+# never drew any self.text() to begin with, so its 4 magnet gauge holes
+# (diameters stepping by only 0.15mm) were visually identical on the
+# returned physical part -- no way to tell which hole seated snugly. Fix:
+# an engrave-red tick-mark count (1..4, ascending small-to-large diameter)
+# next to each hole -- see calibration.py's GAUGE_TICK_* comment.
+# =============================================================================
+
+def test_ponoko_magnet_gauge_tick_marks_present(ponoko_sheets):
+    from faxbox import calibration as cal
+
+    coupon_bboxes = [
+        p.bbox
+        for sheet in ponoko_sheets
+        for p in _sheet_pieces(sheet)
+        if p.label.startswith("Calibration")
+    ]
+    assert len(coupon_bboxes) == 1, f"expected exactly 1 Calibration piece, found {len(coupon_bboxes)}"
+    coupon_bbox = coupon_bboxes[0]
+
+    # The 4 gauge holes themselves (circular, cut-blue), sorted left to
+    # right -- _ponoko_item_centers draws them smallest-diameter first, so
+    # position order already matches PONOKO_MAGNET_DIAMETERS' own ascending
+    # order.
+    gauge_holes = []
+    for sheet in ponoko_sheets:
+        for piece in su.get_pieces(sheet):
+            gauge_holes += [
+                h for h in piece.holes
+                if 4.5 <= h.bbox.width <= 6.5
+                and h.bbox.dims_match(h.bbox.width, h.bbox.width, tol=0.05)
+                and coupon_bbox.contains(h.bbox, tol=0.2)
+            ]
+    assert len(gauge_holes) == 4
+    gauge_holes.sort(key=lambda h: h.bbox.xmin)
+
+    # Tick marks: short, near-zero-width engrave-red paths inside the
+    # coupon's own bbox (never blue -- ticks carry no dimensional meaning,
+    # so a laser must never be told to CUT one).
+    tick_paths = [
+        p for sheet in ponoko_sheets for p in su.iter_paths(sheet)
+        if su.normalize_color(p.stroke) == "red" and coupon_bbox.contains(p.bbox, tol=0.2)
+    ]
+    assert tick_paths, "expected engrave-red tick marks on the Ponoko calibration coupon"
+
+    # Assign each tick to its nearest gauge hole by X center and count.
+    counts = []
+    for hole in gauge_holes:
+        hx = (hole.bbox.xmin + hole.bbox.xmax) / 2
+        nearby = [
+            t for t in tick_paths
+            if abs(((t.bbox.xmin + t.bbox.xmax) / 2) - hx) < cal.GAUGE_TICK_SPACING * 4
+        ]
+        counts.append(len(nearby))
+
+    assert counts == [1, 2, 3, 4], (
+        f"expected ascending tick counts 1,2,3,4 (small-to-large gauge diameter), got {counts}"
+    )
+    assert sum(counts) == len(tick_paths), "found tick marks not attributable to any gauge hole"
 
 
 # =============================================================================

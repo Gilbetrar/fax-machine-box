@@ -9,10 +9,14 @@ change numbers.
 Everything is in **millimeters**. Material is uniform **3.175mm (1/8") plywood**
 (`T` below). Laser kerf is handled by Boxes.py's `burn` parameter (0.08mm
 starting value — calibrate with a test cut before the real run). Finger holes
-and slots are widened by `FINGER_PLAY` (0.1mm) so joints still assemble when
-the ply runs thick (nominal 3.175 stock commonly measures 3.0–3.4); this makes
-edge-adjacent hole rows break through their part edge by ≤ play/2, which is
-sub-kerf and hidden inside joints.
+and slots are widened by `FINGER_PLAY` (0.1mm), giving a physical hole
+through-dimension of `T + play` = 3.275mm — this covers nominal 3.175 stock
+measuring up to ~3.275mm, but thicker stock (3.3–3.4mm, within the normal
+3.0–3.4 range this ply is sold at) interferes by up to ~0.125mm (at 3.4) and
+requires recalibrating `FINGER_PLAY` from the thickness coupon (which now
+carries 3.30/3.40 gauges) before cutting. This makes edge-adjacent hole rows
+break through their part edge by ≤ play/2, which is sub-kerf and hidden
+inside joints — **except the top-panel hole row, see part #7 below.**
 
 **Contents fit:** the SPEC envelope and compartment dimensions come from
 Ben's fully functional cardboard prototype of this exact box (confirmed
@@ -127,8 +131,13 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
   wall's front edge** (the lid could never be inserted otherwise),
   Z = 118.025 → 122.0. Construction: drawn as a closed rectangular hole whose
   front boundary exactly coincides with the blank's front edge — the laser
-  cuts both lines and the mouth opens (one 3.975mm segment double-cut;
-  negligible). Leaves a 5.0mm rail above (Z 122 → 127) cantilevered from
+  cuts both lines and the mouth opens (in the kerf-compensated output the
+  hole's front boundary and the blank's own front edge are not one
+  coincident line but a parallel pair, 0.11mm apart for the NYC Resistor
+  cut and 0.15mm for Ponoko, overlapping along ~3.1mm of the 3.975mm mouth
+  — the laser burns that gap as a single ~0.3mm channel; still negligible,
+  and since the two lines aren't coincident, Ponoko's doubled-line objection
+  doesn't apply here). Leaves a 5.0mm rail above (Z 122 → 127) cantilevered from
   X = 79.375 — handle gently until assembled.
 - **Divider finger-hole line**: vertical, X = 79.375 → 82.55, Z = 3.175 →
   123.825. (A Boxes.py `fingerHolesAt` line — a dashed row of T-wide holes,
@@ -188,6 +197,14 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
   faces — same joint style as the shelf and divider. Front edge plain,
   extending flush over the divider, with a finger-hole line receiving the
   divider's top-edge fingers at the divider midplane.
+- **This hole row's breakthrough is NOT hidden like the other edge-adjacent
+  rows** (see the material note near the top of this document): the row's
+  midplane (Z = 125.4125) sits close enough to the wall top edge (Z = 127.0)
+  that the hole top (127.05) breaks through the visible top edge itself,
+  rather than staying buried inside the joint. The holes read as open-top
+  notches along the top edge until glue-up — cosmetically a normal
+  finger-joint look, but the top panel's actual uplift fixity depends on the
+  specified PVA glue-up (README's glue step), not on geometry alone.
 
 ### 8. Sliding lid — 1×
 
@@ -284,9 +301,11 @@ the drawer closed.
   each drawer is Y-centered in its rear-wall opening at closed position, the
   drawer's Back-wall hole and both divider holes share one box Y = `T +
   INTERIOR_WIDTH/2 + 40.0 = 122.55`. Checked: this sits ~39mm from the
-  divider's nearer Y-edge and the Back panel's nearer finger edge either way
-  — the choice of +40 vs. −40 is arbitrary given that margin; +40 (toward
-  increasing Y) was picked with no other reasoning.
+  divider's nearer Y-edge (half its 158.75 width, minus the 40mm offset) and
+  34.5mm from the Back panel's nearer finger edge (half its narrower 149.0
+  width, minus the same 40mm offset) — both ≫ the 3mm minimum, so the choice
+  of +40 vs. −40 is arbitrary given either margin; +40 (toward increasing Y)
+  was picked with no other reasoning.
 - Z: "drawer mid-height" (`DRAWER_BODY['height']/2`) is a property of the
   drawer body alone; on the divider (a fixed part) it is projected via each
   slot's own resting datum — the bottom drawer rests on the bay floor
@@ -304,8 +323,18 @@ the drawer closed.
   the outward faces with a sharpie before separating, press-fit each into
   its hole, then CA glue. Recommend **6×2mm N35 discs** (gentler pull,
   ~0.5–0.7kg at contact — one-finger openable); force is tunable by buying
-  N52 or 3mm-thick discs instead, no geometry change. 2mm-thick magnets sit
-  1.2mm recessed in 3.175mm ply (fine, glue backfills); 3mm sit near-flush.
+  N52 or 3mm-thick discs instead, no geometry change. **Install the magnets
+  FLUSH with the two MATING faces** (the drawer-Back's rear face and the
+  divider's front face — the faces that actually close the gap), recessing
+  only on the far (non-mating) side where the glue backfills; a 2mm disc
+  recessed 1.2mm on its *mating* side, mirrored on both parts, would leave
+  a ~2.4mm pole-to-pole gap across the joint that collapses the quoted
+  0.5–0.7kg pull to roughly 0.1–0.17kg — an easy mistake to make since
+  "recessed, glue backfills" is fine for a joint that only needs to look
+  clean, but not for a magnetic joint that needs the poles to meet. **6×3mm
+  discs are the low-risk alternative**: at 3mm they sit near-flush on both
+  sides regardless of which face is nominally "mating," so a flush-vs-
+  recessed install mistake can't collapse the pull as badly.
 - **Leading-end float, honestly stated (adversarial-review finding #4):**
   the magnet sits on the drawer's Back (leading) wall, where lateral play in
   the bay is **±4.9mm/side** (part #9 above — the drawer is guided by its
@@ -314,14 +343,18 @@ the drawer closed.
   that ±4.9mm bay float — the divider hole and the Back-wall hole are NOT
   guaranteed coaxial at first approach.
   - **Capture sequence**: true Y-centering only happens in the drawer's
-    **final ~2.7mm of travel** (`FACEPLATE_thickness − FACEPLATE_REVEAL` =
+    **final ~2.4mm of travel** (`FACEPLATE_thickness − FACEPLATE_REVEAL` =
     `T − 0.75 = 2.425mm`, i.e. the last stretch where the faceplate itself is
     entering its snug rear-wall opening, ≥1.5mm total clearance
     width-wise) — the faceplate's own fit against its opening is what
-    narrows the drawer's lateral position down to the opening's own
-    tolerance (≈±0.75mm) by the time the magnets are at contact distance.
-    Before that final stretch, the drawer body alone (loose in the ±4.9mm
-    bay float) is doing the guiding, not the faceplate.
+    narrows the drawer's lateral position, but the magnet hole sits at the
+    OPPOSITE (Back/leading) end of the drawer, 218.6mm away from that
+    faceplate datum: over that lever arm, the ≈±0.75mm the faceplate itself
+    resolves at its own end translates to a residual yaw of up to 0.57°
+    with the faceplate seated, which reopens to **≈±2.9mm** of lateral
+    play at the magnet end — not the faceplate's own ±0.75mm. Before that
+    final stretch, the drawer body alone (loose in the ±4.9mm bay float) is
+    doing the guiding, not the faceplate.
   - **Residual worst case**: at the moment the faceplate starts entering its
     opening (magnet gap closing to contact), the drawer could still be
     off-center by close to the bay's own float before the faceplate's fit
@@ -340,9 +373,11 @@ the drawer closed.
     (or a scribe) through the Back-wall hole and mark/scribe its true
     contact point against the (temporarily uninstalled or masked) divider
     face before final placement — this makes the install self-correcting
-    for whatever the real, as-built float turns out to be, instead of
-    depending on the ±4.9mm bay float never mattering. README's install
-    steps (below) state this explicitly.
+    for whatever the real, as-built float turns out to be (the ±2.9mm yaw
+    residual at the magnet end even with the faceplate seated, or the full
+    ±4.9mm bay float before it engages), instead of depending on either
+    number never mattering on paper. README's install steps (below) state
+    this explicitly.
   - This is why `test_magnet_holes_coaxial_at_closed_position`
     (`tests/test_retention.py`) is checked against a **0.6mm** tolerance
     band, not the bay's full ±4.9mm float: that test asserts the two
@@ -413,7 +448,7 @@ it entirely.
   - **Rotated UP** (paddle pointing +Z): the button's blunt-cap rear sits at
     box Z = `110 − 4.5 = 105.5` (below the lid band already) and the tip
     reaches box Z = `110 + 17.5 = 127.5` — comfortably past the required
-    `(121.2 + 1) = 122.2` (6.3mm of margin), standing proud in open air
+    `(121.2 + 1) = 122.2` (5.3mm of margin), standing proud in open air
     above/in front of the lid-slot region where nothing else is present to
     hit. In Y, the paddle's ±4.5mm half-width band (box Y 78.05 → 87.05)
     sits well inside the lid's own Y-span (0.75 → 164.35), so a single
@@ -483,7 +518,7 @@ on it.
 | Drawer body ↔ opening width | 3.4 total | ≥ 1.5 per SPEC |
 | Drawer body ↔ opening height | 1.5 | ≥ 1.5 |
 | Drawer body ↔ slot height | 5.24 | ≥ 1.5 |
-| Drawer body ↔ bay length | ~1.1 | > 0 (not a sliding fit) |
+| Drawer body ↔ bay length | 0.475 | > 0 (not a sliding fit) |
 | Lid width ↔ slot span | 1.5 total | ≥ 1.5 |
 | Lid thickness ↔ slot height | 0.8 | = 0.8 (documented deviation) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
@@ -496,9 +531,23 @@ on it.
 | Turn-button-up envelope ↔ lid exit band (Y, Z) | wide margin both axes | ≥ 1.0 each axis (the blocking test) |
 | Turn-button-down top ↔ front wall top edge | 3.525 | ≥ 1.0 |
 
+### QA notes (2026-07-09 adversarial pass)
+
+- The largest **drawn** part is the Shell Bottom at **304.96 × 165.26mm**
+  (full footprint including finger extensions and burn compensation) — not
+  the oft-quoted 298.45 (X) × 158.75 (Y) interior figure (`L_INT`/`W_INT`
+  above), which is the interior span, not the cut blank's bounding box.
+- Minimum viable laser bed, allowing a 10mm margin on all four sides of that
+  part: **324.96 × 185.26mm**.
+- The rear wall's bottom web (below the bottom drawer opening) measures
+  **3.27mm** in the generated SVG, and is perforated by the bottom panel's
+  finger-hole row (part #4's through-hole line near the bottom edge) — it is
+  structurally sound per the ≥3.0 rule above, but is a thin, hole-perforated
+  strip; handle the rear wall gently before assembly (glue-up) locks it in.
+
 ## Known deltas from SPEC.md targets
 
-- Drawer external length 221.2 (body 218 + faceplate T) vs SPEC "9.0 external":
+- Drawer external length 221.775 (body 218.6 + faceplate T) vs SPEC "9.0 external":
   the difference is consumed by the front wall, divider, and rear wall within
   the fixed 12" envelope. SPEC marks drawer dims "to fit" — envelope wins.
 - Drawer external width 149.0 vs SPEC "approx 6.3" (160)": constrained by the

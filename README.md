@@ -57,6 +57,16 @@ checking it (see `tests/conftest.py`), so it always measures what the code
 `xfail`s before cutting anything — this is the project's standing policy
 (see `LEARNINGS.md`).
 
+**Render-based visual QA** (the check class that catches what geometry
+tests can't — issue #25): `scripts/qa_render.py` renders every sheet, every
+part, and every part corner to PNGs under `scratch/qa-renders/` (whole-sheet
+overviews, per-part crops, 15×15mm corner windows, plus `_thick` variants
+with strokes fattened to 0.15mm for legibility). Re-run it after ANY
+generator change and actually look at the parts you touched — the one real
+defect an outside reviewer caught (issue #25) was visible in seconds in a
+render and invisible to 200 green tests. A laser operator's eyes see the
+rendered file, not the path data.
+
 ## Project Structure
 
 ```
@@ -145,10 +155,11 @@ part of the shell/drawer/lid sheets:**
 
 **Calibration — standalone, not part of the box:**
 
-- [ ] 1× Kerf/thickness coupon (from `kerf_coupon.svg`) — three
-  ply-thickness gauge slots (3.05 / 3.175 / 3.30mm) and a 10mm reference
-  square. Cut this on scrap *before* cutting any real part; see "Cut-day
-  checklist" step 3.
+- [ ] 1× Kerf/thickness coupon (from `kerf_coupon.svg`) — five
+  ply-thickness gauge slots (2.95 / 3.05 / 3.175 / 3.30 / 3.40mm, spanning
+  past both ends of the 3.0–3.4mm stock band) and a 10mm reference square.
+  Cut this on scrap *before* cutting any real part; see "Cut-day checklist"
+  step 3.
 - [ ] 1× Magnet press-fit coupon (from `magnet_coupon.svg`) — 4
   burn-compensated gauge holes, physically identical to same-labeled real
   part holes (5.5 / 5.65 / 5.8 / 5.95mm). Cut on scrap right after the kerf
@@ -250,9 +261,13 @@ That drives the whole order below.
 
 **(g) Glue on the faceplates (×2).**
    Each Faceplate glues flush to its drawer body's front face — align it
-   using the **red-engraved registration rectangle** on the faceplate's
-   back (it traces the drawer body's front cross-section: center the body
-   on the rectangle, don't just eyeball edges), clamp, and check that the
+   using the **red-engraved registration rectangle** (it traces the drawer
+   body's front cross-section: center the body on the rectangle, don't just
+   eyeball edges). The laser engraves whichever face was up on the bed, so
+   **orient the engraved rectangle toward the body** — that face becomes the
+   hidden glue face. (The faceplate is symmetric left-right, so flipping it
+   costs nothing; what matters is the red rectangle ending up inside the
+   joint, not on the drawer's visible front.) Clamp, and check that the
    faceplate's grip slot lines up with the body Front's grip slot before
    the glue sets — a finger needs to reach through both into the drawer.
    Faceplates sit flush with the rear wall's exterior plane when the drawer
@@ -324,7 +339,21 @@ nobody "fixes" them mid-build or is surprised later:
 - **The 5mm rail above each lid slot is permanently fragile.** It's a thin
   (5.0mm) cantilevered strip of ply above the slot cut, unsupported along
   most of its length. **Never force the lid** — if it binds, stop and check
-  for a swollen/misaligned joint rather than pushing through.
+  for a swollen/misaligned joint rather than pushing through. For the same
+  reason, **never pick the box up by the lid**: lifting loads the two rails
+  (and, pre-turn-button, just pulls the lid out). Gift recipients won't know
+  this — hand the box over from the bottom.
+- **The rear wall's bottom web is the most fragile spot on any part.** The
+  strip below the lower drawer opening is 3.175mm tall and is itself
+  perforated by the bottom-panel finger-hole row, leaving under 3mm of net
+  material until assembly backs it up. Handle the rear wall by its edges
+  before glue-up; don't push a drawer through its opening while the wall is
+  loose.
+- **The "fixed" Top Panel is fixed by glue, not geometry.** Its finger
+  holes in the walls break through the walls' top edge by design (see
+  DESIGN.md), so before the PVA cures the panel can lift straight out —
+  fingers-in-notches, not fingers-in-holes. Normal finger-joint look once
+  assembled; just don't skip glue on the top-panel rows.
 - **The lid slot's vertical clearance is 0.8mm, not the SPEC's 1.5mm.**
   This is a deliberate, documented deviation (see DESIGN.md), not an error:
   applying the SPEC's full 1.5mm play across the lid's *thickness* would
@@ -343,10 +372,15 @@ the holes are already in the parts, this is a final, non-structural step.
 - 6× disc magnets, 6mm diameter × 2mm thick, N35 grade (4 needed — one
   attracting pair per drawer, 2 drawers — **plus 2 spares** for a dropped/
   chipped magnet or a scrap test-fit; recommended starting point — gentler
-  pull, ~0.5–0.7kg at contact, one-finger openable). Force is tunable with
-  no geometry change: buy N52 for a stronger pull, or 3mm-thick discs for a
-  slightly-proud fit (2mm sits 1.2mm recessed in the 3.175mm ply, glue
-  backfills; 3mm sits near-flush).
+  pull, ~0.5–0.7kg at contact, one-finger openable). **The quoted pull
+  assumes the magnets are pressed FLUSH with the two mating faces** (the
+  drawer Back's rear face and the divider's facing surface) — a 2mm disc
+  centered or recessed on its mating side leaves an air gap between the
+  pair, and a ~2.4mm total pole gap collapses the pull to roughly
+  0.1–0.17kg (see DESIGN.md "Retention" §A). Recess only on the far side;
+  glue backfills there. Force is tunable with no geometry change: buy N52
+  for a stronger pull, or 3mm-thick discs — the low-risk choice, since they
+  sit near-flush on both sides and can't be recessed wrong.
 - 1× M3×12 button-head bolt (turn-button pivot).
 - 1× M3 nyloc nut.
 - 2× M3 washer.
@@ -367,8 +401,11 @@ the holes are already in the parts, this is a final, non-structural step.
    opening in the final ~2.4mm of travel), rather than assuming the two
    holes are dead-center-coaxial on paper. THEN press-fit and CA-glue the
    drawer-side magnet at the marked/confirmed position, polarity oriented
-   to attract (test with the two magnets before gluing either). Repeat per
-   drawer.
+   to attract (test with the two magnets before gluing either). **Press
+   each magnet in until it is flush with its MATING face** — both magnets'
+   working faces must be able to touch through the closed joint (see the
+   shopping-list note above; a recessed mating face collapses the pull).
+   Repeat per drawer.
 3. **Turn-button**: bolt the `Turn Button` piece (`output/hardware.svg`)
    through the front wall's pivot hole with the M3 bolt (button head on the
    OUTSIDE, so it's the piece you turn), a washer on each side, nyloc nut
@@ -415,8 +452,8 @@ this checklist is current.
    sheets with the **face grain running along the sheet's long axis** for
    stiffness on the long spans.
 3. **Cut `output/kerf_coupon.svg` on scrap FIRST, before any real part.**
-   It has three ply-thickness gauge slots (3.05 / 3.175 / 3.30mm) and a
-   10mm reference square. Find which gauge slot *your actual sheet* fits
+   It has five ply-thickness gauge slots (2.95 / 3.05 / 3.175 / 3.30 /
+   3.40mm) and a 10mm reference square. Find which gauge slot *your actual sheet* fits
    into snugly, and measure the cut size of the 10mm square with calipers.
    If either is off from nominal, adjust `BURN` (kerf compensation) and/or
    `FINGER_PLAY` (thickness compensation) in `src/faxbox/config.py` and
@@ -427,7 +464,9 @@ this checklist is current.
    starting values, not calibrated ones.
 3a. **Cut `output/magnet_coupon.svg` on scrap right after the kerf coupon
    (iteration 2, issue #20)** — same closed-loop rule applies: it has 4
-   drawn (burn-neutral) gauge holes (5.5 / 5.65 / 5.8 / 5.95mm). Press a
+   burn-COMPENSATED gauge holes (5.5 / 5.65 / 5.8 / 5.95mm — drawn smaller
+   so the physical hole equals its label, exactly like the real part
+   holes; unlike the kerf square, which stays burn-neutral). Press a
    real 6mm disc magnet into each; whichever seats snugly sets
    `MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter>` in `config.py`.
    **If you change `BURN` per step 3, re-cut this coupon too** before
@@ -528,3 +567,50 @@ shipping to NYC (check the quote page for current dates).
    in. (If joints on the FIRST order don't assemble at all, that's a
    thickness problem, not kerf — check the delivered ply with calipers
    against the 3.0–3.4mm band.)
+
+## Rebuilding sheets for a different laser bed
+
+**Hard floor first: the minimum viable bed is 324.96 × 185.26mm** (with the
+standard 10mm margins). The largest *drawn* part is `Shell: Bottom` at
+**304.96 × 165.26mm** — that's the 304.8mm exterior length plus finger
+protrusion and kerf compensation, so don't size a bed or buy stock off the
+often-quoted 298.45mm *interior* figure. Three parts (Bottom, both side
+walls) are ~305mm long: **a 300×200mm K40-class bed cannot cut this box**,
+no rotation or re-nesting helps, and the packer will tell you so loudly
+(a `ValueError` naming the first part that doesn't fit — it never silently
+drops or truncates parts).
+
+For any bed at or above the floor, no source edit is needed:
+
+```bash
+# one-off, env vars (mm):
+FAXBOX_SHEET_WIDTH=458 FAXBOX_SHEET_HEIGHT=304 .venv/bin/python -m faxbox.layout
+
+# or from Python, kwargs win over env over provider defaults:
+.venv/bin/python -c "from faxbox.layout import generate_layout; \
+generate_layout(sheet_width=458, sheet_height=304)"
+```
+
+A new recurring service deserves a proper `PROVIDERS` entry in
+`src/faxbox/config.py` (burn, colors, `sheet_width`/`sheet_height`,
+label policy) — see the `nycr`/`ponoko` entries for the pattern; then
+`FAXBOX_PROVIDER=<name> .venv/bin/python -m faxbox.layout`. Precedence:
+explicit kwarg > `FAXBOX_SHEET_*` env > provider entry > NYCR default
+(609.6 × 457.2). Small beds just mean more sheets (458×304 → 7 sheets;
+the 324.96×185.26 minimum → 14).
+
+Verify before cutting — exact commands, and **order matters**:
+
+```bash
+# 1. tests FIRST (the suite regenerates output/ with DEFAULT settings,
+#    overwriting any custom-bed sheets):
+.venv/bin/python -m pytest tests/ -q
+# 2. THEN rebuild for your bed (again):
+FAXBOX_SHEET_WIDTH=458 FAXBOX_SHEET_HEIGHT=304 .venv/bin/python -m faxbox.layout
+# 3. render YOUR sheets (qa_render defaults to the ponoko set, not yours):
+.venv/bin/python scripts/qa_render.py --sheets output/sheet_*.svg
+```
+
+Look at every rendered sheet before sending anything to a laser. The sheet
+files on disk are always exactly one run's output (stale sheets from a
+previous nesting are purged automatically).

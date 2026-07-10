@@ -156,8 +156,10 @@ MAGNET_HOLE_DIA = MAGNET_DIA - MAGNET_PRESS_FIT   # 5.65, physical target size
 # rear-wall opening at closed position (opening_cx = INTERIOR_WIDTH/2 in the
 # rear wall's own frame -> box Y = T + INTERIOR_WIDTH/2, see shell_generator's
 # rear wall), the two drawers' magnet holes and both divider holes all land
-# at the SAME box Y. Checked (2026-07-07): +40mm puts the hole ~39mm from
-# the divider's nearer Y-edge and the drawer Back panel's nearer finger edge
+# at the SAME box Y. Checked (2026-07-07; distances corrected 2026-07-09):
+# +40mm puts the hole ~39.4mm from the divider's nearer Y-edge (158.75/2 -
+# 40) and 34.5mm from the drawer Back panel's nearer finger edge (149.0/2 -
+# 40 -- the two parts have different widths, so the two distances differ)
 # (both >> the required 3mm/8mm clearances); -40mm is symmetric and equally
 # safe -- the choice of side is arbitrary given that clearance margin, so +40
 # (toward increasing Y, the right/engraved-wall side) was picked for no
@@ -231,7 +233,7 @@ LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
 #                          = 122.2 - 110.0 = 12.2mm.
 # The button's actual reach (length - pivot_from_blunt_end = 22 - 4.5 = 17.5)
 # exceeds this, so rotated fully vertical the tip lands at box Z = 110 +
-# 17.5 = 127.5 -- 6.3mm past the required 122.2mm margin, standing proud in
+# 17.5 = 127.5 -- 5.3mm past the required 122.2mm, standing proud in
 # open air above/in front of the lid slot region (nothing else is there to
 # hit). Rotated fully DOWN (180 deg from vertical), the button's near
 # (blunt-cap) edge lands at box Z = 110 + pivot_from_blunt_end = 114.5,
@@ -365,6 +367,17 @@ PONOKO_SHEET_HEIGHT = 384.0
 
 PONOKO_OUTPUT_DIR = f"{OUTPUT_DIR}/ponoko"
 
+# --- NYC Resistor-specific verified constants -------------------------------
+# Same conservative-fallback bed size src/faxbox/layout.py has always used
+# (see that module's docstring for the full ambiguous-bed-size story, issue
+# #19) -- moved here, unchanged, so PROVIDERS["nycr"] can reference them the
+# same way PROVIDERS["ponoko"] references PONOKO_SHEET_WIDTH/HEIGHT above.
+# layout.py's own SHEET_WIDTH_MM/SHEET_HEIGHT_MM now point at these same two
+# constants (not independent copies), so there is exactly one source of
+# truth and the default (no env/provider-override) output stays unchanged.
+NYCR_SHEET_WIDTH = 609.6   # 24in, conservative fallback
+NYCR_SHEET_HEIGHT = 457.2  # 18in, conservative fallback
+
 PROVIDERS = {
     "nycr": {
         "burn": BURN,                    # 0.08, this file's pre-existing default
@@ -372,6 +385,8 @@ PROVIDERS = {
         "engrave_color": ENGRAVE_COLOR,  # red, pre-existing
         "strip_labels": False,           # keep gray reference-only part labels
         "output_dir": OUTPUT_DIR,        # "output", pre-existing
+        "sheet_width": NYCR_SHEET_WIDTH,
+        "sheet_height": NYCR_SHEET_HEIGHT,
     },
     "ponoko": {
         "burn": PONOKO_BURN,
