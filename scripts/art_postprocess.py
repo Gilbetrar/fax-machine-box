@@ -424,6 +424,81 @@ def process_left_wall():
         feature_pos_mm=pos, feature_neg_mm=neg)
 
 
+def _erase_funfor(final_bit):
+    """VARIANT builder (Ben's 2026-07-11 feedback #4, decision pending): erase
+    the six 'Fun For' lead-in glyphs from the finished right_wall placement,
+    leaving every other stroke bit-identical. Motivation (measured, see
+    scratch/title-shift/): the lid through-slot (x[0.04,76.16]mm,
+    y[5.04,8.93]mm) erases the mid-strokes of all six letters; an exhaustive
+    rigid-shift search found NO position that clears the slot without landing
+    inside 'Terrible ...' or off the part, and Gemini redraw passes could not
+    fit readable lettering in the ~3.5mm strip above the slot. Removing the
+    lead-in (title reads 'Terrible Writers & Artists of All Ages') is the
+    only deterministic clean option.
+
+    Glyph selection is geometric, in final placement coordinates (stable:
+    the fit is deterministic): letters live inside x<640, y<170px (measured
+    block bbox (113,0)-(607,139)). Five letters are isolated components; the
+    leading 'F' is pixel-merged with the portrait frame's squiggle, so that
+    component is split by marker watershed (erode to seeds, classify seeds
+    by region, assign every pixel to its nearest seed's class) -- method
+    validated by eye in scratch/title-shift/watershed_split_check.png."""
+    from scipy import ndimage
+
+    RECT_X1, RECT_Y1 = 640, 170          # glyph search region (px)
+    GLYPH_X0 = 100                       # letters start at x=113; frame parts hug x=0
+    F_X0, F_X1, F_Y1 = 80, 260, 150      # leading-F seed region (px)
+
+    ink = (final_bit == 0).astype(np.uint8)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(ink, connectivity=8)
+    erase = np.zeros_like(ink, dtype=bool)
+    n_whole = 0
+    for i in range(1, n):
+        x, y, wc, hc, area = stats[i]
+        comp = labels == i
+        inside = comp[:RECT_Y1, :RECT_X1].sum()
+        if inside == 0:
+            continue
+        frac = inside / area
+        if frac >= 0.99 and x >= GLYPH_X0:
+            # an isolated letter (u/n/F/o/r); frame fragments (which also sit
+            # fully inside the region) all start at x=0 and are excluded
+            erase |= comp
+            n_whole += 1
+        elif 0.3 <= frac < 0.99 and (x + wc) > GLYPH_X0:
+            # the F+frame merged component: watershed split
+            eroded = cv2.erode(comp.astype(np.uint8) * 255,
+                               np.ones((3, 3), np.uint8), iterations=3)
+            n2, labels2, stats2, _ = cv2.connectedComponentsWithStats(eroded, connectivity=8)
+            seed_img = np.zeros_like(labels2, dtype=np.int32)
+            f_seeds = 0
+            for j in range(1, n2):
+                sx, sy, sw, sh, sarea = stats2[j]
+                if sarea < 20:
+                    continue
+                if F_X0 < sx and (sx + sw) < F_X1 and sy < F_Y1:
+                    seed_img[labels2 == j] = 1
+                    f_seeds += 1
+                else:
+                    seed_img[labels2 == j] = 2
+            if f_seeds == 0:
+                continue  # merged comp has no F seed -- not the F+frame comp
+            _, (iy, ix) = ndimage.distance_transform_edt(seed_img == 0,
+                                                         return_indices=True)
+            nearest = seed_img[iy, ix]
+            erase |= comp & (nearest == 1)
+
+    removed_px = int(erase.sum())
+    # Loud guard: the measured block is 32,052 ink px. If a future re-fit
+    # moves the title, fail here instead of silently erasing the wrong art.
+    assert n_whole == 5, f"expected 5 isolated glyphs in the Fun-For region, got {n_whole}"
+    assert 25000 <= removed_px <= 40000, \
+        f"Fun-For erase removed {removed_px}px, outside the sanity window"
+    variant = final_bit.copy()
+    variant[erase] = 255
+    return variant, removed_px
+
+
 def process_right_wall():
     gray, path = load_gray("IMG_4230_ai_vH2.png")
     h, w = gray.shape
@@ -451,6 +526,28 @@ def process_right_wall():
     save_bit_png(final, out_path)
     pos, neg = feature_audit(final)
 
+    # VARIANT NOFUNFOR -- see _erase_funfor docstring (Ben feedback #4)
+    variant, removed_px = _erase_funfor(final)
+    save_bit_png(variant, os.path.join(OUT, "right_wall_VARIANT_NOFUNFOR.png"))
+    pos_v, neg_v = feature_audit(variant)
+    variant_step = (
+        "VARIANT NOFUNFOR (Ben's 2026-07-11 feedback #4, decision pending): "
+        "the lid through-slot (76.2x4mm, y 5.04-8.93mm below the top edge, "
+        "front half) erases the mid-strokes of all six 'Fun For' lead-in "
+        "letters. MEASURED conclusion (scratch/title-shift/): no rigid shift "
+        "of the block clears the slot without colliding with 'Terrible', "
+        "the framed portrait, or the part edge (best legal shift lands "
+        "mid-sentence at dx=+132mm); the strip above the slot is only "
+        "~3.5mm -- unreadably small -- and 4 Gemini redraw passes all "
+        "failed placement. This variant instead ERASES the six glyphs "
+        f"surgically ({removed_px}px removed; 5 isolated components + the "
+        "leading F split from the portrait-frame squiggle by marker "
+        "watershed), leaving all other approved art bit-identical. Title "
+        "reads 'Terrible Writers & Artists of All Ages'; the slot cuts "
+        "through blank wood. Ben picks: accept the cut (canonical) vs drop "
+        "the lead-in (this variant)."
+    )
+
     log("right_wall", source="IMG_4230_ai_vH2.png", source_px=f"{w}x{h}",
         steps=[
             "JUDGMENT CALL: SPECS flags 'faint stray marks at top/bottom "
@@ -463,9 +560,16 @@ def process_right_wall():
             "(this defensive edge-clear stays in rev 3, per BRIEF).",
             "global threshold @128 (0=ink)",
             f"speckle cleanup: dropped {removed} components <4px^2",
-        ] + _cover_fit_steps(box, info, tw, th),
+        ] + _cover_fit_steps(box, info, tw, th) + [variant_step],
         final_px=f"{tw}x{th}", canvas_mm=f"{w_mm}x{h_mm}",
         feature_pos_mm=pos, feature_neg_mm=neg)
+
+    log("right_wall_VARIANT_NOFUNFOR", source="IMG_4230_ai_vH2.png",
+        source_px=f"{w}x{h}",
+        steps=["identical to right_wall.png (same threshold/bbox/cover-fit) "
+               "except the final glyph erase:", variant_step],
+        final_px=f"{tw}x{th}", canvas_mm=f"{w_mm}x{h_mm}",
+        feature_pos_mm=pos_v, feature_neg_mm=neg_v)
 
 
 def process_faceplate(name, src_name):
