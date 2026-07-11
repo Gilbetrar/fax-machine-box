@@ -40,15 +40,15 @@ SAMPLE_MM = 0.5
 # bottom edges, 0.95mm inside each side edge (DESIGN.md part #9). Its
 # correctness is asserted by the registration-outline tests, not here.
 #
-# Exception 2 — the right wall: the "FAX MACHINE" engraving currently
-# OVERLAPS the shelf and divider finger-hole through-cuts (text center
-# Z=63.5 == shelf hole-row midplane). Known open defect, decision pending
-# with Ben (move/shrink the text, drop it at art integration, or accept the
-# holes-through-letters look). test_right_wall_known_collision_still_present
-# below asserts the overlap is still there, so whichever way the decision
-# lands this file MUST be updated — the exception cannot silently outlive
-# its defect.
-EXPECTED_VIOLATIONS = {"Right Wall"}
+# (Resolved 2026-07-10: the right wall's "FAX MACHINE" pixel text — which
+# overlapped the shelf/divider finger-hole cuts, text center Z=63.5 == shelf
+# midplane — was REMOVED per Ben's decision on issue #25 open-item 1. Wall
+# artwork replaces it via the art-integration pipeline; Ben has explicitly
+# accepted that art crosses the joint-hole rows ("eat the cost of those
+# holes"), so when art lands, art-bearing parts join EXPECTED_VIOLATIONS
+# with a pointer to that decision — full-bleed art + through-holes is the
+# recorded intent, not a defect.)
+EXPECTED_VIOLATIONS: set[str] = set()
 FLUSH_BY_DESIGN = {"Faceplate"}
 
 SVGS_IN_SCOPE = ["outer_shell.svg", "drawer.svg", "lids.svg"]
@@ -130,23 +130,18 @@ def test_faceplate_registration_outline_still_flush():
     assert seen >= 1, "no faceplate with engraving found — clustering or labels changed"
 
 
-def test_right_wall_known_collision_still_present():
-    """Pins the OPEN defect so it cannot be silently forgotten: the FAX
-    MACHINE engraving currently crosses the shelf/divider hole cuts. When
-    Ben's decision lands and the text is moved/removed/accepted-with-record,
-    this test (and EXPECTED_VIOLATIONS above) must be updated in the same
-    change — deleting the entry without a decision record is the failure
-    mode this guards against."""
+def test_walls_carry_no_engraving_until_art_lands():
+    """The pixel text was removed 2026-07-10 (Ben's decision, issue #25
+    open-item 1) and wall art has not been integrated yet, so NO wall may
+    carry red geometry — a stray red path on a wall would be an unreviewed
+    laser instruction. When art integration lands, replace this with the
+    art-bearing allowlist described at EXPECTED_VIOLATIONS above."""
     walls = [
         (svg, piece, dist)
         for svg, piece, dist in _pieces_with_engraving()
-        if "Right Wall" in (piece.label or "")
+        if "Wall" in (piece.label or "")
     ]
-    assert walls, "right wall with engraving not found — labels or clustering changed"
-    for svg_name, _, dist in walls:
-        assert dist < 0.2, (
-            f"{svg_name}: right-wall engraving now clears the cut layer "
-            f"(min distance {dist:.3f}mm) — the known collision appears "
-            f"fixed; remove 'Right Wall' from EXPECTED_VIOLATIONS and turn "
-            f"this test into a clearance assertion"
-        )
+    assert walls == [], (
+        f"unexpected red engraving on wall(s): "
+        f"{[(svg, p.label) for svg, p, _ in walls]}"
+    )

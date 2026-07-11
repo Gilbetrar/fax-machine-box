@@ -358,7 +358,10 @@ def main_shell_svg(tmp_path_factory):
     src_dir = tmp_root / "src" / "faxbox"
     src_dir.mkdir(parents=True)
 
-    for name in ("__init__.py", "config.py", "shell_generator.py"):
+    # svglabels.py joined shell_generator's imports in the 2026-07-09 QA
+    # pass; the fixture must mirror main's actual import closure or the
+    # subprocess dies on ModuleNotFoundError instead of generating.
+    for name in ("__init__.py", "config.py", "shell_generator.py", "svglabels.py"):
         result = subprocess.run(
             ["git", "show", f"main:src/faxbox/{name}"],
             check=True, cwd=REPO_ROOT, capture_output=True, text=True,
@@ -390,24 +393,43 @@ def _path_signature(p):
 
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_matches_main_footprint(main_shell_svg, side):
-    """Every path (outer boundary + every hole/engrave stroke) on this side
-    wall must have an exact counterpart in `main`'s own generated side wall
-    -- i.e. REV.B's fix (deleting the side-wall pivot-hole callback) did not
-    change anything else about the side walls. A stray leftover pivot hole,
-    a shifted finger-hole row, or any other regression would show up as a
-    mismatched signature set."""
+    """Every CUT path (outer boundary + every blue hole) on this side wall
+    must have an exact counterpart in `main`'s own generated side wall --
+    i.e. REV.B's fix (deleting the side-wall pivot-hole callback) did not
+    change anything else about the side walls' cut geometry. A stray
+    leftover pivot hole, a shifted finger-hole row, or any other regression
+    would show up as a mismatched signature set.
+
+    Scoped to CUT (blue) paths since 2026-07-10: the right wall's red
+    "FAX MACHINE" engraving was removed by Ben's decision (issue #25
+    open-item 1), so the engrave layer legitimately differs from a `main`
+    that predates the removal. Walls must currently carry NO red at all
+    (asserted here and in test_engrave_cut_clearance) until art-integration
+    lands its reviewed engrave layers."""
     main_piece = _piece(main_shell_svg, side)
     cur_piece = _piece(SHELL_SVG, side)
 
-    main_sigs = sorted(_path_signature(p) for p in main_piece.all_paths())
-    cur_sigs = sorted(_path_signature(p) for p in cur_piece.all_paths())
+    def cut_sigs(piece):
+        return sorted(
+            _path_signature(p) for p in piece.all_paths()
+            if su.normalize_color(p.stroke) == "blue"
+        )
+
+    main_sigs = cut_sigs(main_piece)
+    cur_sigs = cut_sigs(cur_piece)
 
     assert len(cur_sigs) == len(main_sigs), (
-        f"{side}: path count changed vs. main: main={len(main_sigs)}, current={len(cur_sigs)}"
+        f"{side}: cut path count changed vs. main: main={len(main_sigs)}, current={len(cur_sigs)}"
     )
     assert cur_sigs == main_sigs, (
-        f"{side}: geometry differs from main's v1 output -- REV.B must leave "
-        f"the side walls byte-identical to v1"
+        f"{side}: cut geometry differs from main's v1 output -- REV.B must "
+        f"leave the side walls' cut layer byte-identical to v1"
+    )
+
+    cur_red = [p for p in cur_piece.all_paths() if su.normalize_color(p.stroke) == "red"]
+    assert not cur_red, (
+        f"{side}: unexpected red engrave paths (pixel text was removed "
+        f"2026-07-10; art arrives only via the art-integration pipeline)"
     )
 
 

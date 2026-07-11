@@ -256,10 +256,11 @@ LID_GRIP_SLOT = {"width": 30.0, "height": 10.0, "radius": 5.0,
 
 ENGRAVE_COLOR = [1.0, 0.0, 0.0]   # red = engrave
 CUT_COLOR = [0.0, 0.0, 1.0]       # blue = cut
-ENGRAVE_TEXT = "FAX MACHINE"
-ENGRAVE_PIXEL_SIZE = 4.0          # 5x7 pixel font cell size
-ENGRAVE_FONT_SPACING = 2.0        # gap between letters
-ENGRAVE_CENTER = {"x": SHELL_EXT["length"] / 2, "z": 63.5}  # right wall exterior
+# The "FAX MACHINE" pixel-font engraving constants (ENGRAVE_TEXT/
+# ENGRAVE_PIXEL_SIZE/ENGRAVE_FONT_SPACING/ENGRAVE_CENTER) were REMOVED
+# 2026-07-10 with the engraving itself (Ben's decision, issue #25 open-item
+# 1: wall art from art/FACES.md supersedes the placeholder text, whose
+# Z=63.5 centerline sat exactly on the shelf finger-hole row).
 
 # --- Output ------------------------------------------------------------------
 
