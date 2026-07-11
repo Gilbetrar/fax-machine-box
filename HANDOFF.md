@@ -1,86 +1,74 @@
-# HANDOFF — fax-machine-box
+# HANDOFF — fax-machine-box (art-integration workstream)
 
-**Date:** 2026-07-09 (late night) · **Branch:** `main` @ 56e24fd (in `~/AI/Projects/fax-machine-box`)
-**Tracking:** issue #20 (decision record), issue #25 (deep QA — **DONE**, comment posted, awaiting Ben's decisions), PR #22 open-experimental (do not touch)
-**Pushed:** yes → origin
+**Date:** 2026-07-11 · **Branch:** `art-integration` (in `~/AI/Projects/fax-machine-box`), based on `main` @ 848ade8
+**Pushed:** yes → origin (both branches)
+**Tracking:** issue #25 (QA — CLOSED-equivalent, done + decisions recorded in comments), issue #20 (decision record), PR #22 open-experimental (DO NOT TOUCH)
 
 ## TL;DR for the next agent
 
-**Issue #25 (deep adversarial QA) is COMPLETE — commit 56e24fd, full report in `docs/QA-REPORT-2026-07-09.md`** (also on Ben's Desktop: `~/Desktop/Mini/Fax Machine/qa-2026-07-09/`). Two-pass red-team (8 critics → fixes → 4 verifiers → final check). Verdict: **the cut geometry is clean** — independently re-derived and measured to <0.01mm on all 23 parts, both providers; Ponoko sheets conformance-verified as acceptable as-is. The defects were peripheral and are all fixed + regression-guarded (suite 200 → **217 green**): red engrave labels on standalone files (systemic fix `src/faxbox/svglabels.py` + guard tests), real bed-size portability (`FAXBOX_SHEET_WIDTH/HEIGHT` env, provider sheet sizes, stale-sheet purge, README procedure — **min viable bed 324.96×185.26mm; largest DRAWN part is 304.96×165.26, NOT the oft-quoted 298.45**), coupon upgrades (5 thickness gauges 2.95–3.40, tick-marked ponoko magnet gauges), ~15 doc/number corrections, new red-vs-blue clearance test class, repeatable render harness `scripts/qa_render.py`.
-
-**What the next agent must NOT do:** re-litigate the QA, "fix" the pinned right-wall collision without Ben's decision (see below), start fabrication, integrate art, or touch PR #22.
-
-**Waiting on Ben (all pinned in the QA report §Open items + issue #25 comment):**
-1. **THE finding: "FAX MACHINE" engraving is crossed by real through-cuts** (shelf finger-hole row through the letters' waist — text center Z=63.5 == shelf midplane exactly; divider column through the "X"). Recommended: drop the pixel text (art/FACES.md gives that wall full-panel art anyway). Pinned by `tests/test_engrave_cut_clearance.py::test_right_wall_known_collision_still_present` — whichever way Ben decides, update that test + EXPECTED_VIOLATIONS in the same change.
-2. Game-component dims (paper W×H, stack height, longest pen) → then add the missing acceptance test (nothing in-repo verifies the box fits the GAME).
-3. Turn-button bolt tail ~5mm into the paper compartment at Z=110 (accept / re-spec).
-4. v1 ergonomics accepted (README warnings added): no drawer out-stop, lid pulls out pre-button, never-lift-by-lid.
-
-Everything else (art, fabrication path, Clark reply) is **paused on Ben** — status below so you don't re-derive it.
+**Your job: act on Ben's rev-3 proof-gate feedback (4 items, "BEN'S FEEDBACK" section below — he gave it 2026-07-11 and it has NOT been acted on), produce updated proofs to `~/Desktop/Mini/Fax Machine/`, and get his sign-off; only then proceed to trace + sheet integration (pipeline tail already de-risked, see "After the feedback").** The art placement pipeline is 3 revisions deep: rev 3 (full-bleed, snake-head-on-lid) is committed and its proofs are on Ben's Desktop (`art-proofs-rev3/`). Walls are APPROVED by Ben. Everything is committed + pushed on `art-integration`; suite is 217 green.
 
 ## What this project is
 
-A laser-cut 3.175mm-birch-ply box for Ben's "Fax Machine" pen-and-paper game (telephone-pictionary as "faxes" — https://press.invincible.ink/game-pile-fax-machine/). The box IS the game kit: front vertical compartment for pre-cut paper, two rear drawers for pens/pencils, sliding lid, engraved artwork on 10 faces reproducing Ben's hand-drawn cardboard prototype. Endgame: several boxes as gifts. `src/faxbox/config.py` is the single source of truth for all dimensions (mm).
+Laser-cut 3.175mm birch-ply box for Ben's "Fax Machine" pen-and-paper game (telephone pictionary). Front vertical paper compartment, two rear drawers, sliding lid, hand-drawn-style engraved artwork on 11 faces reproducing Ben's cardboard prototype art (AI-restyled to 1-bit hatch style, already generated + approved). Endgame: several boxes as gifts. `src/faxbox/config.py` + DESIGN.md = geometry source of truth. Deep adversarial QA of all cut geometry is DONE (2026-07-09, `docs/QA-REPORT-2026-07-09.md`): geometry verified clean; sheets Ponoko-conformant.
+
+## BEN'S FEEDBACK (2026-07-11, verbatim intent — the work queue, in his priority order)
+
+1. **Drawer sides — "the biggest issue right now": the split-generate-merge seams are bad.** The two halves of each stitched panel (4233 turkeys / 4235 alligator / 4237 gallery / 4239 bookshelf, files `IMG_<n>_ai_vS_stitched.png` in `art/ai-versions/final/`) have visibly different art styles on either side and/or lines that don't meet — "an obvious kind of shocking break in the middle." Ben: "you should be able to find a way to have these generate so these match better… worth doing some pretty big visual check against and maybe trying to handle these differently." → This likely means REGENERATING the drawer-side art (Gemini, key at `~/.config/gemini/api_key`, GEMINI_API_KEY in ~/.zshenv, model gemini-3-pro-image at 4K; ~$1/face-ish). Binding generation learnings in `art/ai-versions/SPECS.md` (sequential conditioning for halves, padded-canvas direct translation, no style-anchor with simple sources). Consider alternatives to split-generate: e.g. single-shot 21:9 with band composition (the ORIGINAL approach — its outputs were 2.3:1, too tall, but cover-fit now exists), or seam-blend fix-passes ("reproduce exactly, change only the seam region"). Whatever you do, build a REAL seam-quality visual check (render each stitched panel, look hard at the seam column with fresh eyes / a vision subagent quota'd to find mismatches) — Ben explicitly wants intense visual verification here.
+2. **Faceplates (COLORS / Lines) — Ben's DECISION: don't full-bleed these; put the whole word BELOW the grip slot.** Current rev-3 balanced-fit is off anyway (doesn't reach the top edge, runs too close to the bottom finger teeth). Ben: "I actually think it's worth having those not bleed and shrinking those so the words are underneath the cut hole… put them all below the cut hole and small enough so the full text fits below." Geometry: faceplate 150.9 × 53.5mm; grip slot 30×15mm, horizontally centered, slot TOP 8mm below the part top edge → slot occupies the z-band 30.5–45.5mm (from bottom). The clear band below the slot is the bottom ~30.5mm × full width. Scale each word to sit fully in that band (respect ~2mm edge margins), centered. This also kills the current slot-through-the-"L"-of-COLORS problem. These are labels, not scenes — Ben is explicit they should be treated differently from the other faces.
+3. **Lid/top-panel — snake variant ACCEPTED as fallback, but Ben wants to SEE a full-cat variant.** He likes the walls ("the fax machine, the bird spray painting… looks great") and the snake-on-lid version is "okay… I'd rather do that than nothing." He DISLIKES variant B ("a weird middle section that is centered"). He wants a variant where **the full cat is visible — window bottom/cat-end-justified** ("bottom-justified or right-justified on the cat side"): i.e. anchor the 301.25mm window at the FLORAL/CAT end of the fill-height-scaled panorama (the opposite anchoring from rev-3's head-anchored A variant; this trims the snake head instead). Produce it as a third variant proof (A = head-anchored current canonical, C = cat-anchored) + seam strips, deliver, let him pick. Note: whichever end is trimmed, the art stays rotated so the surviving front content rides the sliding lid — think through what lands on the lid in the C variant (the cat end) before rendering, and label the strips clearly.
+4. **Right wall title vs lid slot — recommend + try a text shift.** The lid through-slot (76.2×4mm, near the top edge, front half of the wall) cuts through "FUN FOR" in the "Fun For Terrible Writers & Artists of All Ages" title, likely making it unreadable. Ben: "curious about your recommendation… maybe moving that specific piece of the text around and trying to move the text slightly to have those cuts be less painful… without breaking it." Options to evaluate: (a) programmatic raster shift of the title block within the art (deterministic pixel-region translate — allowed, it's post-processing not freehand vector), (b) Gemini single-change fix-pass ("reproduce exactly, change only: move the title text down/right N mm" — SPECS says single-change passes work well), (c) accept. Overlay the REAL slot geometry when judging (the proof builder does this). Recommendation + proof to Ben.
+
+**Also still open from rev-3 flags (lower priority, fold into the same proof round):** lid front-lip white wedge (~19mm run where the head's diagonal boundary crosses the front edge — more overshoot crops the head tip; Ben hasn't ruled); drawer_side_1's clipped top text line (probably moot if #1 regenerates the art); lid rotation direction vs the physical box (unverifiable remotely; flagged in PLACEMENTS.md); Ben's QA open items #2–4 from `docs/QA-REPORT-2026-07-09.md` (game-component dims, turn-button bolt protrusion, ergonomics — all waiting on Ben, don't block art).
 
 ## Current state (honest ledger)
 
-- **Geometry/code:** main is green (**200 tests**, re-verified 2026-07-09 after the registration-outline fix). Outputs regenerate deterministically. NOTHING has been physically cut. **Ben explicitly does not trust the QA level** — that's issue #25.
-- **Registration-outline fix (2026-07-09, committed):** `generate_drawers.py::_draw_engraved_rect_outline` corner setback 1.0mm → 0.3mm. The setback exists on purpose (Cairo merges exactly-touching same-style segments into one path; the clustering test harness would misread a closed rect covering ~99% of the faceplate as a nested piece). Sheets regenerated.
-- **Artwork: GENERATION COMPLETE, awaiting Ben's sign-off.** All 10 faces exist as hand-drawn-style B&W hatch images (Ben's chosen style: NO halftone dots, NO stylization — direct translation of his originals). Canonical set: `art/ai-versions/final/` (11 files, committed), mirrored to `~/Desktop/Mini/Fax Machine/final-set/`. Full pipeline documentation + per-face learnings: `art/ai-versions/SPECS.md` (READ IT before regenerating anything — sequential conditioning for split faces is mandatory). Post-processing (1-bit threshold, deskew of the lid master, exact-ratio crops, panel-overlay proofs, tracing, sheet integration) has NOT started — see `art/ai-versions/BRIEF.md` for that pipeline. ~282MB of intermediate candidates live UNCOMMITTED in `art/ai-versions/` (gitignored; regenerable via Gemini for ~$5; some mirrored in `~/Desktop/Mini/Fax Machine/proofs-archive/`).
-- **Gemini image API:** key installed at `~/.config/gemini/api_key` + `GEMINI_API_KEY` in `~/.zshenv`; prepaid credits topped up; model `gemini-3-pro-image` at 4K. Total art spend so far <$10.
-- **Fabrication: DELIBERATELY UNDECIDED (Ben, 2026-07-09 — supersedes "Ponoko only").** Do not anchor on Ponoko vs friend-cut. Requirement instead: rebuilding sheets for a differently-sized bed must be verified easy (part of issue #25). Held Ponoko quote ~$153 still parked; **no ordering until art sign-off AND QA (#25) done AND Ben picks a path.**
-- **Clark/Pete thread: awaiting Ben.** Clark (friend, small laser) got the 7/8-era ponoko-order sheet bundle by email, caught the registration-outline defect, and says "Pete" (identity unknown, in no record) is busy with Edinburgh Fringe (Aug 7–31) but could maybe make boxes September+. Open questions ONLY Ben can answer: who is Pete / whose laser / bed size (largest panel 298.45mm — a small bed may not fit it); reopen friend path or not; what to reply. A reply gist was suggested to Ben 2026-07-09; he hasn't sent/decided anything.
-- **Untested (physical):** everything — kerf values (ponoko 0.10 / nycr 0.08) are book values; magnet press-fit; retention force. Calibration coupons are nested on the sheets.
-- **Open-experimental:** PR #22 spring detents — do not resume without Ben.
+- **Branch `art-integration`, 5 commits ahead of main, all pushed.** main @ 848ade8 = post-QA state (its HANDOFF.md section is superseded by this file).
+- **Art placement pipeline (rev 3) DONE + committed:** `scripts/art_postprocess.py` (deterministic; threshold → debts → robust-content-bbox → cover-fit full bleed; 4231: deshear (a −8.06° horizontal SHEAR, not rotation — top/bottom edges are level, don't "fix" it to a rotation) → 180° rotation (snake head to front) → fill-height 158.75mm → head-anchored 301.25mm window with 8mm front overshoot → split at 79mm). Outputs: `art/engrave/*.png` — 11 canonical 1-bit files + 2 `*_VARIANT_B*` (centered window — Ben dislikes it, superseded by his request for a cat-anchored variant C). Full per-face derivations/flags: `art/engrave/PLACEMENTS.md`.
+- **Proof builder DONE:** `scripts/art_proofs.py` renders every placement over real part geometry (blue cuts on top of black art, real slot/hole positions, seam-continuity strips, contact sheet) → `scratch/art-proofs/`. Ben-visible mirror: `~/Desktop/Mini/Fax Machine/art-proofs-rev3/`.
+- **Ben's verdicts so far:** left wall (parrot) + right wall (writers) APPROVED. Snake-on-lid acceptable pending the cat variant. Faceplates + drawer sides NOT approved (feedback #1/#2). Pixel "FAX MACHINE" text fully REMOVED (his order; commit eebbfe7) — walls carry ZERO red until reviewed art lands, tests enforce this.
+- **Trace pilot DONE (left wall):** hybrid = centerline polylines (skeleton + spur-prune + Douglas-Peucker) for hatch + potrace fills for solids → 96.9% agreement, 13.4k pts; pure potrace-fill 99.5%, 31k pts (hobby-laser pick). `scratch/trace-pilot/RESULTS.md` (+ my addendum: the rumored Ponoko 3,000-point cap is REFUTED — existing sheet_2 has ~9.4k pts and quoted fine at $153). Ponoko format decision: red-hairline vector-line engrave for hatch, small black fills for solids; raster embed is a hard NO at Ponoko. `scratch/qa-docs/ponoko-engrave-format.md`.
+- **Tests: 217 green** (`.venv/bin/python -m pytest tests/ -q`, ~6–22s). Regenerate outputs: the 6 `faxbox.*` module mains + `FAXBOX_PROVIDER=ponoko … -m faxbox.ponoko`; layout purges stale sheets automatically.
+- **Untested/not started:** tracing the other 10 faces; sheet integration (no engrave layer is in any generator/sheet yet); quoting with art; everything physical.
 
 ## Next concrete steps (in order)
 
-1. **Do issue #25** (deep QA). Fresh agent, fresh eyes, adversarial. Build the render-based visual QA class that actually catches things; re-derive geometry independently; simulate assembly; audit the engrave layer; verify bed-size portability. Fix what's wrong, add regression tests, write the QA report.
-2. **When Ben signs off on art** (`~/Desktop/Mini/Fax Machine/final-set/`): run the BRIEF.md post-processing pipeline (threshold → deskew lid master → exact crops per SPECS.md table → panel-overlay proofs with keep-outs → Ben gate → trace with potrace ONLY → integrate into sheets).
-3. **When Ben answers the Clark/Pete questions:** he replies to Clark himself (he can't paste — never hand him text to copy); if friend path reopens, get bed size and add a provider entry.
-4. **When 1–3 done:** regenerate sheets with art, fresh quote (or friend files), Ben orders/arranges. After the cut: record measured kerf + magnet fit into the provider entry; lessons → LEARNINGS.md.
-
-## Build / test baseline
-
-`.venv/bin/python -m pytest tests/ -q` → **200 passed, ~18s** (verified 2026-07-09 after the gap fix). Outputs: `.venv/bin/python -m faxbox.generate_drawers` (and sibling modules); Ponoko sheets: `FAXBOX_PROVIDER=ponoko .venv/bin/python -m faxbox.ponoko` → `output/ponoko/sheet_{1,2,3}.svg`. Blue-path closure spot-check: `python3 scripts/check_closure.py` (20/20 clean — but READ ITS LIMITS, listed in issue #25).
+1. Read `art/engrave/PLACEMENTS.md`, `scratch/art-proofs/PROOFS.md`, `art/ai-versions/SPECS.md` (binding generation learnings). Look at the rev-3 proofs yourself.
+2. **Feedback #2 (faceplates)** — pure placement change in `art_postprocess.py`, no regeneration; quick win.
+3. **Feedback #3 (lid variant C)** + the front-lip wedge options — placement change + proof strips.
+4. **Feedback #4 (right-wall title)** — evaluate shift options, recommend, proof. (Wall art itself is approved; only the title block moves.)
+5. **Feedback #1 (drawer sides)** — the big one: regeneration experiments + a serious seam-quality visual check harness. Budget Gemini spend consciously (<$10 total was the whole art budget so far).
+6. One proof round to Ben's Desktop (`~/Desktop/Mini/Fax Machine/<new folder>/`), get sign-off.
+7. THEN the pipeline tail: trace all faces (hybrid, per trace-pilot), integrate engrave layers into generators/sheets (mind wall mirroring — art must land on EXTERIOR faces as drawn; lid/top-panel orientation per PLACEMENTS.md), update `tests/test_engrave_cut_clearance.py`'s EXPECTED_VIOLATIONS with a decision-record allowlist (Ben accepted art-over-holes 2026-07-10), extend the red-census tests, regenerate, fresh Ponoko quote (NO ordering).
 
 ## Decisions made (do not relitigate without Ben)
 
-- **Art style (Ben, 2026-07-09):** loose hand-drawn hatching, solid-black display lettering, DIRECT translation of the originals only — he explicitly rejected halftone-dot renderings ("polka dot-y") and all stylized variants. Style anchor: `art/ai-versions/final/IMG_4230_ai_vH2.png`.
-- **Drawer sides use split-generate-merge** (Ben's own idea, validated): cut source at a quiet column, generate halves sequentially (right half conditioned on finished left + full original + exclusion list), butt-join. Cut fractions + all learnings in SPECS.md.
-- **Lid art spans BOTH the sliding lid and the fixed top panel** as one continuous panorama (field 301.25×158.75mm, seam at 26.22% from front, 5.8mm vertical step at the seam — geometry derivation in SPECS.md STATUS block). Master: `final/IMG_4231_ai_vT1_master.png` + seam preview.
-- **Face map settled 2026-07-08** (`art/FACES.md`); drawer backs and box rear get no art; bottom out of scope.
-- **Fabrication method: open** (2026-07-09) — supersedes the 7/8 "Clark DROPPED, Ponoko only" record in issue #20.
-- **Standing artwork rules:** LLMs never freehand vectors — tracing tools only (potrace/vtracer); never engrave source photos directly; model does prep/parameters/judging.
+- Pixel FAX MACHINE text: REMOVED everywhere (Ben 2026-07-10, twice-confirmed). Walls must stay red-free until reviewed art lands (tests enforce).
+- Art crosses joint holes: ACCEPTED ("eat the cost of those holes") — recorded in issue #25 comments + test comments.
+- Full bleed everywhere EXCEPT faceplates (Ben 2026-07-11: labels go below the grip slot, no bleed).
+- Snake head on the sliding lid (vs cat) unless the variant-C proof changes his mind; variant B (centered) rejected.
+- Fabrication provider deliberately undecided; NO ordering until art done + Ben picks. Art style locked (hatch, direct translation). LLMs never freehand vectors — tracing tools/programmatic geometry only. Never engrave source photos.
 
 ## Gotchas & environment quirks
 
-- **File delivery to Ben: copy to `~/Desktop/Mini/<subfolder>/`** via loopback SSH (`ssh -o BatchMode=yes localhost 'cp ... "$HOME/Desktop/Mini/..."'`) — in-chat sends don't reach him; Desktop is TCC-protected for direct reads (see ~/AI/CLAUDE.md). All fax material on the Mini is consolidated under `~/Desktop/Mini/Fax Machine/` (Ben's request).
-- **Ben's terminal cannot copy-paste** — never hand him commands or reply text to paste; run things yourself or write files.
-- **Screenshot filenames** from macOS contain a narrow no-break space before "AM/PM" — glob (`Screenshot*3.16*`) instead of typing the name.
-- **Gemini generation learnings** (hard-won, in SPECS.md, binding): padded-canvas direct translation beats instruction-following; NEVER pass a style-anchor image alongside simple/lettering-only sources (content bleed — it happened 3×); single-change fix passes work; model CANNOT reliably straighten a tilted composition (deskew deterministically in post instead); residual color tints die at threshold time — don't chase them with re-rolls.
-- **Google MCP:** ben.bateman account auth is EXPIRED (re-auth flow was triggered 2026-07-09, port 8001; Ben may or may not have completed it). gilbetrar account works. Clark's email thread lives in ben.bateman — unauditable until re-auth.
-- **iMessage MCP works** and is the record of the Ben↔Clark outreach (2026-07-08, handle +12097285785).
-- **Thresholding lesson:** naive local-mean adaptive threshold hollows thick marker strokes; fix = large (251px) morphological-close background estimate then diff (`art/pilot/extract_lines.py`, PARAMS.md).
-- **Ponoko flow:** colors NOT auto-mapped — laser ops assigned per-file via dropdowns at quote time; wood cuts ON the line (no auto kerf comp for wood), our baked-in BURN compensation is correct. Text must be outlined; Ponoko sheets carry no reference labels (parts identified via `data-part` attrs).
-- **Boxes.py 'f'/'F' edges** both protrude up to one thickness (phase complements) — size-band tests account for it.
-- **2D-geometry lesson (bit us 3×):** flexure/cam works only if ONE part's plane contains BOTH travel and deflection axes; per-panel 2D tests can't see 3D swept-volume blocking — render + eyeball + red-team novel geometry.
-- **Subagents + mid-flight spec changes:** don't SendMessage a running subagent a spec change (it read one as prompt injection once); kill and respawn.
-- **Asana:** order task gid `1216374505254377` "⏸️ PAUSED — Fax box: order cut online (Ponoko) AFTER artwork is final", due 2026-07-31 as revisit marker (MCP can't clear due dates). NOTE: task wording predates the 7/9 "provider undecided" decision. Hardware-buy task `1216374505535107` (6× 6mm N35 magnets, M3×12 bolt, nyloc, washers) still open.
-- Ben works manager-style: delegate high-token work to sonnet/haiku subagents; red-team important outputs (`~/AI/CLAUDE.md`).
+- **File delivery to Ben:** copy to `~/Desktop/Mini/Fax Machine/<subfolder>/` via loopback SSH (`ssh -o BatchMode=yes localhost 'cp … "$HOME/Desktop/Mini/…"'`) — direct Desktop writes are TCC-blocked; in-chat sends don't reach him. **Ben's terminal can't copy-paste** — never hand him commands; run things yourself.
+- **Subagents:** Opus critics occasionally derail instantly (0 tool calls, garbled output) — respawn, don't debug. Subagent Writes of report files into repo scratch are sometimes permission-blocked — have them return findings inline and persist yourself. Verify critic claims by measurement before acting (two pass-1 QA claims were refuted; the "kerf under-compensation" was a bbox artifact of corner-relief arcs — flats are exact).
+- **4231 master processing:** the deskew is a horizontal SHEAR (left edge leaned, top/bottom level) — a rotation would be wrong. The reserved grip capsule in the art was only usable in the rev-2 placement; rev 3 (full-bleed + rot180) abandons it — the real slot now cuts the head mosaic between the eyes (documented, Ben-accepted).
+- **cover_fit had a real bug** (blank edge column when the bbox-edge ink lived in the cross-axis crop band) — fixed with an iterative bbox-within-window convergence loop; don't simplify it away.
+- **tests/test_retention.py's `main_shell_svg` fixture** copies an explicit file list from `main:src/faxbox/` — if shell_generator gains a new import, ADD IT to that list (bit us with svglabels).
+- **Renders for eyeballing:** `scripts/qa_render.py --sheets <files>` (defaults to ponoko sheets — pass your files explicitly); art proofs via `scripts/art_proofs.py` (no args).
+- Boxes.py: labels via `move(label=…)` render engrave-red — every generator write site must call `svglabels.enforce_reference_labels()` (systemic guard tests exist). Ponoko flow: colors assigned per-file at quote time; text must be outlined/absent; wood cut ON the line, BURN baked in.
+- google MCP: ben.bateman auth EXPIRED (gilbetrar works). Ben↔Clark record in iMessage (+12097285785). Asana revisit-marker task gid 1216374505254377; hardware-buy task 1216374505535107.
+- Don't SendMessage a running subagent a spec change — kill and respawn.
 
 ## Hard constraints
 
-1. **No fabrication ordering** until: art sign-off + issue #25 QA done + Ben picks a provider.
-2. **No LLM-freehand vector art** — tracing tools only.
-3. **Do not touch PR #22.**
-4. **Never claim QA confidence from the existing test suite alone** — that's the failure mode that created issue #25.
+1. NO fabrication ordering. 2. NO LLM-freehand vector art (tracing/programmatic only). 3. Do not touch PR #22. 4. Never weaken a test (extend/replace with decision records). 5. `art/ai-versions/final/` is frozen canon — post-process copies, never edit sources. 6. Placement gates: Ben sees proofs on his Desktop before tracing/integration proceeds.
 
 ## Where everything lives
 
-- Branch: `main`, pushed. This file: repo root.
-- Art: `art/ai-versions/final/` (canonical, committed) · `art/ai-versions/SPECS.md` (specs + pipeline learnings) · `art/ai-versions/BRIEF.md` (post-processing pipeline) · `art/FACES.md` (face map) · `art/trimmed/` (sources) · `art/pilot/` (old potrace pilot — superseded for style, tooling still relevant).
-- Uncommitted-by-design: `art/ai-versions/*.png` top level (intermediates, gitignored, ~282MB) · `scratch/` (renders/analysis from QA sessions, gitignored).
-- Tools: `scripts/check_closure.py` (blue-path closure checker, committed).
-- Ben-visible mirror: `~/Desktop/Mini/Fax Machine/{final-set,proofs-archive,source-drawings,pilot-traces,specs,ponoko-order}/`.
-- Gemini key: `~/.config/gemini/api_key`; generation scripts from this session are in the session scratchpad (not the repo) — SPECS.md carries everything needed to rewrite them.
+- Branch `art-integration` (pushed). Key scripts: `scripts/art_postprocess.py`, `scripts/art_proofs.py`, `scripts/qa_render.py`.
+- Engrave-ready art: `art/engrave/` (+ PLACEMENTS.md). Sources: `art/ai-versions/final/` (frozen) + SPECS.md (generation learnings). Face map: `art/FACES.md`.
+- Proofs: `scratch/art-proofs/` (gitignored) → mirrored `~/Desktop/Mini/Fax Machine/art-proofs-rev3/`. Trace pilot: `scratch/trace-pilot/RESULTS.md`. Ponoko engrave research: `scratch/qa-docs/ponoko-engrave-format.md`.
+- QA record (main): `docs/QA-REPORT-2026-07-09.md`, `scratch/qa-critics/*/FINDINGS*.md`, issue #25 comments.
+- Gemini key: `~/.config/gemini/api_key`; credits topped up; total art spend <$10 so far.
