@@ -103,6 +103,14 @@ PART_SPECS = [
         x_jointed=True, y_jointed=False,
     ),
     PartSpec(
+        key="right_wall_nofunfor", svg_file="outer_shell.svg", label="Right Wall",
+        art_file="right_wall_VARIANT_NOFUNFOR.png", nominal_mm=(298.45, 127.0),
+        flip_y=False,
+        title="Right Wall -- VARIANT: 'Fun For' lead-in removed (feedback #4 option)",
+        jointed_note="front/rear edges (x, both) finger-jointed; top/bottom (y) plain",
+        x_jointed=True, y_jointed=False,
+    ),
+    PartSpec(
         key="front_wall", svg_file="outer_shell.svg", label="Front Wall",
         art_file="front_wall.png", nominal_mm=(158.75, 118.025), flip_y=False,
         jointed_note="left/right edges (x, both) finger-jointed; top/bottom (y) plain",
