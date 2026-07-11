@@ -110,9 +110,11 @@ def test_all_strokes_normalize_to_a_known_color(svg_path):
 # =============================================================================
 # Engrave (red) content only where DESIGN.md places it
 # =============================================================================
-# DESIGN.md: "FAX MACHINE" engraving on the right side wall exterior
-# (outer_shell.svg); faceplate registration outline (drawer.svg, part of the
-# not-yet-built faceplate); no engraving anywhere on the lid (lids.svg).
+# Faceplate registration outline (drawer.svg); no engraving anywhere on the
+# lid (lids.svg) or the shell (outer_shell.svg — the "FAX MACHINE" pixel
+# text was removed 2026-07-10, Ben's decision on issue #25 open-item 1; wall
+# art arrives via the art-integration pipeline and these expectations get
+# updated with it).
 
 def _pieces_with_red(svg_path):
     return {
@@ -122,8 +124,8 @@ def _pieces_with_red(svg_path):
     }
 
 
-def test_shell_engrave_only_on_right_wall():
-    assert _pieces_with_red(OUTPUT_DIR / "outer_shell.svg") == {"Right Wall"}
+def test_shell_has_no_engraving():
+    assert _pieces_with_red(OUTPUT_DIR / "outer_shell.svg") == set()
 
 
 def test_drawer_engrave_only_on_faceplate():

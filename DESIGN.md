@@ -26,7 +26,9 @@ No separate component-dimension check is needed.
 ## Decisions this design implements (Ben, 2026-07-07)
 
 - Drawers open from the **rear** 6.5"×5" end face (SPEC "Rear Drawer Housing").
-- **"FAX MACHINE"** pixel-font engraving on the **right side wall** exterior.
+- ~~**"FAX MACHINE"** pixel-font engraving on the **right side wall** exterior.~~
+  *(Superseded 2026-07-10, Ben: pixel text removed entirely — full-panel wall
+  art from art/FACES.md replaces it; see part #2's engraving note.)*
 - **Fixed top panel** over the drawer bay (not a removable lid).
 - Sliding lid rides in **through-slots** cut through both side walls, open at
   the front edge; lid inserts from the front. Slot ends visible outside = accepted.
@@ -144,9 +146,13 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
   not one continuous slot.)
 - **Shelf finger-hole line**: horizontal, Z = 61.9125 → 65.0875, X = 82.55 →
   301.625. (Dashed row, as above.)
-- **Right wall only**: "FAX MACHINE" engraving (red), 5×7 pixel font,
-  pixel size 4.0mm → text ≈ 240 × 28, centered at X = 152.4, Z = 63.5.
-  Engrave on the exterior face (the drawn face, per the convention above).
+- **Engraving: none (as of 2026-07-10).** The original "FAX MACHINE" 5×7
+  pixel-font engraving (centered X = 152.4, Z = 63.5 on the right wall
+  exterior) was removed by Ben's decision (issue #25 open-item 1): its
+  centerline sat exactly on the shelf finger-hole cut row, and the wall
+  artwork from art/FACES.md supersedes it (both walls get full-panel art
+  via the art-integration pipeline; Ben has accepted that art crosses the
+  joint-hole rows).
 
 ### 3. Front wall — 1×
 

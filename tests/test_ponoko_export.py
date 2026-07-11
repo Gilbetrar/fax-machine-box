@@ -204,20 +204,22 @@ def test_ponoko_no_overlapping_pieces(ponoko_sheets):
 
 
 # =============================================================================
-# Engrave (red) content only where DESIGN.md places it: the right wall's
-# "FAX MACHINE" text, each drawer's faceplate registration outline -- same
-# rule test_laser_requirements.py enforces for the NYCR default -- plus the
-# Calibration coupon's own magnet-gauge tick marks (adversarial-QA fix:
-# PonokoCalibrationCoupon draws no text at all, so its 4 magnet gauge holes
-# need a non-text, engrave-red tick-mark count to stay distinguishable once
-# cut -- see calibration.py's GAUGE_TICK_* comment).
+# Engrave (red) content only where DESIGN.md places it: each drawer's
+# faceplate registration outline -- same rule test_laser_requirements.py
+# enforces for the NYCR default -- plus the Calibration coupon's own
+# magnet-gauge tick marks (adversarial-QA fix: PonokoCalibrationCoupon draws
+# no text at all, so its 4 magnet gauge holes need a non-text, engrave-red
+# tick-mark count to stay distinguishable once cut -- see calibration.py's
+# GAUGE_TICK_* comment). The right wall's "FAX MACHINE" pixel text was
+# removed 2026-07-10 (Ben, issue #25 open-item 1); art-integration will add
+# wall engraving and update this census when it lands.
 # =============================================================================
 
-def test_ponoko_engrave_only_on_right_wall_and_faceplates(ponoko_sheets):
+def test_ponoko_engrave_only_on_faceplates_and_coupon(ponoko_sheets):
     pieces = _all_sheet_pieces(ponoko_sheets)
     red_labels = {p.label for p in pieces if "red" in p.colors}
     non_coupon_red = {label for label in red_labels if not label.startswith("Calibration")}
-    assert non_coupon_red == {"Shell: Right Wall", "Drawer 1: Faceplate", "Drawer 2: Faceplate"}
+    assert non_coupon_red == {"Drawer 1: Faceplate", "Drawer 2: Faceplate"}
     coupon_red = {label for label in red_labels if label.startswith("Calibration")}
     assert coupon_red, "expected the Calibration coupon's magnet-gauge tick marks to be engrave-red"
 

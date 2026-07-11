@@ -813,20 +813,21 @@ def test_drawer_grip_slot_position(synonym):
 
 
 # --- 8. Engraving position -----------------------------------------------------------
+# The "FAX MACHINE" pixel-font engraving was REMOVED 2026-07-10 (Ben's
+# decision, issue #25 open-item 1: wall art supersedes it; its Z=63.5
+# centerline sat exactly on the shelf finger-hole cut row). Until the
+# art-integration pipeline lands engrave layers, the shell must carry NO
+# red at all — a stray red path here would be an unreviewed laser
+# instruction, the exact defect class issue #25 exists for.
 
-def test_engrave_position_on_right_wall():
-    piece = _piece(SHELL_SVG, "right wall")
-    reds = [h for h in piece.holes if su.normalize_color(h.stroke) == "red"]
-    assert reds, "expected red engraving paths on the right wall"
-    xs = [p.bbox.xmin for p in reds] + [p.bbox.xmax for p in reds]
-    ys = [p.bbox.ymin for p in reds] + [p.bbox.ymax for p in reds]
-    red_cx, red_cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-
-    to_box_x = _wall_frame(piece, mirror=False)
-    box_x = to_box_x(red_cx)
-    box_z = _wall_box_z(piece, red_cy)
-    assert abs(box_x - c.ENGRAVE_CENTER["x"]) <= 2.0, f"engrave center X={box_x:.2f}, expected {c.ENGRAVE_CENTER['x']}"
-    assert abs(box_z - c.ENGRAVE_CENTER["z"]) <= 2.0, f"engrave center Z={box_z:.2f}, expected {c.ENGRAVE_CENTER['z']}"
+def test_shell_carries_no_engraving_until_art_lands():
+    for piece in su.design_pieces(SHELL_SVG):
+        reds = [h for h in piece.all_paths() if su.normalize_color(h.stroke) == "red"]
+        assert not reds, (
+            f"{piece.label}: unexpected red engrave paths — the pixel text was "
+            f"removed 2026-07-10 and art arrives only via the art-integration "
+            f"pipeline (update this test when it does)"
+        )
 
 
 # --- 9. Edge-polarity tripwire -------------------------------------------------------

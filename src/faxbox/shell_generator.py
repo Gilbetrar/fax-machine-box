@@ -31,10 +31,6 @@ from faxbox.config import (
     DIVIDER_HEIGHT,
     DIVIDER_X0,
     DIVIDER_X1,
-    ENGRAVE_CENTER,
-    ENGRAVE_FONT_SPACING,
-    ENGRAVE_PIXEL_SIZE,
-    ENGRAVE_TEXT,
     FLOOR_TOP,
     FRONT_WALL_HEIGHT,
     FRONT_WALL_TOP,
@@ -63,41 +59,11 @@ from faxbox.svglabels import enforce_reference_labels
 
 T = MATERIAL_THICKNESS
 
-# Pixel font definitions: 5 columns x 7 rows
-PIXEL_FONT = {
-    'F': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 0), (2, 0), (3, 0), (4, 0),
-          (1, 3), (2, 3), (3, 3)],
-    'A': [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 0), (2, 0), (3, 0),
-          (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6),
-          (1, 3), (2, 3), (3, 3)],
-    'X': [(0, 0), (0, 1), (4, 0), (4, 1),
-          (1, 2), (3, 2),
-          (2, 3),
-          (1, 4), (3, 4),
-          (0, 5), (0, 6), (4, 5), (4, 6)],
-    'M': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 1), (2, 2), (3, 1),
-          (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6)],
-    'C': [(1, 0), (2, 0), (3, 0), (4, 0),
-          (0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
-          (1, 6), (2, 6), (3, 6), (4, 6)],
-    'H': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 3), (2, 3), (3, 3),
-          (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6)],
-    'I': [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0),
-          (2, 1), (2, 2), (2, 3), (2, 4), (2, 5),
-          (0, 6), (1, 6), (2, 6), (3, 6), (4, 6)],
-    'N': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 1), (2, 2), (3, 3),
-          (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6)],
-    'E': [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6),
-          (1, 0), (2, 0), (3, 0), (4, 0),
-          (1, 3), (2, 3), (3, 3),
-          (1, 6), (2, 6), (3, 6), (4, 6)],
-    ' ': [],
-}
+# The "FAX MACHINE" pixel-font engraving (a 5x7 hatch-filled font drawn on
+# the right wall) was REMOVED entirely on 2026-07-10 (Ben's decision, issue
+# #25 open-item 1): the wall artwork from art/FACES.md supersedes it, and the
+# lettering already lives inside IMG_4228's drip-graffiti art on the left
+# wall. Engrave art lands via the art-integration pipeline, not drawn here.
 
 # Divider's thickness zone midplane, expressed as a local-X coordinate on
 # both the Bottom panel and the side walls (both use the same box_X - T
@@ -124,62 +90,6 @@ class OuterShell(Boxes):
         self.cut_color = provider_cfg["cut_color"]
         self.engrave_color = provider_cfg["engrave_color"]
 
-    # -- pixel-font engraving (ctx.fill() is not implemented by Boxes.py;
-    # engrave by stroking closed pixel-square paths in ENGRAVE_COLOR) -------
-
-    # Hatch-fill spacing for solid pixel engraving (DESIGN.md: pixel cell is
-    # pixel_size*0.85 ~= 3.4mm at ENGRAVE_PIXEL_SIZE; ~0.4mm between lines
-    # gives ~9 lines/pixel including the top and bottom edges -- close
-    # enough for the laser to read as a solid-filled square rather than a
-    # wireframe outline, since Boxes.py/cairo has no ctx.fill() here).
-    HATCH_SPACING_MM = 0.4
-
-    def draw_pixel_char(self, char: str, x: float, y: float, pixel_size: float) -> float:
-        """Draw a single character using the pixel font. Returns advance width."""
-        if char not in PIXEL_FONT:
-            return pixel_size * 5 + ENGRAVE_FONT_SPACING
-        pixels = PIXEL_FONT[char]
-        if not pixels:
-            return pixel_size * 5 + ENGRAVE_FONT_SPACING
-        pixel_cell = pixel_size * 0.85
-        # Evenly spaced horizontal hatch lines spanning the full cell height,
-        # inclusive of the top (offset 0) and bottom (offset pixel_cell)
-        # edges -- solid-fill engraving instead of a hollow stroked outline
-        # (a wireframe box would leave "FAX MACHINE" un-engraved inside each
-        # pixel).
-        n_lines = max(2, round(pixel_cell / self.HATCH_SPACING_MM) + 1)
-        for col, row in pixels:
-            px = x + col * pixel_size + (pixel_size - pixel_cell) / 2
-            py = y + (6 - row) * pixel_size + (pixel_size - pixel_cell) / 2
-            for i in range(n_lines):
-                line_y = py + pixel_cell * i / (n_lines - 1)
-                self.ctx.move_to(px, line_y)
-                self.ctx.line_to(px + pixel_cell, line_y)
-                self.ctx.stroke()
-        return pixel_size * 5 + ENGRAVE_FONT_SPACING
-
-    def draw_pixel_text(self, text: str, x: float, y: float, pixel_size: float = ENGRAVE_PIXEL_SIZE) -> None:
-        """Draw text using the pixel font in the engraving (red) color."""
-        self.set_source_color(self.engrave_color)
-        current_x = x
-        for char in text.upper():
-            width = self.draw_pixel_char(char, current_x, y, pixel_size)
-            current_x += width
-        self.set_source_color(self.cut_color)
-
-    def _engrave_fax_machine(self) -> None:
-        """"FAX MACHINE" pixel text, centered per DESIGN.md's ENGRAVE_CENTER
-        (right side wall exterior only)."""
-        pixel_size = ENGRAVE_PIXEL_SIZE
-        char_width = 5 * pixel_size + ENGRAVE_FONT_SPACING
-        text_width = len(ENGRAVE_TEXT) * char_width - ENGRAVE_FONT_SPACING
-        text_height = 7 * pixel_size
-        center_x = ENGRAVE_CENTER["x"] - T  # box X -> side wall local X
-        center_z = ENGRAVE_CENTER["z"]
-        text_x = center_x - text_width / 2
-        text_y = center_z - text_height / 2
-        self.draw_pixel_text(ENGRAVE_TEXT, text_x, text_y, pixel_size)
-
     # -- pieces ---------------------------------------------------------
 
     def _build_bottom(self) -> None:
@@ -196,7 +106,7 @@ class OuterShell(Boxes):
             move="right", label="Bottom",
         )
 
-    def _build_side_wall(self, mirror: bool, label: str, engrave: bool) -> None:
+    def _build_side_wall(self, mirror: bool, label: str) -> None:
         """Side wall: INTERIOR_LENGTH (local X = box X - T) x WALL_HEIGHT
         (local Y = box Z), full height (DESIGN.md #2).
 
@@ -268,9 +178,6 @@ class OuterShell(Boxes):
             if mirror:
                 top_x0 = mirror_start(top_x0, BAY_LENGTH)
             self.fingerHolesAt(top_x0, TOP_PANEL_HOLE_Z, BAY_LENGTH, angle=0)
-
-            if engrave:
-                self._engrave_fax_machine()
 
         self.rectangularWall(
             INTERIOR_LENGTH, WALL_HEIGHT,
@@ -397,8 +304,8 @@ class OuterShell(Boxes):
         self.set_source_color(self.cut_color)
 
         self._build_bottom()
-        self._build_side_wall(mirror=False, label="Right Wall", engrave=True)
-        self._build_side_wall(mirror=True, label="Left Wall", engrave=False)
+        self._build_side_wall(mirror=False, label="Right Wall")
+        self._build_side_wall(mirror=True, label="Left Wall")
         self._build_front_wall()
         self._build_rear_wall()
         self._build_divider()
