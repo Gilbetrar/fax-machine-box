@@ -469,6 +469,15 @@ def process_right_wall():
 
 
 def process_faceplate(name, src_name):
+    """Ben's DECISION 2026-07-11 (supersedes the rev-3 balanced-fit): the
+    faceplates are labels, not scenes -- do NOT full-bleed them. The whole
+    word goes BELOW the grip slot, small enough to fit entirely in the clear
+    band, centered. Slot geometry (from config/DESIGN): 30x15mm, horizontally
+    centered, slot TOP 8mm below the part top edge -> slot bottom sits 23mm
+    from the top of the 53.5mm face. The word band is bounded by: slot bottom
+    + 2mm clearance (top), 4mm off the bottom edge (finger-jointed -- SPECS
+    safe-margin rule; Ben also flagged rev 3 running too close to the bottom
+    teeth), 2mm side margins. Contain-fit (zero crop) into that band."""
     gray, path = load_gray(src_name)
     h, w = gray.shape
     w_mm, h_mm, tw, th = FACE_TARGETS[name]
@@ -478,47 +487,55 @@ def process_faceplate(name, src_name):
 
     box = robust_content_bbox(bit, min_ink=3)
 
-    # Rev-3 UNIVERSAL RULE would be a strict cover-fit here, but MEASURED
-    # directly (rendered + read by eye): pure cover-fit on this wordmark
-    # ("COLORS", content bbox 5770x1409px vs panel ratio 2.82:1) forces a
-    # 68.2mm-total width crop -- that's more than the entire final letter
-    # ("S", ~28.7mm wide at cover scale) and over half the first ("C",
-    # ~50.5mm) -- i.e. it doesn't just trim edge margin, it deletes a whole
-    # glyph. That's exactly the "centering would obviously decapitate
-    # content" case the BRIEF calls out for an override. Content-aware
-    # fix: use BALANCED fit instead of pure cover -- the unique scale
-    # between contain-fit (0 crop, full pad) and cover-fit (full crop, 0
-    # pad) that makes the leftover crop and the leftover pad numerically
-    # equal in mm, so the wordmark's outer strokes are trimmed a little
-    # (not deleted) and the panel keeps a little (not a lot of) top/bottom
-    # margin -- see _balanced_fit() docstring for the derivation.
-    final, info = balanced_fit(bit, box, tw, th)
+    SLOT_BOTTOM_MM = 8.0 + 15.0     # slot top offset + slot height
+    CLEAR_BELOW_SLOT_MM = 2.0
+    BOTTOM_MARGIN_MM = 4.0          # finger-jointed bottom edge (SPECS >=4mm)
+    SIDE_MARGIN_MM = 2.0
+    band_top_px = int(round(mm_to_px(SLOT_BOTTOM_MM + CLEAR_BELOW_SLOT_MM)))
+    band_bot_px = th - int(round(mm_to_px(BOTTOM_MARGIN_MM)))
+    band_h_px = band_bot_px - band_top_px
+    band_w_px = tw - 2 * int(round(mm_to_px(SIDE_MARGIN_MM)))
+
+    top_, bottom_, left_, right_ = box
+    content = bit[top_:bottom_ + 1, left_:right_ + 1]
+    ch, cw = content.shape
+    s = min(band_w_px / cw, band_h_px / ch)  # contain fit: no crop, ever
+    scaled_w = max(1, int(round(cw * s)))
+    scaled_h = max(1, int(round(ch * s)))
+    if s >= 1.0:
+        scaled = cv2.resize(content, (scaled_w, scaled_h), interpolation=cv2.INTER_NEAREST)
+        scaled = np.where(scaled < 127, 0, 255).astype(np.uint8)
+    else:
+        scaled = resize_area_rethreshold(content, scaled_w, scaled_h)
+
+    final = np.full((th, tw), 255, dtype=np.uint8)
+    x0 = (tw - scaled_w) // 2
+    y0 = band_top_px + (band_h_px - scaled_h) // 2
+    final[y0:y0 + scaled_h, x0:x0 + scaled_w] = scaled
 
     out_path = os.path.join(OUT, f"{name}.png")
     save_bit_png(final, out_path)
     pos, neg = feature_audit(final)
 
-    cw, ch = info["content_wh"]
     steps = [
         "global threshold @128 (0=ink)",
         f"speckle cleanup: dropped {removed} components <4px^2",
         f"ROBUST content bbox (rows/cols with >=3 ink px): rows "
         f"{box[0]}-{box[1]}, cols {box[2]}-{box[3]} -> {cw}x{ch}px content "
         f"({cw/ch:.3f}:1 vs panel {tw/th:.3f}:1)",
-        "CONTENT-AWARE OVERRIDE (measured, not assumed): a strict "
-        f"cover-fit (scale={max(tw/cw, th/ch):.4f}) would crop "
-        f"{(max(tw/cw, th/ch) * cw - tw) / PX_PER_MM:.1f}mm total off the "
-        "width -- enough to delete the final letter outright and gut the "
-        "first. BALANCED fit used instead: scale="
-        f"{info['scale']:.4f} (the unique value where leftover width-crop "
-        "== leftover height-pad, in mm), so both defects are small instead "
-        "of one being total: "
-        f"width crop {info['crop_l_mm']:.2f}mm left / {info['crop_r_mm']:.2f}mm "
-        f"right (trims only the outer stroke of the first/last glyph); "
-        f"height pad {info['pad_t_mm']:.2f}mm top / {info['pad_b_mm']:.2f}mm "
-        "bottom (small margin, not the ~68mm this face would otherwise need "
-        "to crop). Verified by eye: both endpoint letters read correctly "
-        "in the output.",
+        "BELOW-SLOT LABEL PLACEMENT (Ben's decision 2026-07-11, supersedes "
+        "rev-3 balanced fit -- faceplates are labels, not scenes; no bleed): "
+        f"grip slot is 30x15mm, slot top 8mm below the part top edge -> slot "
+        f"bottom at {SLOT_BOTTOM_MM:.0f}mm from top. Word band = rows "
+        f"{band_top_px}-{band_bot_px}px ({(SLOT_BOTTOM_MM + CLEAR_BELOW_SLOT_MM):.0f}"
+        f"-{h_mm - BOTTOM_MARGIN_MM:.1f}mm from top: {CLEAR_BELOW_SLOT_MM:.0f}mm "
+        f"clearance under the slot, {BOTTOM_MARGIN_MM:.0f}mm off the finger-"
+        f"jointed bottom edge), {SIDE_MARGIN_MM:.0f}mm side margins. "
+        f"CONTAIN-fit (zero crop) scale={s:.4f} -> word {scaled_w}x{scaled_h}px "
+        f"({scaled_w / PX_PER_MM:.1f}x{scaled_h / PX_PER_MM:.1f}mm), centered "
+        f"horizontally (x0={x0}px) and vertically within the band (y0={y0}px). "
+        "The word no longer touches any edge and the slot no longer cuts "
+        "through any glyph.",
     ]
     log(name, source=src_name, source_px=f"{w}x{h}", steps=steps,
         final_px=f"{tw}x{th}", canvas_mm=f"{w_mm}x{h_mm}",
@@ -767,9 +784,32 @@ def process_4231():
     front_trimmed_B_mm = window_start_B_px / PX_PER_MM
     rear_trimmed_B_mm = (total_w_px - (window_start_B_px + field_w_px)) / PX_PER_MM
 
+    # === step 8b: VARIANT C (Ben 2026-07-11) -- CAT-END-ANCHORED window:
+    # keep the FULL cat + floral border (the rear end of the rotated strip)
+    # and trim the snake-head end instead -- the exact opposite anchoring
+    # from canonical A. The art stays in the same rot180 orientation (snake
+    # toward the front, per Ben: sliding part shows snake, not cat), so the
+    # sliding lid receives the window's front 79mm = the snake's mid-body
+    # scale region (the head is what gets trimmed). Same full-bleed
+    # white-run rule as A's front anchor, applied at the REAR edge: smallest
+    # rear overshoot in [0,8]mm whose edge column has no contiguous white
+    # run over 20% of field height. ===
+    runs_rear = [max_white_run_px(scaled[:, total_w_px - 1 - c])
+                 for c in range(0, max_overshoot_px + 1)]
+    met_rear = [c for c, r in enumerate(runs_rear) if r <= RUN_LIMIT_PX]
+    rear_criterion_met_C = bool(met_rear)
+    rear_overshoot_C_px = met_rear[0] if rear_criterion_met_C else int(np.argmin(runs_rear))
+    rear_overshoot_C_mm = rear_overshoot_C_px / PX_PER_MM
+    residual_run_C_mm = runs_rear[rear_overshoot_C_px] / PX_PER_MM
+    window_end_C_px = total_w_px - rear_overshoot_C_px
+    window_start_C_px = window_end_C_px - field_w_px
+    field_bit_C = scaled[:, window_start_C_px:window_end_C_px]
+    front_trimmed_C_mm = window_start_C_px / PX_PER_MM
+
     # === steps 6/7: split at 79mm + orient into lid/panel conventions ===
     res_A = _finish_lid_panel(field_bit_A, None, split_x_px)
     res_B = _finish_lid_panel(field_bit_B, "B", split_x_px)
+    res_C = _finish_lid_panel(field_bit_C, "C", split_x_px)
 
     # === step 9: locate the real grip slot inside the head art (no
     # reserved capsule in this placement -- Ben has accepted cuts through
@@ -869,6 +909,45 @@ def process_4231():
         f"cleanup: lid dropped {res_B['removed_lid']}, panel dropped "
         f"{res_B['removed_panel']} components <4px^2"
     )
+    speckle_step_C = (
+        "global threshold @128 (0=ink) applied before compositing; speckle "
+        f"cleanup: lid dropped {res_C['removed_lid']}, panel dropped "
+        f"{res_C['removed_panel']} components <4px^2"
+    )
+    if rear_criterion_met_C:
+        rear_verdict_C = (
+            f"Rear-edge white-run search over [0,8]mm SATISFIED at rear "
+            f"overshoot={rear_overshoot_C_mm:.2f}mm (residual max white run "
+            f"{residual_run_C_mm:.2f}mm, under the "
+            f"{RUN_LIMIT_PX / PX_PER_MM:.2f}mm/20% limit)."
+        )
+    else:
+        rear_verdict_C = (
+            f"Rear-edge white-run search over [0,8]mm did NOT meet the "
+            f"<{RUN_LIMIT_PX / PX_PER_MM:.2f}mm criterion; picked the best "
+            f"available point: rear overshoot={rear_overshoot_C_mm:.2f}mm, "
+            f"residual max white run {residual_run_C_mm:.2f}mm. FLAG for the "
+            "proof gate."
+        )
+    variant_c_step = (
+        f"VARIANT C (Ben 2026-07-11, CAT-END-ANCHORED window): "
+        f"[{window_start_C_px}px, {window_end_C_px}px) = "
+        f"[{front_trimmed_C_mm:.2f}mm, {front_trimmed_C_mm + FIELD_W_MM:.2f}mm) "
+        f"of the {total_len_mm:.2f}mm scaled content -- the exact opposite "
+        f"anchoring from canonical A: the window is flush against the "
+        f"floral/cat (rear) end, so the FULL cat figure (body, face, hose, "
+        f"leash) plus the floral border survive on the top panel, and "
+        f"{front_trimmed_C_mm:.1f}mm is trimmed off the snake-HEAD end "
+        f"instead. {rear_verdict_C} The art keeps the same rot180 "
+        "orientation as A (snake toward the front), so the sliding lid "
+        "carries whatever the window's front 79mm holds (the region just "
+        "past the trimmed head -- see the proof strip for exactly what "
+        "survives and where the grip slot lands). "
+        "Saved as sliding_lid_VARIANT_C.png / top_panel_VARIANT_C.png; "
+        "proof strip lid_top_panel_seam_VARIANT_C.png. Ben picks A (head "
+        "on lid, cat lost) vs C (full cat at the panel rear, head lost) at "
+        "the proof gate."
+    )
     variant_b_step = (
         f"VARIANT B (comparison, CENTERED window): [{window_start_B_px}px, "
         f"{window_start_B_px + field_w_px}px) = [{front_trimmed_B_mm:.2f}mm, "
@@ -923,7 +1002,7 @@ def process_4231():
             "table convention 222.25mm-wide x 158.75mm-tall = depth-horizontal "
             "same as field): direct slice, already at target px, no rotation/"
             "padding needed.",
-            variant_b_step,
+            variant_b_step, variant_c_step,
         ],
         final_px=f"{res_A['tw_p']}x{res_A['th_p']}",
         canvas_mm=f"{res_A['w_mm_p']}x{res_A['h_mm_p']}",
@@ -933,7 +1012,7 @@ def process_4231():
         steps=[
             shared_deskew_step, content_step, rotate_step, scale_step,
             window_step, split_step, speckle_step_A, lid_pad_step,
-            grip_slot_step, variant_b_step,
+            grip_slot_step, variant_b_step, variant_c_step,
         ],
         final_px=f"{res_A['tw_l']}x{res_A['th_l']}",
         canvas_mm=f"{res_A['w_mm_l']}x{res_A['h_mm_l']}",
@@ -957,6 +1036,25 @@ def process_4231():
         final_px=f"{res_B['tw_l']}x{res_B['th_l']}",
         canvas_mm=f"{res_B['w_mm_l']}x{res_B['h_mm_l']}",
         feature_pos_mm=res_B["pos_l"], feature_neg_mm=res_B["neg_l"])
+
+    log("top_panel_VARIANT_C", source="IMG_4231_ai_vT1_master.png", source_px=f"{w}x{h}",
+        steps=[shared_deskew_step, content_step, rotate_step, scale_step,
+               variant_c_step, split_step, speckle_step_C,
+               "same field orientation as the canonical top panel, no rotation."],
+        final_px=f"{res_C['tw_p']}x{res_C['th_p']}",
+        canvas_mm=f"{res_C['w_mm_p']}x{res_C['h_mm_p']}",
+        feature_pos_mm=res_C["pos_p"], feature_neg_mm=res_C["neg_p"])
+
+    log("sliding_lid_VARIANT_C", source="IMG_4231_ai_vT1_master.png", source_px=f"{w}x{h}",
+        steps=[shared_deskew_step, content_step, rotate_step, scale_step,
+               variant_c_step, split_step, speckle_step_C,
+               "same rot90(k=-1) + pad-center treatment as the canonical lid "
+               f"(pad {res_C['pad_left_mm']:.2f}mm left / "
+               f"{res_C['pad_right_mm']:.2f}mm right, blank-by-design, hidden "
+               "in the wall slots)."],
+        final_px=f"{res_C['tw_l']}x{res_C['th_l']}",
+        canvas_mm=f"{res_C['w_mm_l']}x{res_C['h_mm_l']}",
+        feature_pos_mm=res_C["pos_l"], feature_neg_mm=res_C["neg_l"])
 
 
 # --------------------------------------------------------------- runner ----
