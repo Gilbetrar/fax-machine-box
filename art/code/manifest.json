@@ -1,0 +1,207 @@
+{
+  "faces": {
+    "left_wall": {
+      "part_id": "left_wall",
+      "piece_label": "Left Wall",
+      "piece_svg": "output/outer_shell.svg",
+      "title": "Left wall (parrot, FAX MACHINE)",
+      "size_mm": [
+        298.45,
+        127.0
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "solid",
+          "label": "FAX MACHINE solid",
+          "svg": "out/left_wall__solid.svg",
+          "png": "out/left_wall__solid.png",
+          "default": true,
+          "notes": "Display lettering kept solid black (Ben's style); other large solids get gap channels.",
+          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
+          "ink_pct": 26.8,
+          "paths": 47,
+          "svg_kb": 148
+        },
+        {
+          "id": "outline",
+          "label": "FAX MACHINE outline + light fill",
+          "svg": "out/left_wall__outline.svg",
+          "png": "out/left_wall__outline.png",
+          "default": false,
+          "notes": "Lettering redrawn as a 0.9 mm outline with light coded hatching inside: much less burn time and charring than solid.",
+          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
+          "ink_pct": 15.3,
+          "paths": 458,
+          "svg_kb": 241
+        }
+      ]
+    },
+    "right_wall": {
+      "part_id": "right_wall",
+      "piece_label": "Right Wall",
+      "piece_svg": "output/outer_shell.svg",
+      "title": "Right wall (Terrible Writers & Artists)",
+      "size_mm": [
+        298.45,
+        127.0
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "funfor",
+          "label": "With 'Fun For'",
+          "svg": "out/right_wall__funfor.svg",
+          "png": "out/right_wall__funfor.png",
+          "default": false,
+          "notes": "Full title. The lid through-slot (y 5.1-8.9 mm, front 76 mm) cuts through 'Fun For'.",
+          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
+          "ink_pct": 26.0,
+          "paths": 486,
+          "svg_kb": 289
+        },
+        {
+          "id": "nofunfor",
+          "label": "Without 'Fun For'",
+          "svg": "out/right_wall__nofunfor.svg",
+          "png": "out/right_wall__nofunfor.png",
+          "default": true,
+          "notes": "'Fun For' removed so the lid slot crosses blank wood; the title reads 'Terrible Writers & Artists of All Ages'.",
+          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
+          "ink_pct": 25.7,
+          "paths": 477,
+          "svg_kb": 288
+        }
+      ]
+    },
+    "front_wall": {
+      "part_id": "front_wall",
+      "piece_label": "Front Wall",
+      "piece_svg": "output/outer_shell.svg",
+      "title": "Front wall (fax machine panel)",
+      "size_mm": [
+        158.75,
+        118.025
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced",
+          "svg": "out/front_wall__traced.svg",
+          "png": "out/front_wall__traced.png",
+          "default": true,
+          "notes": "Fit above the bottom finger-joint row (art bottom at 113.4 mm). '44' kept as drawn in the source.",
+          "source": "art/ai-versions/final/IMG_4229_ai_vH1.png (approved)",
+          "ink_pct": 27.9,
+          "paths": 87,
+          "svg_kb": 128
+        }
+      ]
+    },
+    "drawer_side_1": {
+      "part_id": "drawer_side_1",
+      "piece_label": "Left Side",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer side 1 (turkeys)",
+      "size_mm": [
+        212.25,
+        50.325
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced line + coded hatch",
+          "svg": "out/drawer_side_1__traced.svg",
+          "png": "out/drawer_side_1__traced.png",
+          "default": true,
+          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+          "source": "art/trimmed/IMG_4233.jpeg (Ben's original, one continuous panel)",
+          "ink_pct": 14.8,
+          "paths": 149,
+          "svg_kb": 100
+        }
+      ]
+    },
+    "drawer_side_2": {
+      "part_id": "drawer_side_2",
+      "piece_label": "Right Side",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer side 2 (alligator and seagull)",
+      "size_mm": [
+        212.25,
+        50.325
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced line + coded hatch",
+          "svg": "out/drawer_side_2__traced.svg",
+          "png": "out/drawer_side_2__traced.png",
+          "default": true,
+          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+          "source": "art/trimmed/IMG_4235.jpeg (Ben's original, one continuous panel)",
+          "ink_pct": 12.2,
+          "paths": 167,
+          "svg_kb": 85
+        }
+      ]
+    },
+    "drawer_side_3": {
+      "part_id": "drawer_side_3",
+      "piece_label": "Left Side",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer side 3 (gallery)",
+      "size_mm": [
+        212.25,
+        50.325
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced line + coded hatch",
+          "svg": "out/drawer_side_3__traced.svg",
+          "png": "out/drawer_side_3__traced.png",
+          "default": true,
+          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+          "source": "art/trimmed/IMG_4237.jpeg (Ben's original, one continuous panel)",
+          "ink_pct": 23.9,
+          "paths": 351,
+          "svg_kb": 191
+        }
+      ]
+    },
+    "drawer_side_4": {
+      "part_id": "drawer_side_4",
+      "piece_label": "Right Side",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer side 4 (bookshelf)",
+      "size_mm": [
+        212.25,
+        50.325
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced line + coded hatch",
+          "svg": "out/drawer_side_4__traced.svg",
+          "png": "out/drawer_side_4__traced.png",
+          "default": true,
+          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+          "source": "art/trimmed/IMG_4239.jpeg (Ben's original, one continuous panel)",
+          "ink_pct": 28.2,
+          "paths": 329,
+          "svg_kb": 198
+        }
+      ]
+    }
+  },
+  "style": {
+    "name": "traced-line + coded hatch",
+    "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: line >= 0.25 mm, gap >= 0.30 mm, no islands < 0.09 mm2, 0.5 mm clear of every cut."
+  }
+}
