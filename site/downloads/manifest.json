@@ -1,414 +1,5 @@
 {
- "thicknesses": {
-  "2.8": {
-   "folder": "T2.8",
-   "zip": "fax-machine-box_T2.8.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "2.9": {
-   "folder": "T2.9",
-   "zip": "fax-machine-box_T2.9.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.0": {
-   "folder": "T3.0",
-   "zip": "fax-machine-box_T3.0.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.1": {
-   "folder": "T3.1",
-   "zip": "fax-machine-box_T3.1.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.2": {
-   "folder": "T3.2",
-   "zip": "fax-machine-box_T3.2.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.3": {
-   "folder": "T3.3",
-   "zip": "fax-machine-box_T3.3.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.4": {
-   "folder": "T3.4",
-   "zip": "fax-machine-box_T3.4.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  },
-  "3.5": {
-   "folder": "T3.5",
-   "zip": "fax-machine-box_T3.5.zip",
-   "files": [
-    "coupon.dxf",
-    "coupon.svg",
-    "generic_600x400_sheet_1.dxf",
-    "generic_600x400_sheet_1.svg",
-    "generic_600x400_sheet_2.dxf",
-    "generic_600x400_sheet_2.svg",
-    "generic_600x400_sheet_3.dxf",
-    "generic_600x400_sheet_3.svg",
-    "glowforge_pro_sheet_1.dxf",
-    "glowforge_pro_sheet_1.svg",
-    "glowforge_pro_sheet_2.dxf",
-    "glowforge_pro_sheet_2.svg",
-    "glowforge_pro_sheet_3.dxf",
-    "glowforge_pro_sheet_3.svg",
-    "glowforge_pro_sheet_4.dxf",
-    "glowforge_pro_sheet_4.svg",
-    "glowforge_pro_sheet_5.dxf",
-    "glowforge_pro_sheet_5.svg",
-    "ponoko_sheet_1.dxf",
-    "ponoko_sheet_1.svg",
-    "ponoko_sheet_2.dxf",
-    "ponoko_sheet_2.svg",
-    "xtool_p2_sheet_1.dxf",
-    "xtool_p2_sheet_1.svg",
-    "xtool_p2_sheet_2.dxf",
-    "xtool_p2_sheet_2.svg",
-    "xtool_p2_sheet_3.dxf",
-    "xtool_p2_sheet_3.svg",
-    "xtool_p2_sheet_4.dxf",
-    "xtool_p2_sheet_4.svg",
-    "xtool_s1_sheet_1.dxf",
-    "xtool_s1_sheet_1.svg",
-    "xtool_s1_sheet_2.dxf",
-    "xtool_s1_sheet_2.svg",
-    "xtool_s1_sheet_3.dxf",
-    "xtool_s1_sheet_3.svg",
-    "xtool_s1_sheet_4.dxf",
-    "xtool_s1_sheet_4.svg"
-   ],
-   "sheets": {
-    "ponoko": 2,
-    "xtool_s1": 4,
-    "xtool_p2": 4,
-    "glowforge_pro": 5,
-    "generic_600x400": 3
-   }
-  }
- },
+ "schema": 2,
  "beds": {
   "ponoko": {
    "width_mm": 790.0,
@@ -448,14 +39,14 @@
    "margin_mm": 5.0,
    "spacing_mm": 3.5,
    "sheets_by_thickness": {
-    "2.8": 4,
-    "2.9": 4,
-    "3.0": 4,
-    "3.1": 4,
-    "3.2": 4,
-    "3.3": 4,
-    "3.4": 4,
-    "3.5": 4
+    "2.8": 3,
+    "2.9": 3,
+    "3.0": 3,
+    "3.1": 3,
+    "3.2": 3,
+    "3.3": 3,
+    "3.4": 3,
+    "3.5": 3
    }
   },
   "glowforge_pro": {
@@ -488,6 +79,2562 @@
     "3.3": 3,
     "3.4": 3,
     "3.5": 3
+   }
+  }
+ },
+ "engrave": {
+  "colors": {
+   "cut": "#0000FF",
+   "engrave_fill": "#000000",
+   "engrave_line": "#FF0000"
+  },
+  "dxf_layers": {
+   "cut": "CUT",
+   "engrave": "ENGRAVE"
+  },
+  "dxf_note": "DXF has no fill attribute: the engraved art is closed polylines on layer ENGRAVE, so set that layer to fill / raster in the laser software.",
+  "conventions": [
+   "Cuts are kerf-offset; engraving is not.",
+   "Engraving stays at least 0.35 mm from every cut.",
+   "Lay every part on the bed outside face up. Parts flagged 'flipped' are mirrored in the cut + engrave files for this; the art is not mirrored.",
+   "The drawer faceplate glue-up outline of the cut-only files is left out of the cut + engrave files."
+  ],
+  "default_variants": {
+   "left": "solid",
+   "right": "nofunfor",
+   "front": "traced",
+   "top": "a",
+   "lid": "a",
+   "B_face": "traced",
+   "T_face": "traced",
+   "B_left": "traced",
+   "B_right": "traced",
+   "T_left": "traced",
+   "T_right": "traced"
+  },
+  "faces": {
+   "left": {
+    "title": "Left wall (parrot, FAX MACHINE)",
+    "part_id": "left",
+    "flipped": false,
+    "exterior_face": "+",
+    "variants": [
+     {
+      "id": "solid",
+      "label": "FAX MACHINE solid",
+      "default": true,
+      "notes": "Display lettering kept solid black (Ben's style); other large solids get gap channels.",
+      "ink_pct": 25.4
+     },
+     {
+      "id": "outline",
+      "label": "FAX MACHINE outline + light fill",
+      "default": false,
+      "notes": "Lettering redrawn as a 0.9 mm outline with light coded hatching inside: much less burn time and charring than solid.",
+      "ink_pct": 14.5
+     }
+    ]
+   },
+   "right": {
+    "title": "Right wall (Terrible Writers & Artists)",
+    "part_id": "right",
+    "flipped": false,
+    "exterior_face": "+",
+    "variants": [
+     {
+      "id": "funfor",
+      "label": "With 'Fun For'",
+      "default": false,
+      "notes": "Full title. The lid through-slot (y 5.1-8.9 mm, front 76 mm) cuts through 'Fun For'.",
+      "ink_pct": 24.4
+     },
+     {
+      "id": "nofunfor",
+      "label": "Without 'Fun For'",
+      "default": true,
+      "notes": "'Fun For' removed so the lid slot crosses blank wood; the title reads 'Terrible Writers & Artists of All Ages'.",
+      "ink_pct": 24.3
+     }
+    ]
+   },
+   "front": {
+    "title": "Front wall (fax machine panel)",
+    "part_id": "front",
+    "flipped": false,
+    "exterior_face": "+",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced",
+      "default": true,
+      "notes": "Fit above the bottom finger-joint row (art bottom 4.6 mm above the bottom edge). '44' kept as drawn in the source.",
+      "ink_pct": 25.2
+     }
+    ]
+   },
+   "top": {
+    "title": "Top panel (fixed, behind the lid)",
+    "part_id": "top",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "a",
+      "label": "Snake head (A)",
+      "default": true,
+      "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+      "ink_pct": 21.5
+     },
+     {
+      "id": "c",
+      "label": "Full cat (C)",
+      "default": false,
+      "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+      "ink_pct": 19.7
+     }
+    ]
+   },
+   "lid": {
+    "title": "Sliding lid",
+    "part_id": "lid",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "a",
+      "label": "Snake head (A)",
+      "default": true,
+      "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+      "ink_pct": 15.8
+     },
+     {
+      "id": "c",
+      "label": "Full cat (C)",
+      "default": false,
+      "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+      "ink_pct": 20.2
+     }
+    ]
+   },
+   "B_face": {
+    "title": "Lower drawer faceplate: COLORS",
+    "part_id": "B_face",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced outline + coded fills",
+      "default": true,
+      "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
+      "ink_pct": 8.7
+     }
+    ]
+   },
+   "T_face": {
+    "title": "Upper drawer faceplate: Lines",
+    "part_id": "T_face",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced outline + coded fills",
+      "default": true,
+      "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
+      "ink_pct": 5.6
+     }
+    ]
+   },
+   "B_left": {
+    "title": "Lower drawer, left side (turkeys)",
+    "part_id": "B_left",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced line + coded hatch",
+      "default": true,
+      "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+      "ink_pct": 14.1
+     }
+    ]
+   },
+   "B_right": {
+    "title": "Lower drawer, right side (alligator and seagull)",
+    "part_id": "B_right",
+    "flipped": false,
+    "exterior_face": "+",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced line + coded hatch",
+      "default": true,
+      "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+      "ink_pct": 12.4
+     }
+    ]
+   },
+   "T_left": {
+    "title": "Upper drawer, left side (gallery)",
+    "part_id": "T_left",
+    "flipped": true,
+    "exterior_face": "-",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced line + coded hatch",
+      "default": true,
+      "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+      "ink_pct": 22.6
+     }
+    ]
+   },
+   "T_right": {
+    "title": "Upper drawer, right side (bookshelf)",
+    "part_id": "T_right",
+    "flipped": false,
+    "exterior_face": "+",
+    "variants": [
+     {
+      "id": "traced",
+      "label": "Traced line + coded hatch",
+      "default": true,
+      "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
+      "ink_pct": 28.1
+     }
+    ]
+   }
+  }
+ },
+ "thicknesses": {
+  "2.8": {
+   "folder": "T2.8",
+   "zip": "fax-machine-box_T2.8.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T2.8.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T2.8_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.389
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.389
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.393
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.391
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.4
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.4
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.551
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    }
+   }
+  },
+  "2.9": {
+   "folder": "T2.9",
+   "zip": "fax-machine-box_T2.9.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T2.9.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T2.9_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.397
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.4
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.4
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.555
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.555
+     }
+    }
+   }
+  },
+  "3.0": {
+   "folder": "T3.0",
+   "zip": "fax-machine-box_T3.0.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.0.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.0_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.391
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.38
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.38
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.37
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.392
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.416
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.409
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.555
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.552
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.557
+     }
+    }
+   }
+  },
+  "3.1": {
+   "folder": "T3.1",
+   "zip": "fax-machine-box_T3.1.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.1.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.1_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.49
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.516
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.509
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.555
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.556
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.55
+     }
+    }
+   }
+  },
+  "3.2": {
+   "folder": "T3.2",
+   "zip": "fax-machine-box_T3.2.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.2.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.2_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.373
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.593
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.392
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.4
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.597
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.584
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.431
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.447
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.475
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.467
+     }
+    }
+   }
+  },
+  "3.3": {
+   "folder": "T3.3",
+   "zip": "fax-machine-box_T3.3.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.3.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.3_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.657
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.597
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.584
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.392
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.392
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.391
+     }
+    }
+   }
+  },
+  "3.4": {
+   "folder": "T3.4",
+   "zip": "fax-machine-box_T3.4.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.4.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.4_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.381
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.39
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.727
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.375
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.597
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.584
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.394
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.395
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.388
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.38
+     }
+    }
+   }
+  },
+  "3.5": {
+   "folder": "T3.5",
+   "zip": "fax-machine-box_T3.5.zip",
+   "files": [
+    "coupon.dxf",
+    "coupon.svg",
+    "generic_600x400_sheet_1.dxf",
+    "generic_600x400_sheet_1.svg",
+    "generic_600x400_sheet_2.dxf",
+    "generic_600x400_sheet_2.svg",
+    "generic_600x400_sheet_3.dxf",
+    "generic_600x400_sheet_3.svg",
+    "glowforge_pro_sheet_1.dxf",
+    "glowforge_pro_sheet_1.svg",
+    "glowforge_pro_sheet_2.dxf",
+    "glowforge_pro_sheet_2.svg",
+    "glowforge_pro_sheet_3.dxf",
+    "glowforge_pro_sheet_3.svg",
+    "glowforge_pro_sheet_4.dxf",
+    "glowforge_pro_sheet_4.svg",
+    "glowforge_pro_sheet_5.dxf",
+    "glowforge_pro_sheet_5.svg",
+    "ponoko_sheet_1.dxf",
+    "ponoko_sheet_1.svg",
+    "ponoko_sheet_2.dxf",
+    "ponoko_sheet_2.svg",
+    "xtool_p2_sheet_1.dxf",
+    "xtool_p2_sheet_1.svg",
+    "xtool_p2_sheet_2.dxf",
+    "xtool_p2_sheet_2.svg",
+    "xtool_p2_sheet_3.dxf",
+    "xtool_p2_sheet_3.svg",
+    "xtool_s1_sheet_1.dxf",
+    "xtool_s1_sheet_1.svg",
+    "xtool_s1_sheet_2.dxf",
+    "xtool_s1_sheet_2.svg",
+    "xtool_s1_sheet_3.dxf",
+    "xtool_s1_sheet_3.svg",
+    "xtool_s1_sheet_4.dxf",
+    "xtool_s1_sheet_4.svg",
+    "set.json"
+   ],
+   "sheets": {
+    "ponoko": 2,
+    "xtool_s1": 4,
+    "xtool_p2": 3,
+    "glowforge_pro": 5,
+    "generic_600x400": 3
+   },
+   "cut_only": {
+    "zip": "fax-machine-box_T3.5.zip",
+    "files": [
+     "coupon.dxf",
+     "coupon.svg",
+     "generic_600x400_sheet_1.dxf",
+     "generic_600x400_sheet_1.svg",
+     "generic_600x400_sheet_2.dxf",
+     "generic_600x400_sheet_2.svg",
+     "generic_600x400_sheet_3.dxf",
+     "generic_600x400_sheet_3.svg",
+     "glowforge_pro_sheet_1.dxf",
+     "glowforge_pro_sheet_1.svg",
+     "glowforge_pro_sheet_2.dxf",
+     "glowforge_pro_sheet_2.svg",
+     "glowforge_pro_sheet_3.dxf",
+     "glowforge_pro_sheet_3.svg",
+     "glowforge_pro_sheet_4.dxf",
+     "glowforge_pro_sheet_4.svg",
+     "glowforge_pro_sheet_5.dxf",
+     "glowforge_pro_sheet_5.svg",
+     "ponoko_sheet_1.dxf",
+     "ponoko_sheet_1.svg",
+     "ponoko_sheet_2.dxf",
+     "ponoko_sheet_2.svg",
+     "xtool_p2_sheet_1.dxf",
+     "xtool_p2_sheet_1.svg",
+     "xtool_p2_sheet_2.dxf",
+     "xtool_p2_sheet_2.svg",
+     "xtool_p2_sheet_3.dxf",
+     "xtool_p2_sheet_3.svg",
+     "xtool_s1_sheet_1.dxf",
+     "xtool_s1_sheet_1.svg",
+     "xtool_s1_sheet_2.dxf",
+     "xtool_s1_sheet_2.svg",
+     "xtool_s1_sheet_3.dxf",
+     "xtool_s1_sheet_3.svg",
+     "xtool_s1_sheet_4.dxf",
+     "xtool_s1_sheet_4.svg",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    }
+   },
+   "cut_engrave": {
+    "zip": "fax-machine-box_T3.5_engrave.zip",
+    "files": [
+     "README_engrave.txt",
+     "faces/B_face__traced.dxf",
+     "faces/B_face__traced.svg",
+     "faces/B_left__traced.dxf",
+     "faces/B_left__traced.svg",
+     "faces/B_right__traced.dxf",
+     "faces/B_right__traced.svg",
+     "faces/T_face__traced.dxf",
+     "faces/T_face__traced.svg",
+     "faces/T_left__traced.dxf",
+     "faces/T_left__traced.svg",
+     "faces/T_right__traced.dxf",
+     "faces/T_right__traced.svg",
+     "faces/front__traced.dxf",
+     "faces/front__traced.svg",
+     "faces/left__outline.dxf",
+     "faces/left__outline.svg",
+     "faces/left__solid.dxf",
+     "faces/left__solid.svg",
+     "faces/lid__a.dxf",
+     "faces/lid__a.svg",
+     "faces/lid__c.dxf",
+     "faces/lid__c.svg",
+     "faces/right__funfor.dxf",
+     "faces/right__funfor.svg",
+     "faces/right__nofunfor.dxf",
+     "faces/right__nofunfor.svg",
+     "faces/top__a.dxf",
+     "faces/top__a.svg",
+     "faces/top__c.dxf",
+     "faces/top__c.svg",
+     "generic_600x400_sheet_1_engrave.dxf",
+     "generic_600x400_sheet_1_engrave.svg",
+     "generic_600x400_sheet_2_engrave.dxf",
+     "generic_600x400_sheet_2_engrave.svg",
+     "generic_600x400_sheet_3_engrave.dxf",
+     "generic_600x400_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_1_engrave.dxf",
+     "glowforge_pro_sheet_1_engrave.svg",
+     "glowforge_pro_sheet_2_engrave.dxf",
+     "glowforge_pro_sheet_2_engrave.svg",
+     "glowforge_pro_sheet_3_engrave.dxf",
+     "glowforge_pro_sheet_3_engrave.svg",
+     "glowforge_pro_sheet_4_engrave.dxf",
+     "glowforge_pro_sheet_4_engrave.svg",
+     "glowforge_pro_sheet_5_engrave.dxf",
+     "glowforge_pro_sheet_5_engrave.svg",
+     "ponoko_sheet_1_engrave.dxf",
+     "ponoko_sheet_1_engrave.svg",
+     "ponoko_sheet_2_engrave.dxf",
+     "ponoko_sheet_2_engrave.svg",
+     "xtool_p2_sheet_1_engrave.dxf",
+     "xtool_p2_sheet_1_engrave.svg",
+     "xtool_p2_sheet_2_engrave.dxf",
+     "xtool_p2_sheet_2_engrave.svg",
+     "xtool_p2_sheet_3_engrave.dxf",
+     "xtool_p2_sheet_3_engrave.svg",
+     "xtool_s1_sheet_1_engrave.dxf",
+     "xtool_s1_sheet_1_engrave.svg",
+     "xtool_s1_sheet_2_engrave.dxf",
+     "xtool_s1_sheet_2_engrave.svg",
+     "xtool_s1_sheet_3_engrave.dxf",
+     "xtool_s1_sheet_3_engrave.svg",
+     "xtool_s1_sheet_4_engrave.dxf",
+     "xtool_s1_sheet_4_engrave.svg",
+     "coupon.svg",
+     "coupon.dxf",
+     "set.json"
+    ],
+    "sheets": {
+     "ponoko": 2,
+     "xtool_s1": 4,
+     "xtool_p2": 3,
+     "glowforge_pro": 5,
+     "generic_600x400": 3
+    },
+    "default_variants": {
+     "left": "solid",
+     "right": "nofunfor",
+     "front": "traced",
+     "top": "a",
+     "lid": "a",
+     "B_face": "traced",
+     "T_face": "traced",
+     "B_left": "traced",
+     "B_right": "traced",
+     "T_left": "traced",
+     "T_right": "traced"
+    }
+   },
+   "faces": {
+    "left": {
+     "solid": {
+      "svg": "faces/left__solid.svg",
+      "dxf": "faces/left__solid.dxf",
+      "min_clearance_mm": 0.391
+     },
+     "outline": {
+      "svg": "faces/left__outline.svg",
+      "dxf": "faces/left__outline.dxf",
+      "min_clearance_mm": 0.373
+     }
+    },
+    "right": {
+     "funfor": {
+      "svg": "faces/right__funfor.svg",
+      "dxf": "faces/right__funfor.dxf",
+      "min_clearance_mm": 0.381
+     },
+     "nofunfor": {
+      "svg": "faces/right__nofunfor.svg",
+      "dxf": "faces/right__nofunfor.dxf",
+      "min_clearance_mm": 0.381
+     }
+    },
+    "front": {
+     "traced": {
+      "svg": "faces/front__traced.svg",
+      "dxf": "faces/front__traced.dxf",
+      "min_clearance_mm": 0.738
+     }
+    },
+    "top": {
+     "a": {
+      "svg": "faces/top__a.svg",
+      "dxf": "faces/top__a.dxf",
+      "min_clearance_mm": 0.39
+     },
+     "c": {
+      "svg": "faces/top__c.svg",
+      "dxf": "faces/top__c.dxf",
+      "min_clearance_mm": 0.391
+     }
+    },
+    "lid": {
+     "a": {
+      "svg": "faces/lid__a.svg",
+      "dxf": "faces/lid__a.dxf",
+      "min_clearance_mm": 0.597
+     },
+     "c": {
+      "svg": "faces/lid__c.svg",
+      "dxf": "faces/lid__c.dxf",
+      "min_clearance_mm": 0.584
+     }
+    },
+    "B_face": {
+     "traced": {
+      "svg": "faces/B_face__traced.svg",
+      "dxf": "faces/B_face__traced.dxf",
+      "min_clearance_mm": 3.607
+     }
+    },
+    "T_face": {
+     "traced": {
+      "svg": "faces/T_face__traced.svg",
+      "dxf": "faces/T_face__traced.dxf",
+      "min_clearance_mm": 4.134
+     }
+    },
+    "B_left": {
+     "traced": {
+      "svg": "faces/B_left__traced.svg",
+      "dxf": "faces/B_left__traced.dxf",
+      "min_clearance_mm": 0.392
+     }
+    },
+    "B_right": {
+     "traced": {
+      "svg": "faces/B_right__traced.svg",
+      "dxf": "faces/B_right__traced.dxf",
+      "min_clearance_mm": 0.398
+     }
+    },
+    "T_left": {
+     "traced": {
+      "svg": "faces/T_left__traced.svg",
+      "dxf": "faces/T_left__traced.dxf",
+      "min_clearance_mm": 0.4
+     }
+    },
+    "T_right": {
+     "traced": {
+      "svg": "faces/T_right__traced.svg",
+      "dxf": "faces/T_right__traced.dxf",
+      "min_clearance_mm": 0.391
+     }
+    }
    }
   }
  }
