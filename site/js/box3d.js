@@ -24,6 +24,50 @@ export function partGroup(p) {
   return 'shell';
 }
 export const isDrawer = g => g && g.startsWith('drawer');
+
+// Bring any parts.json into the frame the renderer uses: mm, Z up, right-handed,
+// +X front to rear, +Y from the right wall to the left wall (seen from the front).
+// The geometry exporter writes a left-handed frame (Y left -> right) and says so in
+// box.handedness; we reflect Y there, which keeps every face, hole and engraving the
+// physical way round (the renderer flips winding for mirrored matrices).
+export function normalizeData(d) {
+  const B = d.box || {}; const W = B.width || 165.1;
+  const flat = t => Array.isArray(t[0]) ? t.flat() : t;
+  const left = String(B.handedness || '').toLowerCase().startsWith('l');
+  const mir = v => v && [v[0], -v[1], v[2]];
+  for (const p of d.parts) {
+    p.transform = flat(p.transform);
+    if (left) {
+      const t = p.transform; // rows 0..3; reflect row 1 (Y) about W/2
+      for (let c = 0; c < 4; c++) t[4 + c] = -t[4 + c];
+      t[7] += W;
+      p.insert_direction = mir(p.insert_direction);
+      if (p.art_up) p.art_up = mir(p.art_up);
+    }
+    p.group = p.group || partGroup(p);
+  }
+  if (left) for (const s of d.steps || []) s.insert_direction = mir(s.insert_direction);
+  if (left && d.hardware && d.hardware.magnets) for (const m of d.hardware.magnets) { m.at = [m.at[0], W - m.at[1], m.at[2]]; m.axis = mir(m.axis); }
+  // magnets: derive from the small round holes in the divider and drawer backs when not given
+  d.hardware = d.hardware || {};
+  if (!d.hardware.magnets) {
+    const mags = [];
+    for (const p of d.parts) {
+      if (!/divider|back/i.test(p.id + ' ' + p.name)) continue;
+      const M = new THREE.Matrix4().set(...p.transform);
+      for (const h of p.holes || []) {
+        if (h.length < 12) continue;
+        let cx = 0, cy = 0; for (const [x, y] of h) { cx += x; cy += y; } cx /= h.length; cy /= h.length;
+        const r = Math.hypot(h[0][0] - cx, h[0][1] - cy); if (r < 2 || r > 4) continue;
+        const at = new THREE.Vector3(cx, cy, p.thickness / 2).applyMatrix4(M);
+        const axis = new THREE.Vector3(0, 0, 1).transformDirection(M);
+        mags.push({ at: at.toArray(), axis: axis.toArray(), d: 6, h: 2, group: isDrawer(p.group) ? p.group : undefined });
+      }
+    }
+    d.hardware.magnets = mags;
+  }
+  return d;
+}
 function sideSign(p) {
   const e = p.exterior_face;
   const s = typeof e === 'string' ? e : (e && (e.side || e.face)) || '+w';
@@ -165,6 +209,8 @@ function nominalCenterLocal(p) {
   for (const [x, y] of p.outline) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
   return new THREE.Vector2((x0 + x1) / 2, (y0 + y1) / 2);
 }
+// which way is "up" in the art for faces that lie flat (fallback when the manifest says nothing)
+const ART_UP = { sliding_lid: [-1, 0, 0], lid: [-1, 0, 0], top_panel: [0, 1, 0] };
 export function artFrame(p) {
   const M = partMatrix(p); const sgn = sideSign(p);
   const n = new THREE.Vector3(0, 0, sgn).transformDirection(M);
@@ -257,6 +303,7 @@ export class BoxModel {
   }
   async setArt(face, info, variant, mode = 'burn') {
     const pid = info.part_id; const p = this.byId[pid]; if (!p) return;
+    if (!p.art_up && (info.up || ART_UP[face])) p.art_up = info.up || ART_UP[face];
     const old = this.art[face]; if (old) { old.parent.remove(old); old.geometry.dispose(); old.material.map && old.material.map.dispose(); old.material.dispose(); delete this.art[face]; }
     if (!variant) return;
     const url = artUrl(variant); if (!url) return;
@@ -299,7 +346,8 @@ export class Viewer {
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
     const sc = this.scene = new THREE.Scene();
     const pm = new THREE.PMREMGenerator(r); sc.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    sc.add(new THREE.HemisphereLight(0xfff6e8, 0xc9b38f, 0.55));
+    sc.add(new THREE.HemisphereLight(0xfff6e8, 0xc9b38f, 0.85));
+    const fill = new THREE.DirectionalLight(0xfff4e6, 0.7); fill.position.set(model.center.x + 400, model.center.y - 300, 260); sc.add(fill);
     const sun = new THREE.DirectionalLight(0xfff1dc, 1.6); sun.position.set(-160, 120, 700); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048); const sca = sun.shadow.camera; sca.left = -800; sca.right = 800; sca.top = 800; sca.bottom = -800; sca.near = 10; sca.far = 1400; sun.shadow.bias = -0.0005; sun.shadow.radius = 6;
     sun.target.position.copy(model.center); sc.add(sun, sun.target);

@@ -125,6 +125,11 @@
      "default": false,
      "notes": ""
     }
+   ],
+   "up": [
+    -1,
+    0,
+    0
    ]
   },
   "faceplate_colors": {

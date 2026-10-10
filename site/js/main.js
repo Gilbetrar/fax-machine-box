@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {
   BoxModel, Viewer, StillRenderer, partGroup, isDrawer, stepNumber, stepParts,
-  partBox, partMatrix, artFrame, inkCanvas, birchCanvas, artUrl,
+  partBox, partMatrix, artFrame, inkCanvas, birchCanvas, artUrl, normalizeData,
 } from './box3d.js';
 import { RULES } from './rules.js';
 
@@ -94,6 +94,7 @@ function initHero(data) {
   const origSelect = viewer.select.bind(viewer);
   viewer.select = (id, c) => { origSelect(id, c); syncChips(); };
   artState.listeners.push(async () => { await applyArt(model, 'burn'); viewer.kick(); });
+  window.faxHero = { model, viewer };   // handy for checking views from the console
   return { model, viewer };
 }
 
@@ -198,12 +199,15 @@ async function renderInventory(data, R) {
   const cells = items.map(({ p, n }) => {
     const img = h('img', { alt: p.name, width: 600, height: 450 });
     const sz = p.size_mm ? `${Math.round(p.size_mm[0])} × ${Math.round(p.size_mm[1])} mm` : '';
-    const name = n > 1 ? p.name.replace(/\s*\((lower|upper) drawer\)/, '') : p.name;
+    const name = n > 1 ? cleanName(p.name) : p.name;
     inv.append(h('div', { class: 'inv' }, h('span', { class: 'letter' }, p.letter), h('span', { class: 'qty' }, '×' + n), img, h('b', {}, name), h('small', {}, sz)));
     return { p, img };
   });
   const hw = $('#hardware');
-  const hitems = (data.hardware && data.hardware.items) || [];
+  let hitems = (data.hardware && data.hardware.items) || [];
+  if (!hitems.length) hitems = [
+    { name: 'Disc magnet, 6 × 2 mm', qty: 4, spares: 2 }, { name: 'M3 × 14 button-head bolt', qty: 1 },
+    { name: 'M3 nyloc nut', qty: 1 }, { name: 'M3 washer', qty: 2 }];
   for (const it of hitems) hw.append(h('div', { class: 'hw', html: hwIcon(it.name) }, h('div', {}, h('b', {}, it.name), it.spares ? h('small', {}, `plus ${it.spares} spares`) : null), h('span', { class: 'qty' }, '×' + it.qty)));
   const tools = new Set(['Calipers (to measure the plywood)', 'Wood glue (PVA)', 'CA glue or epoxy for the magnets', 'Painter\'s tape or clamps', 'Small mallet or a block of wood', '2 mm hex key', '5.5 mm wrench or pliers', '220 grit sandpaper', 'Paste wax', 'Paper cutter or scissors']);
   for (const t of tools) $('#tools').append(h('li', {}, t));
@@ -234,65 +238,105 @@ function stepCamera(dir) {
   const perp = Math.abs(d.y) > Math.abs(d.x) ? new THREE.Vector3(-0.9, 0, 0) : new THREE.Vector3(0, -0.9, 0);
   return d.clone().negate().add(perp).add(new THREE.Vector3(0, 0, 0.8)).toArray();
 }
-function renderStep(step, idx, data, R, magnetStep) {
-  const n = stepNumber(step, idx); const ids = stepParts(step);
+// Site-side wording for the exporter's steps (keyed by step id), plus the steps
+// the geometry export does not model: preparation, squaring, magnets, finishing, paper.
+const STEP_TEXT = {
+  drawer_walls: { title: 'Drawer back and front', note: 'Build two drawers the same way. The back is the panel with the magnet hole; the front has the grip slot.', tools: ['wood glue'] },
+  drawer_left_side: { title: 'Drawer left side', tools: ['wood glue'] },
+  drawer_right_side: { title: 'Drawer right side', note: 'The four corners close together.', tools: ['wood glue'] },
+  drawer_bottom: { title: 'Drawer bottom', note: 'Its edges are plain; the wall tabs go through its hole rows.', tools: ['wood glue'] },
+  drawer_face: { title: 'Faceplate', note: 'Put the red-engraved rectangle on the glue side, line up the two grip slots so a finger reaches through both, and clamp. Glue the drawer nowhere else.', tools: ['wood glue', 'clamps'] },
+  box_frame: { title: 'Top panel, shelf and divider', note: 'The divider fits one way: the edge with the longer finger run goes to the left wall. If it will not seat, turn it over rather than forcing it.', tools: ['wood glue'] },
+  box_right: { title: 'Right wall', note: 'Lid slot mouth to the front.', tools: ['wood glue', 'mallet'] },
+  box_rear: { title: 'Rear wall', note: 'Handle it by its edges until it is glued.', tools: ['wood glue', 'mallet'] },
+  box_left: { title: 'Left wall', tools: ['wood glue', 'mallet'] },
+  box_front: { title: 'Front wall', tools: ['wood glue', 'mallet'] },
+  box_bottom: { title: 'Bottom panel', note: 'Its plain edge sits against the rear wall.', tools: ['wood glue', 'mallet'] },
+  box_button: { title: 'Turn button', note: 'Stack: bolt, washer, button, wall, washer, nyloc nut. Tighten until the button turns with a firm push. Up locks the lid, down frees it.', hardware: ['M3 × 14 button-head bolt', '2 × M3 washer', 'M3 nyloc nut'], tools: ['2 mm hex key', '5.5 mm wrench'] },
+  box_lid: { title: 'Sliding lid', note: 'Slide it over the front wall into both slots until it stops at the divider. Never glue the lid or its slots.' },
+  drawers_in: { title: 'Drawers in' },
+};
+const EXTRA_STEPS = [
+  { before: 'drawer_walls', id: 'prep', title: 'Sort the parts and dry-fit', focus: 'dryfit',
+    caption: 'Lay the parts out by letter. To tell the side walls apart, count the column of divider holes near the lid slot: the left wall has 8, the right wall has 7. Dry-fit each step before you glue it, and use slow-set wood glue on the finger joints only.',
+    tools: ['wood glue (slow-set PVA)', 'clamps or painter\'s tape'] },
+  { after: 'box_bottom', id: 'square', title: 'Square and clamp', focus: 'square',
+    caption: 'Measure both diagonals. When they match, clamp or tape the box until the glue sets. Wipe squeeze-out inside the drawer bay right away, and try a drawer in each opening to check it slides.',
+    tools: ['clamps or painter\'s tape', 'damp cloth'] },
+  { after: 'drawers_in', id: 'magnets', title: 'Magnets', focus: 'magnets',
+    caption: 'Glue a magnet into each divider hole, flush with its rear face. Then hold each drawer fully shut, check which way its magnet is pulled, and glue it into the hole in the drawer back, flush with the face that touches the divider.',
+    hardware: ['4 × 6 × 2 mm disc magnet'], tools: ['CA glue or epoxy'] },
+  { after: 'magnets', id: 'finishing', title: 'Finishing', focus: 'finished',
+    caption: 'Sand scorched edges lightly with 220 grit and wipe off the dust. Rub paste wax on the drawer runners and the lid edges so they glide. An oil finish on the outside is optional; keep it off glued faces.',
+    tools: ['220 grit sandpaper', 'cloth', 'paste wax'] },
+  { after: 'finishing', id: 'paper', title: 'Paper', focus: 'paper',
+    caption: 'Cut letter paper into quarters, 4.25 × 5.5 in. Stand a stack on its long edge in the front compartment.',
+    hardware: ['letter paper'], tools: ['paper cutter or scissors'] },
+];
+function buildSteps(data) {
+  const out = (data.steps || []).map((s, i) => {
+    const t = STEP_TEXT[s.id] || {};
+    const base = s.caption || s.text || s.description || '';
+    return { ...s, n: stepNumber(s, i), title: s.title || t.title || base.split(/[.:]/)[0], caption: [base, t.note].filter(Boolean).join(' '),
+      hardware: s.hardware || t.hardware || [], tools: s.tools || t.tools || [] };
+  });
+  for (const x of EXTRA_STEPS) {
+    if (out.some(s => s.id === x.id)) continue;
+    let at = out.length;
+    if (x.before) { const k = out.findIndex(s => s.id === x.before); if (k >= 0) at = k; }
+    if (x.after) { const k = out.findIndex(s => s.id === x.after); if (k >= 0) at = k + 1; }
+    out.splice(at, 0, { ...x, parts: [], extra: true });
+  }
+  return out;
+}
+function renderStep(step, idx, data, R) {
+  const n = step.n ?? idx + 1;
   const by = Object.fromEntries(data.parts.map(p => [p.id, p]));
-  const hi = ids.map(id => by[id]).filter(Boolean);
+  let hi = stepParts(step).map(id => by[id]).filter(Boolean);
   const order = p => p.assembly_step ?? 999;
   const s = R._scene(), b = new THREE.Box3();
   const mags = (data.hardware && data.hardware.magnets) || [];
-  const mentions = (step.hardware || []).join(' ').toLowerCase().includes('magnet');
   if (step.focus === 'paper') return { svg: SVG_PAPER };
   if (step.focus === 'magnets') {
-    const div = findPart(data, /divider/i); if (!div) return null;
-    R.addPart(s, div, 'hi', [0, 0, 0], b);
-    for (const m of mags.filter(m => !m.group)) {
-      R.addMagnet(s, m, b, [30, 0, 0]);
-      R.addArrow(s, new THREE.Vector3(m.at[0] + 58, m.at[1], m.at[2]), [-1, 0, 0], 30, b);
+    const div = findPart(data, /divider/i); const back = data.parts.find(p => p.group === 'drawer_lower' && /back/i.test(p.id + p.name));
+    if (div) R.addPart(s, div, 'ghost', [0, 0, 0], b);
+    const dOff = [60, 0, 0];
+    if (back) R.addPart(s, back, 'ghost', dOff, b);
+    for (const m of mags) {
+      if (m.group && m.group !== 'drawer_lower') continue;
+      R.addMagnet(s, m, b, m.group ? dOff : [0, 0, 0]);
     }
-    return { url: R.render(s, b, { dir: [1, -0.9, 0.6] }) };
+    return { url: R.render(s, b, { dir: [1, -1, 0.55] }) };
   }
   if (!hi.length) {
-    const exploded = idx === 0;
-    for (const p of data.parts) {
-      const g = partGroup(p);
-      if (exploded && isDrawer(g)) continue;
+    const shell = data.parts.filter(p => !isDrawer(p.group));
+    for (const p of step.focus === 'finished' ? data.parts : shell) {
       let off = [0, 0, 0];
-      if (exploded) {
-        if (p.insert_direction) off = p.insert_direction.map(v => -v * 80);
-        else if (/top/i.test(p.id + p.name)) off = [0, 0, 90];
-      }
-      R.addPart(s, p, exploded ? 'plain' : 'hi', off, b);
+      if (step.focus === 'dryfit' && p.insert_direction) off = p.insert_direction.map(v => -v * 80);
+      R.addPart(s, p, step.focus === 'dryfit' ? 'plain' : 'hi', off, b);
     }
-    return { url: R.render(s, b, { dir: [-1, -0.9, 0.75] }) };
+    return { url: R.render(s, b, { dir: [-1, 0.9, 0.7] }), glue: step.focus === 'square' };
   }
-  const groups = new Set(hi.map(partGroup));
-  const family = groups.size === 1 && isDrawer([...groups][0]) ? [...groups][0] : null;
-  const assembled = hi.length > 6 && !step.insert_direction && !family;
+  const groups = [...new Set(hi.map(p => p.group))];
+  const allDrawer = groups.every(isDrawer);
+  // building a drawer: show the lower one only (both are made the same way)
+  const family = allDrawer && step.phase === 'drawer' ? (groups.includes('drawer_lower') ? 'drawer_lower' : groups[0]) : null;
+  if (family) hi = hi.filter(p => p.group === family);
   const hiSet = new Set(hi);
-  const nOrder = Math.max(...hi.map(order));
-  // ghosts: parts already in place (earlier assembly step; same drawer when building a drawer)
   for (const p of data.parts) {
     if (hiSet.has(p) || order(p) >= n) continue;
-    if (family && partGroup(p) !== family) continue;
+    if (family && p.group !== family) continue;
+    if (!family && isDrawer(p.group) && !allDrawer) continue;   // drawers are built separately, they go in last
     R.addPart(s, p, 'ghost', [0, 0, 0], b);
   }
-  // highlighted parts, pulled back against their insert direction
   const byDir = new Map(); let small = true;
   for (const p of hi) {
-    const dir = assembled ? null : (step.insert_direction || p.insert_direction);
-    const D = family ? 30 : (step.insert_direction ? 110 : 50);
+    const dir = step.insert_direction || p.insert_direction;
+    const D = family ? 30 : allDrawer ? 120 : 50;
     const off = dir ? dir.map(v => -v * D) : [0, 0, 0];
     const pb = partBox(p); if (pb.getSize(new THREE.Vector3()).length() > 60) small = false;
     R.addPart(s, p, 'hi', off, b);
     if (dir) { const k = dir.join(','); if (!byDir.has(k)) byDir.set(k, { dir, box: new THREE.Box3() }); byDir.get(k).box.union(pb.translate(new THREE.Vector3(...off))); }
-  }
-  for (const m of mags) {
-    const inFam = family ? m.group === family : !m.group || (n > nOrder && m.group);
-    if (!inFam) continue;
-    if (family && !mentions) continue;
-    if (!family && magnetStep && n < magnetStep) continue;
-    R.addMagnet(s, m, null, [0, 0, 0], family && mentions ? 'arrow' : 'metal');
   }
   for (const { dir, box } of byDir.values()) {
     const c = box.getCenter(new THREE.Vector3()); const d = new THREE.Vector3(...dir).normalize();
@@ -303,37 +347,41 @@ function renderStep(step, idx, data, R, magnetStep) {
   let fit = b;
   if (small) { fit = new THREE.Box3(); for (const p of hi) fit.union(partBox(p)); fit.expandByScalar(70); }
   const firstDir = byDir.size ? [...byDir.values()][0].dir : null;
-  return { url: R.render(s, fit, { dir: stepCamera(firstDir), pad: small ? 1.0 : 1.08 }), glue: !!step.glue || assembled };
+  return { url: R.render(s, fit, { dir: stepCamera(firstDir), pad: small ? 1.0 : 1.08 }) };
 }
 async function renderSteps(data, R) {
-  const steps = data.steps || []; const list = $('#steps'); const nav = $('#stepnav');
+  const steps = buildSteps(data); const list = $('#steps'); const nav = $('#stepnav');
   const by = Object.fromEntries(data.parts.map(p => [p.id, p]));
-  const magnetStep = (() => { const s = steps.find(s => (s.hardware || []).join(' ').toLowerCase().includes('magnet') || s.focus === 'magnets'); return s ? stepNumber(s, steps.indexOf(s)) : null; })();
   const pics = [];
   steps.forEach((s, i) => {
-    const n = stepNumber(s, i);
-    const letters = new Map(); for (const id of stepParts(s)) { const p = by[id]; if (p && !letters.has(p.letter)) letters.set(p.letter, p); }
-    const pic = h('div', { class: 'step-pic' }, h('span', { class: 'ph' }, 'drawing step ' + n + '…'));
+    const num = i + 1;
+    const letters = new Map();
+    let ids = stepParts(s);
+    if (s.phase === 'drawer') ids = ids.filter(id => !/^t_/i.test(id));
+    for (const id of ids) { const p = by[id]; if (p && !letters.has(p.letter)) letters.set(p.letter, p); }
+    const pic = h('div', { class: 'step-pic' }, h('span', { class: 'ph' }, 'drawing step ' + num + '…'));
     const chips = h('div', { class: 'step-parts' },
-      [...letters.values()].slice(0, 8).map(p => h('span', { class: 'pchip' }, h('span', { class: 'letter' }, p.letter), p.name.replace(/\s*\((lower|upper) drawer\)/, ''))),
+      [...letters.values()].slice(0, 8).map(p => h('span', { class: 'pchip' }, h('span', { class: 'letter' }, p.letter), cleanName(p.name))),
+      s.phase === 'drawer' ? h('span', { class: 'pchip tool' }, '× 2 drawers') : null,
       (s.hardware || []).map(x => h('span', { class: 'pchip hwc' }, x)),
       (s.tools || []).map(x => h('span', { class: 'pchip tool' }, x)));
-    const li = h('li', { class: 'step', id: 'step-' + n },
-      h('div', { class: 'step-head' }, h('span', { class: 'step-n' }, n), h('h3', {}, s.title || '')),
-      pic, chips, s.caption || s.text || s.description ? h('p', {}, s.caption || s.text || s.description) : null);
-    list.append(li); pics.push({ s, i, pic });
-    nav.append(h('a', { href: '#step-' + n }, n));
+    const li = h('li', { class: 'step', id: 'step-' + num },
+      h('div', { class: 'step-head' }, h('span', { class: 'step-n' }, num), h('h3', {}, s.title || '')),
+      pic, chips, s.caption ? h('p', {}, s.caption) : null);
+    list.append(li); pics.push({ s, i, num, pic });
+    nav.append(h('a', { href: '#step-' + num }, num));
   });
-  for (const { s, i, pic } of pics) {
+  for (const { s, i, num, pic } of pics) {
     let r = null;
-    try { r = renderStep(s, i, data, R, magnetStep); } catch (e) { console.warn('step', i, e); }
+    try { r = renderStep(s, i, data, R); } catch (e) { console.warn('step', i, e); }
     pic.innerHTML = '';
     if (r && r.svg) pic.innerHTML = r.svg;
-    else if (r && r.url) pic.append(h('img', { src: r.url, alt: 'Step ' + stepNumber(s, i) + ': ' + (s.title || '') }));
-    if (r && r.glue) pic.append(h('span', { class: 'glue-flag' }, 'glue'));
+    else if (r && r.url) pic.append(h('img', { src: r.url, alt: 'Step ' + num + ': ' + (s.title || '') }));
+    if (r && r.glue) pic.append(h('span', { class: 'glue-flag' }, 'clamp'));
     await nextFrame();
   }
 }
+const cleanName = n => n.replace(/\s*\((lower|upper)( drawer)?\)/i, '');
 
 // ---------- engraving ----------
 function faceLabel(fid, face, data) {
@@ -412,57 +460,77 @@ function initEngraving(data) {
 
 // ---------- downloads ----------
 const THICKS = Array.from({ length: 8 }, (_, i) => (2.8 + i * 0.1).toFixed(1));
+// downloads/manifest.json: { thicknesses: { "3.2": { folder, zip, files: [...], sheets: { bed: n } } },
+//                           beds: { bed: { width_mm, height_mm, sheets_by_thickness } } }
+// Older/looser shapes (arrays, {zip, svg, dxf} objects) are accepted too.
 function normThicknesses(m) {
-  const out = {}; const src = m.thicknesses || m.files || m.by_thickness || {};
-  const add = (t, f) => { const k = Number(t).toFixed(1); out[k] = f.files || f; };
+  const out = {}; const src = m.thicknesses || m.by_thickness || {};
+  const add = (t, f) => { if (f && !isNaN(+t)) out[Number(t).toFixed(1)] = f; };
   if (Array.isArray(src)) for (const e of src) add(e.thickness ?? e.mm ?? e.t, e);
-  else for (const [t, f] of Object.entries(src)) if (!isNaN(+t)) add(t, f);
+  else for (const [t, f] of Object.entries(src)) add(t, f);
   return out;
 }
-function normBeds(m) {
+const BED_NAMES = { ponoko: 'Ponoko', xtool_s1: 'xTool S1', xtool_p2: 'xTool P2', glowforge_pro: 'Glowforge Pro', generic_600x400: 'Any 600 × 400 mm bed', nycr: 'NYC Resistor (Epilog 32 × 20 in)' };
+function normBeds(m, t, entry) {
   const src = m.beds || m.layouts || {}; const out = [];
-  if (Array.isArray(src)) for (const b of src) out.push({ name: b.name || b.label || b.id, size: b.size || b.bed || (b.width_mm && `${b.width_mm} × ${b.height_mm} mm`) || '', sheets: b.sheets ?? b.sheet_count ?? b.count, files: b.files });
-  else for (const [k, v] of Object.entries(src)) out.push(typeof v === 'object' ? { name: v.name || k, size: v.size || (v.width_mm && `${v.width_mm} × ${v.height_mm} mm`) || '', sheets: v.sheets ?? v.sheet_count ?? v.count, files: v.files } : { name: k, sheets: v });
+  const list = Array.isArray(src) ? src.map(b => [b.id || b.name, b]) : Object.entries(src);
+  for (const [id, v] of list) {
+    const o = typeof v === 'object' ? v : { sheets: v };
+    const sheets = (entry && entry.sheets && entry.sheets[id]) ?? (o.sheets_by_thickness && o.sheets_by_thickness[t]) ?? o.sheets ?? o.sheet_count;
+    out.push({ id, name: o.name || o.label || BED_NAMES[id] || id.replace(/_/g, ' '), size: o.width_mm ? `${Math.round(o.width_mm)} × ${Math.round(o.height_mm)} mm` : (o.size || ''), sheets, files: o.files });
+  }
   return out;
 }
-function dlLinks(files, base) {
-  const row = h('div', { class: 'dl-row' }); if (!files) return row;
-  const pick = (k) => typeof files === 'string' ? (k === 'zip' ? files : null) : files[k] || files[k.toUpperCase()];
-  for (const [k, label, cls] of [['zip', 'All files (.zip)', 'btn-ink'], ['svg', 'SVG', 'btn-line'], ['dxf', 'DXF', 'btn-line'], ['pdf', 'PDF', 'btn-line']]) {
-    let f = pick(k); if (!f) continue; if (Array.isArray(f)) f = f[0]; const href = /^(https?:|\/)/.test(f) ? f : base + f;
-    row.append(h('a', { class: 'btn ' + cls, href, download: '' }, label));
-  }
-  return row;
-}
+const fileUrl = (base, folder, f) => /^(https?:|\/)/.test(f) ? f : base + (folder && !f.includes('/') ? folder + '/' : '') + f;
+function entryFiles(entry) { return Array.isArray(entry.files) ? entry.files : []; }
+function dlBtn(href, label, cls = 'btn-line') { return h('a', { class: 'btn ' + cls, href, download: '' }, label); }
 const soonBox = (title, text) => h('div', { class: 'soon', html: '<svg width="44" height="44" viewBox="0 0 44 44"><rect x="6" y="4" width="28" height="36" rx="3" fill="#fff" stroke="#1d1b19" stroke-width="2.4"/><path d="M12 14h16M12 20h16M12 26h10" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="8" fill="#f6d33c" stroke="#1d1b19" stroke-width="2.4"/><path d="M33 29v4l3 2" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/></svg>' }, h('div', {}, h('b', {}, title), h('span', {}, text)));
 async function initFiles() {
   const base = 'downloads/'; let man = await getJSON(base + 'manifest.json');
-  if (man && (man.status === 'pending' || (!Object.keys(normThicknesses(man)).length && !man.coupon && !man.test_coupon))) man = null;
-  const thick = $('#thick'); let sel = '3.2';
   const byT = man ? normThicknesses(man) : {};
+  if (man && (man.status === 'pending' || !Object.keys(byT).length)) man = null;
+  const thick = $('#thick'); let sel = '3.2';
   function render() {
     for (const b of thick.children) b.setAttribute('aria-checked', b.dataset.t === sel);
     $('#thick-read').textContent = `${sel} mm is about ${(sel / 25.4).toFixed(3)} in.`;
-    const box = $('#box-dl'); box.innerHTML = '';
-    if (!man) { box.append(soonBox('Files coming soon', 'The cut files for every thickness are being regenerated. This page will offer a zip, SVG and DXF for each one.')); return; }
-    const f = byT[sel];
-    if (f) { box.append(h('p', {}, `Every part for ${sel} mm plywood, laid out on sheets and color-coded for cutting.`), dlLinks(f, base)); }
-    else box.append(soonBox(`No files for ${sel} mm yet`, 'Pick another thickness, or generate your own from the source.'));
+    const box = $('#box-dl'), coupon = $('#coupon-dl'), bedsEl = $('#beds');
+    box.innerHTML = ''; coupon.innerHTML = ''; bedsEl.innerHTML = '';
+    if (!man) {
+      box.append(soonBox('Files coming soon', 'The cut files for every thickness are being regenerated. This page will offer a zip, SVG and DXF for each one.'));
+      coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
+      return;
+    }
+    const e = byT[sel];
+    if (!e) { box.append(soonBox(`No files for ${sel} mm yet`, 'Pick another thickness, or generate your own from the source.')); return; }
+    const files = entryFiles(e), folder = e.folder || '';
+    // coupon
+    const cps = files.filter(f => /coupon/i.test(f));
+    if (cps.length) coupon.append(h('div', { class: 'dl-row' }, cps.map(f => dlBtn(fileUrl(base, folder, f), (/\.dxf$/i.test(f) ? 'Coupon DXF' : 'Coupon SVG') + ` · ${sel} mm`))));
+    else coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
+    // whole set
+    box.append(h('p', {}, `Every part for ${sel} mm plywood, laid out on sheets for each laser bed below and color-coded for cutting. The zip holds all of them plus the coupon.`));
+    const row = h('div', { class: 'dl-row' });
+    if (e.zip) row.append(dlBtn(fileUrl(base, '', e.zip), `Download all (.zip, ${sel} mm)`, 'btn-ink'));
+    box.append(row);
+    // layouts per bed
+    const beds = normBeds(man, sel, e);
+    if (beds.length) {
+      bedsEl.append(h('h4', { class: 'bedh' }, 'Sheet layouts by laser bed'));
+      const g = h('div', { class: 'beds' });
+      for (const b of beds) {
+        const sheetFiles = files.filter(f => f.startsWith(b.id + '_sheet_'));
+        const nums = [...new Set(sheetFiles.map(f => +f.match(/_sheet_(\d+)/)[1]))].sort((x, y) => x - y);
+        g.append(h('div', { class: 'bed' },
+          h('b', {}, b.name),
+          h('small', {}, [b.size, b.sheets != null ? `${b.sheets} sheet${b.sheets == 1 ? '' : 's'}` : null].filter(Boolean).join(' · ')),
+          h('ul', { class: 'sheets' }, nums.map(k => h('li', {}, h('span', {}, 'Sheet ' + k),
+            sheetFiles.filter(f => +f.match(/_sheet_(\d+)/)[1] === k).sort().reverse().map(f => h('a', { href: fileUrl(base, folder, f), download: '' }, f.split('.').pop().toUpperCase())))))));
+      }
+      bedsEl.append(g);
+    }
   }
   for (const t of THICKS) thick.append(h('button', { role: 'radio', 'data-t': t, onclick: () => { sel = t; render(); } }, t));
   render();
-  const coupon = $('#coupon-dl');
-  const cf = man && (man.coupon || man.test_coupon || (man.files && man.files.coupon));
-  if (cf) coupon.append(dlLinks(cf, base)); else coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
-  const beds = man ? normBeds(man) : [];
-  if (beds.length) {
-    const el = $('#beds'); el.append(h('h4', { class: 'bedh' }, 'Layouts for smaller laser beds'));
-    const g = h('div', { class: 'beds' });
-    for (const b of beds) g.append(h('div', { class: 'bed' }, h('b', {}, b.name), h('small', {}, [b.size, b.sheets != null ? `${b.sheets} sheets` : null].filter(Boolean).join(' · ')), b.files ? dlLinks(b.files, base) : null));
-    el.append(g);
-  } else {
-    $('#beds').append(h('p', { class: 'small' }, 'Layouts for common hobby laser beds (about 12 × 20 in and smaller) will be listed here with their sheet counts.'));
-  }
 }
 
 // ---------- materials + drawing kit ----------
@@ -571,7 +639,7 @@ function initParams(data) {
 // ---------- boot ----------
 async function boot() {
   initChrome(); renderRules(); initOptions(); initFiles(); initMaterials();
-  const data = await getJSON('data/parts.json');
+  const raw = await getJSON('data/parts.json'); const data = raw && normalizeData(raw);
   if (!data) { $('#hero-loading').textContent = 'The 3D model could not load.'; return; }
   initParams(data);
   artState.manifest = await getJSON('data/art-manifest.json');
