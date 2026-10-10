@@ -20,8 +20,8 @@
           "notes": "Display lettering kept solid black (Ben's style); other large solids get gap channels.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
           "ink_pct": 26.8,
-          "paths": 47,
-          "svg_kb": 148
+          "paths": 43,
+          "svg_kb": 157
         },
         {
           "id": "outline",
@@ -32,8 +32,8 @@
           "notes": "Lettering redrawn as a 0.9 mm outline with light coded hatching inside: much less burn time and charring than solid.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
           "ink_pct": 15.3,
-          "paths": 458,
-          "svg_kb": 241
+          "paths": 434,
+          "svg_kb": 249
         }
       ]
     },
@@ -56,9 +56,9 @@
           "default": false,
           "notes": "Full title. The lid through-slot (y 5.1-8.9 mm, front 76 mm) cuts through 'Fun For'.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 26.0,
-          "paths": 486,
-          "svg_kb": 289
+          "ink_pct": 25.9,
+          "paths": 444,
+          "svg_kb": 304
         },
         {
           "id": "nofunfor",
@@ -68,9 +68,9 @@
           "default": true,
           "notes": "'Fun For' removed so the lid slot crosses blank wood; the title reads 'Terrible Writers & Artists of All Ages'.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 25.7,
-          "paths": 477,
-          "svg_kb": 288
+          "ink_pct": 25.6,
+          "paths": 433,
+          "svg_kb": 302
         }
       ]
     },
@@ -93,9 +93,133 @@
           "default": true,
           "notes": "Fit above the bottom finger-joint row (art bottom at 113.4 mm). '44' kept as drawn in the source.",
           "source": "art/ai-versions/final/IMG_4229_ai_vH1.png (approved)",
-          "ink_pct": 27.9,
-          "paths": 87,
-          "svg_kb": 128
+          "ink_pct": 27.7,
+          "paths": 86,
+          "svg_kb": 135
+        }
+      ]
+    },
+    "top_panel": {
+      "part_id": "top_panel",
+      "piece_label": "Top Panel",
+      "piece_svg": "output/outer_shell.svg",
+      "title": "Top panel (fixed, behind the lid)",
+      "size_mm": [
+        222.25,
+        158.75
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "a",
+          "label": "Snake head (A)",
+          "svg": "out/top_panel__a.svg",
+          "png": "out/top_panel__a.png",
+          "default": true,
+          "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+          "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+          "ink_pct": 22.0,
+          "paths": 160,
+          "svg_kb": 244
+        },
+        {
+          "id": "c",
+          "label": "Full cat (C)",
+          "svg": "out/top_panel__c.svg",
+          "png": "out/top_panel__c.png",
+          "default": false,
+          "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+          "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+          "ink_pct": 20.2,
+          "paths": 209,
+          "svg_kb": 235
+        }
+      ]
+    },
+    "sliding_lid": {
+      "part_id": "sliding_lid",
+      "piece_label": "Sliding Lid",
+      "piece_svg": "output/lids.svg",
+      "title": "Sliding lid",
+      "size_mm": [
+        79.0,
+        163.6
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "a",
+          "label": "Snake head (A)",
+          "svg": "out/sliding_lid__a.svg",
+          "png": "out/sliding_lid__a.png",
+          "default": true,
+          "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+          "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+          "ink_pct": 16.1,
+          "paths": 57,
+          "svg_kb": 67
+        },
+        {
+          "id": "c",
+          "label": "Full cat (C)",
+          "svg": "out/sliding_lid__c.svg",
+          "png": "out/sliding_lid__c.png",
+          "default": false,
+          "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+          "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+          "ink_pct": 20.5,
+          "paths": 47,
+          "svg_kb": 77
+        }
+      ]
+    },
+    "faceplate_colors": {
+      "part_id": "faceplate_colors",
+      "piece_label": "Faceplate",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer faceplate: COLORS",
+      "size_mm": [
+        150.9,
+        53.5
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced outline + coded fills",
+          "svg": "out/faceplate_colors__traced.svg",
+          "png": "out/faceplate_colors__traced.png",
+          "default": true,
+          "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
+          "source": "art/ai-versions/final/IMG_4236_ai_vH3.png (approved)",
+          "ink_pct": 8.7,
+          "paths": 89,
+          "svg_kb": 40
+        }
+      ]
+    },
+    "faceplate_lines": {
+      "part_id": "faceplate_lines",
+      "piece_label": "Faceplate",
+      "piece_svg": "output/drawer.svg",
+      "title": "Drawer faceplate: Lines",
+      "size_mm": [
+        150.9,
+        53.5
+      ],
+      "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+      "variants": [
+        {
+          "id": "traced",
+          "label": "Traced outline + coded fills",
+          "svg": "out/faceplate_lines__traced.svg",
+          "png": "out/faceplate_lines__traced.png",
+          "default": true,
+          "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
+          "source": "art/ai-versions/final/IMG_4238_ai_vH2.png (approved)",
+          "ink_pct": 5.6,
+          "paths": 36,
+          "svg_kb": 34
         }
       ]
     },
@@ -118,9 +242,9 @@
           "default": true,
           "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
           "source": "art/trimmed/IMG_4233.jpeg (Ben's original, one continuous panel)",
-          "ink_pct": 14.8,
-          "paths": 149,
-          "svg_kb": 100
+          "ink_pct": 14.9,
+          "paths": 146,
+          "svg_kb": 105
         }
       ]
     },
@@ -144,8 +268,8 @@
           "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
           "source": "art/trimmed/IMG_4235.jpeg (Ben's original, one continuous panel)",
           "ink_pct": 12.2,
-          "paths": 167,
-          "svg_kb": 85
+          "paths": 154,
+          "svg_kb": 87
         }
       ]
     },
@@ -169,8 +293,8 @@
           "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
           "source": "art/trimmed/IMG_4237.jpeg (Ben's original, one continuous panel)",
           "ink_pct": 23.9,
-          "paths": 351,
-          "svg_kb": 191
+          "paths": 323,
+          "svg_kb": 203
         }
       ]
     },
@@ -193,9 +317,9 @@
           "default": true,
           "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
           "source": "art/trimmed/IMG_4239.jpeg (Ben's original, one continuous panel)",
-          "ink_pct": 28.2,
-          "paths": 329,
-          "svg_kb": 198
+          "ink_pct": 28.3,
+          "paths": 284,
+          "svg_kb": 208
         }
       ]
     }

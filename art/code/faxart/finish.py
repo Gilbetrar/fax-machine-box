@@ -24,7 +24,7 @@ def finish(face_id: str, ink: np.ndarray, protect: np.ndarray | None = None,
     m = R.remove_small(orig, R.SPECK_MM2)
     m = R.thicken_to_min(m, 0.35)
     # close sub-minimum gaps first, then decide what counts as a large solid
-    m = cv2.morphologyEx(R.u8(m), cv2.MORPH_CLOSE, R.disk(R.px(R.MIN_GAP_MM) + 1)).astype(bool)
+    m = cv2.morphologyEx(R.u8(m), cv2.MORPH_CLOSE, R.disk(7)).astype(bool)
     if knock:
         m, _ = R.knock_out_solids(m, protect=protect, orient_from=orig)
     return R.enforce_laser_rules(m, mat)

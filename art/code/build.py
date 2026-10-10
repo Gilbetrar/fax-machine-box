@@ -19,10 +19,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from faxart.finish import emit  # noqa: E402
-from faxart import ai_faces  # noqa: E402
+from faxart import ai_faces, faceplate_faces, lid_faces  # noqa: E402
 from faxart.faces import RECIPES  # noqa: E402
 
-RECIPES = {**RECIPES, **ai_faces.RECIPES}
+RECIPES = {**RECIPES, **ai_faces.RECIPES, **lid_faces.RECIPES, **faceplate_faces.RECIPES}
 from faxart.geometry import FACES, regenerate_svgs  # noqa: E402
 
 MANIFEST = HERE / "manifest.json"
