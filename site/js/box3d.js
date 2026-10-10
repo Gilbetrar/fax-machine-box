@@ -222,16 +222,25 @@ export function artFrame(p) {
   const c = new THREE.Vector3(c2.x, c2.y, sgn > 0 ? p.thickness : 0).applyMatrix4(M);
   return { M, n, U, R, c, sgn };
 }
-export function artOverlayGeometry(p, sizeMm, texW, texH) {
+// a2l: optional 2x3 affine mapping art mm (u right, v down, as seen from outside) to
+// the part's local outline coords. When given it is exact; otherwise the art is
+// projected onto the exterior face using an up vector.
+export function artOverlayGeometry(p, sizeMm, texW, texH, a2l) {
   const g = new THREE.ShapeGeometry(shapeOf(p), 1);
   const { M, U, R, c, sgn } = artFrame(p);
   const pos = g.attributes.position; const uv = new Float32Array(pos.count * 2);
   const z = sgn > 0 ? p.thickness + 0.06 : -0.06;
   const v = new THREE.Vector3();
+  let inv = null;
+  if (a2l) {
+    const [[a, b, tx], [cc, d, ty]] = a2l; const det = a * d - b * cc;
+    inv = (x, y) => { const X = x - tx, Y = y - ty; return [(d * X - b * Y) / det, (-cc * X + a * Y) / det]; };
+  }
   for (let i = 0; i < pos.count; i++) {
     pos.setZ(i, z);
-    v.set(pos.getX(i), pos.getY(i), z).applyMatrix4(M).sub(c);
-    let s = v.dot(R) / sizeMm[0] + 0.5, t = v.dot(U) / sizeMm[1] + 0.5;
+    let s, t;
+    if (inv) { const [u, vv] = inv(pos.getX(i), pos.getY(i)); s = u / sizeMm[0]; t = 1 - vv / sizeMm[1]; }
+    else { v.set(pos.getX(i), pos.getY(i), z).applyMatrix4(M).sub(c); s = v.dot(R) / sizeMm[0] + 0.5; t = v.dot(U) / sizeMm[1] + 0.5; }
     // account for the transparent padding inside the ink canvas
     s = (s * (texW - 2 * PAD) + PAD) / texW; t = (t * (texH - 2 * PAD) + PAD) / texH;
     uv[2 * i] = s; uv[2 * i + 1] = t;
@@ -310,7 +319,7 @@ export class BoxModel {
     const rgb = mode === 'ink' ? [29, 27, 25] : [70, 40, 20];
     const can = await inkCanvas(url, rgb, mode === 'ink' ? 0.95 : 0.85);
     const tex = new THREE.CanvasTexture(can); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-    const geo = artOverlayGeometry(p, info.size_mm || p.size_mm, can.width, can.height);
+    const geo = artOverlayGeometry(p, info.size_mm || p.size_mm, can.width, can.height, info.art_to_local);
     const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, roughness: 0.95, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     const m = new THREE.Mesh(geo, mat); m.matrixAutoUpdate = false; m.matrix.copy(partMatrix(p)); m.renderOrder = 2; m.userData.partId = pid;
     this.units[pid].pivot.add(m); this.art[face] = m;

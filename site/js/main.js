@@ -386,7 +386,9 @@ const cleanName = n => n.replace(/\s*\((lower|upper)( drawer)?\)/i, '');
 // ---------- engraving ----------
 function faceLabel(fid, face, data) {
   const p = data.parts.find(q => q.id === face.part_id);
-  const nice = { left_wall: 'Left wall', right_wall: 'Right wall', front_wall: 'Front', top_panel: 'Top', sliding_lid: 'Lid', faceplate_colors: 'COLORS drawer', faceplate_lines: 'Lines drawer' };
+  const nice = { left_wall: 'Left wall', right_wall: 'Right wall', front_wall: 'Front', top_panel: 'Top', sliding_lid: 'Lid', faceplate_colors: 'COLORS drawer', faceplate_lines: 'Lines drawer',
+    left: 'Left wall', right: 'Right wall', front: 'Front', top: 'Top', lid: 'Lid', B_face: 'COLORS drawer', T_face: 'Lines drawer',
+    B_left: 'COLORS, left side', B_right: 'COLORS, right side', T_left: 'Lines, left side', T_right: 'Lines, right side' };
   if (nice[fid]) return nice[fid];
   const m = fid.match(/drawer_side_(\d)/); if (m) return 'Drawer side ' + m[1];
   return p ? p.name : fid.replace(/_/g, ' ');
@@ -428,23 +430,35 @@ function initEngraving(data) {
     const face = man.faces[fid]; vbox.innerHTML = '';
     const chosen = variantById(fid, artState.choice[fid]);
     for (const v of face.variants || []) {
-      const url = artUrl(v);
-      const inkImg = h('img', { src: url, alt: v.label + ' line art', loading: 'lazy' });
+      const url = artUrl({ png: v.png || v.svg });
+      const inkImg = h('img', { src: v.svg ? artUrl({ svg: v.svg }) : url, alt: v.label + ' line art', loading: 'lazy' });
       const burnSlot = h('div', {});
       const btn = h('button', { class: 'var' + (v === chosen ? ' on' : ''), 'aria-pressed': v === chosen },
         h('div', { class: 'pair' }, inkImg, burnSlot),
         h('div', { class: 'lbls' }, h('span', {}, 'line art'), h('span', {}, 'burned on birch')),
         h('div', { class: 'cap' }, h('div', {}, h('b', {}, v.label || v.id), v.notes ? h('small', {}, ' ' + v.notes) : null), v === chosen ? h('span', { class: 'tag' }, 'on the box') : null));
       btn.addEventListener('click', async () => {
-        artState.choice[fid] = v.id; showFace(fid);
+        artState.choice[fid] = v.id;
+        for (const other of linkedFaces(fid)) if ((man.faces[other].variants || []).some(x => x.id === v.id)) artState.choice[other] = v.id;
+        showFace(fid);
         for (const f of artState.listeners) f();
       });
       vbox.append(btn);
       burnPreview(url, 700).then(c => burnSlot.append(c)).catch(e => console.warn(e.message));
     }
+    const links = linkedFaces(fid);
+    if (links.length) vbox.append(h('p', { class: 'small linknote' }, `The ${links.map(f => faceLabel(f, man.faces[f], data).toLowerCase()).join(' and ')} changes with it: the art runs across both.`));
     focusFace(fid);
   }
-  for (const [fid, face] of faces) tabs.append(h('button', { role: 'tab', 'data-face': fid, onclick: () => showFace(fid) }, faceLabel(fid, face, data)));
+  // faces whose art continues across a seam switch variants together (top + lid)
+  function linkedFaces(fid) {
+    const groups = man.links || [['top', 'lid'], ['top_panel', 'sliding_lid']];
+    const g = groups.find(x => x.includes(fid)); return g ? g.filter(x => x !== fid && man.faces[x]) : [];
+  }
+  for (const [fid, face] of faces) {
+    const nv = (face.variants || []).length;
+    tabs.append(h('button', { role: 'tab', 'data-face': fid, onclick: () => showFace(fid) }, faceLabel(fid, face, data), nv > 1 ? h('span', { class: 'nv' }, String(nv)) : null));
+  }
   for (const b of document.querySelectorAll('.segbtn')) b.addEventListener('click', async () => {
     artState.mode = b.dataset.mode; for (const x of document.querySelectorAll('.segbtn')) x.classList.toggle('on', x === b);
     await applyArt(model, artState.mode); viewer.kick();

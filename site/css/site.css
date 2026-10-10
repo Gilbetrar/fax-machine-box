@@ -1,3 +1,6 @@
+.facetabs .nv { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; border-radius: 9px; background: var(--ink); color: #fff; font: 700 11px var(--body); padding: 0 5px; }
+.linknote { margin: 0; font-family: var(--hand); font-size: 16px; }
+
 /* cut-file sheet lists */
 .bedh { font: 700 16px var(--display); margin: 22px 0 0; }
 .sheets { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; }
