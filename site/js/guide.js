@@ -1,6 +1,17 @@
 // Build-guide content that does not need three.js: step wording, extra steps,
 // how-it-works cards, hardware icons and small hand-drawn diagrams.
 
+// Parts the design has dropped (the turn-button lock). parts.json may still list
+// them until the geometry branch merges; leave them, and steps that only add them, out.
+export const REMOVED = /button/i;
+export function withoutRemoved(data) {
+  const gone = new Set(data.parts.filter(p => REMOVED.test(p.id + ' ' + (p.name || ''))).map(p => p.id));
+  if (!gone.size) return data;
+  const parts = data.parts.filter(p => !gone.has(p.id));
+  const steps = (data.steps || []).map(s => ({ ...s, parts: (s.parts || []).filter(id => !gone.has(id)) }))
+    .filter(s => !((data.steps.find(x => x.id === s.id) || {}).parts || []).length || s.parts.length);
+  return { ...data, parts, steps };
+}
 export const stepNumber = (s, i) => s.number ?? s.n ?? s.step ?? s.index ?? (i + 1);
 export const stepParts = s => s.parts || s.part_ids || s.added || [];
 export const cleanName = n => String(n || '').replace(/\s*\((lower|upper)( drawer)?\)/i, '');
@@ -18,7 +29,6 @@ export const STEP_TEXT = {
   box_left: { title: 'Left wall', note: 'Engraved face out, lid slot mouth to the front. Rear and left walls are one glue session.', tools: ['wood glue', 'mallet'] },
   box_front: { title: 'Front wall', note: 'Engraved face out, with the fax screen at the top. Front wall and bottom are the last glue session.', tools: ['wood glue', 'mallet'] },
   box_bottom: { title: 'Bottom panel', note: 'Its plain edge sits against the rear wall.', tools: ['wood glue', 'mallet'] },
-  box_button: { title: 'Turn button', note: 'Stack it as bolt, washer, button, wall, washer, nyloc nut, and tighten until the button turns with a firm push. Turned up, it blocks the lid; turned down, the lid slides out.', hardware: ['M3 × 14 button-head bolt', '2 × M3 washer', 'M3 nyloc nut'], tools: ['2 mm hex key', '5.5 mm wrench'], diagram: 'button' },
   box_lid: { title: 'Sliding lid', note: 'Grip slot toward the front, engraved side up. Slide it over the front wall into both slots until it stops at the divider. Never glue the lid or its slots.' },
   drawers_in: { title: 'Drawers in', note: 'COLORS goes in the lower opening, Lines in the upper one. Nothing stops a drawer from coming all the way out, so support it when you pull it far.' },
 };
@@ -96,15 +106,14 @@ export function buildSteps(data) {
 export const HOW_CARDS = [
   { id: 'paper', title: 'Paper slot', text: 'The front compartment holds a stack of quarter-letter sheets (4.25 × 5.5 in) standing on their long edge. Slide the lid back to take a page.', alt: 'Cutaway of the front compartment holding a stack of paper on edge' },
   { id: 'drawers', title: 'Two drawers with magnet catches', text: 'COLORS holds colored pencils and Lines holds pens. Each drawer pulls out the back. A pair of small magnets, one in the drawer and one in the divider, pulls it shut and keeps it closed when you carry the box.', alt: 'The upper drawer pulled out of the back of the box, with its magnet catch' },
-  { id: 'lid', title: 'Sliding lid and turn button', text: 'The lid rides in two slots cut into the side walls. A small wooden turn button bolted to the front wall locks it: turned up, the lid cannot slide out; turned down, it opens.', alt: 'The sliding lid pulled forward out of its slots, with the turn button on the front wall' },
+  { id: 'lid', title: 'Sliding lid', text: 'The lid rides in two slots cut into the side walls and slides out the front. It has no lock: friction in the slots holds it, so carry the box level and lift it from below, never by the lid or the top front edges.', alt: 'The sliding lid pulled forward out of its slots' },
   { id: 'joints', title: 'Finger joints', text: 'Every corner is a row of interlocking fingers cut to the exact plywood thickness. They line the box up square on their own, and a little wood glue makes them permanent.', alt: 'A corner of the box pulled apart to show the interlocking finger joints' },
 ];
 
-export const TOOLS = ['Calipers (to measure the plywood)', 'Wood glue (Titebond III)', 'CA glue for the magnets', 'Painter\'s tape or clamps', 'Small mallet or a block of wood', 'Tape measure', '2 mm hex key', '5.5 mm wrench or pliers', '220 grit sandpaper', 'Paraffin or beeswax', 'Paper cutter or scissors'];
+export const TOOLS = ['Calipers (to measure the plywood)', 'Wood glue (Titebond III)', 'CA glue for the magnets', 'Painter\'s tape or clamps', 'Small mallet or a block of wood', 'Tape measure', '220 grit sandpaper', 'Paraffin or beeswax', 'Paper cutter or scissors'];
 
 export const HARDWARE_FALLBACK = [
-  { name: 'Disc magnet, 6 × 2 mm', qty: 4, spares: 2 }, { name: 'M3 × 14 button-head bolt', qty: 1 },
-  { name: 'M3 nyloc nut', qty: 1 }, { name: 'M3 washer, 7 mm OD', qty: 2 }];
+  { name: 'Disc magnet, 6 × 2 mm', qty: 4, spares: 2 }];
 
 export const HW_ICONS = {
   magnet: '<svg viewBox="0 0 54 54" aria-hidden="true"><ellipse cx="27" cy="33" rx="17" ry="7" fill="#9aa0a8" stroke="#1d1b19" stroke-width="2.4"/><path d="M10 25v8M44 25v8" stroke="#1d1b19" stroke-width="2.4"/><ellipse cx="27" cy="25" rx="17" ry="7" fill="#d1d5da" stroke="#1d1b19" stroke-width="2.4"/></svg>',
@@ -126,18 +135,6 @@ export const SVG_PAPER = `<svg viewBox="0 0 900 640" xmlns="http://www.w3.org/20
 <path d="M660 175h165" /><circle cx="800" cy="145" r="15"/>
 ${K(610, 400, 40, '4 quarters,')}${K(610, 448, 40, '4.25 × 5.5 in')}</g></svg>`;
 
-// Turn button, locked (up) and open (down), seen from the front.
-function buttonPanel(x, up, label) {
-  const px = x + 150, py = 300;
-  const paddle = up ? `<rect x="${px - 22}" y="${py - 150}" width="44" height="172" rx="22" fill="#f2d9a8"/>` : `<rect x="${px - 22}" y="${py - 22}" width="44" height="172" rx="22" fill="#f2d9a8"/>`;
-  return `<rect x="${x}" y="150" width="300" height="300" fill="#fbf7ef"/>
-  <rect x="${x - 20}" y="${up ? 120 : 120}" width="340" height="26" fill="${up ? '#f2d9a8' : '#efe9dc'}" ${up ? '' : 'stroke-dasharray="10 8"'}/>
-  ${paddle}<circle cx="${px}" cy="${py}" r="9" fill="#fff"/>
-  ${up ? `<path d="M${px - 70} 104l40 0" stroke="#d8423a" stroke-width="6"/><path d="M${px - 90} 95l-18 20M${px - 108} 95l18 20" stroke="#d8423a" stroke-width="6"/>` : `<path d="M${x + 40} 104h-70m14-14l-14 14 14 14" stroke="#d8423a" stroke-width="6"/>`}
-  ${K(x + 60, 520, 44, label)}`;
-}
-export const SVG_BUTTON = `<svg viewBox="0 0 900 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Turn button up locks the lid; turned down the lid slides out"><g fill="none" stroke="#1d1b19" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="filter:url(#wobble)">
-${buttonPanel(70, true, 'up: locked')}${buttonPanel(530, false, 'down: open')}</g></svg>`;
 
 // Laser starting points. Filled from published sources; see the citations rendered with the table.
 export { LASER } from './laser.js';

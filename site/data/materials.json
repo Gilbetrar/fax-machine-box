@@ -11,33 +11,6 @@
       "note": "The box uses 4 (one pair per drawer); the pack leaves spares for the coupon and for a dropped magnet. N35 magnets of the same size also work, with a gentler pull."
     },
     {
-      "category": "Hardware",
-      "name": "M3 × 14 button-head bolt",
-      "spec": "M3 × 0.5 × 14 mm button-head socket cap screw, 304 stainless, 50-pack",
-      "qty": 1,
-      "url": "https://www.amazon.com/dp/B0GH6CR24N",
-      "price_usd": 7.69,
-      "note": "The turn button's pivot. Takes a 2 mm hex key."
-    },
-    {
-      "category": "Hardware",
-      "name": "M3 flat washers, 7 mm OD",
-      "spec": "M3 × 7 mm OD (ISO 7089 / DIN 125 size), 18-8 stainless, 100-pack",
-      "qty": 2,
-      "url": "https://www.amazon.com/dp/B0BGH5Y5LQ",
-      "price_usd": 5.10,
-      "note": "One on each side of the turn button."
-    },
-    {
-      "category": "Hardware",
-      "name": "M3 nyloc nut",
-      "spec": "M3 × 0.5 nylon-insert lock nut, standard height (about 4 mm), 150-pack",
-      "qty": 1,
-      "url": "https://www.amazon.com/dp/B0F1Y7T692",
-      "price_usd": 5.99,
-      "note": "Tightening it sets how stiffly the button turns."
-    },
-    {
       "category": "Wood",
       "name": "Baltic birch plywood, 1/8 in, 12 × 24 in, box of 12",
       "spec": "Woodpeckers, B/BB grade; true size 11-7/8 × 23-7/8 in (301.6 × 606.4 mm)",
@@ -98,7 +71,7 @@
       "spec": "Minwax Polycrylic, clear satin, 1/2 pint",
       "qty": 1,
       "url": "https://www.amazon.com/dp/B000C02AO2",
-      "price_usd": 11.90,
+      "price_usd": 11.9,
       "optional": true,
       "note": "Optional. One or two thin coats on the outside only, after assembly. Keep it off the sliding faces and the inside of the drawer bay. Water clean-up, low odor."
     },

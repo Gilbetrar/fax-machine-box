@@ -49,6 +49,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             idx = json.loads(body)
             OUT.mkdir(parents=True, exist_ok=True)
             (OUT / "index.json").write_text(json.dumps(idx, indent=1) + "\n")
+            keep = {Path(v).name for v in idx.get("files", {}).values()}
+            for f in OUT.glob("*.png"):      # drop pictures of parts or steps that no longer exist
+                if f.name not in keep:
+                    f.unlink()
             print("wrote index with", len(idx.get("files", {})), "pictures")
         else:
             return self.send_error(404)

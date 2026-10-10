@@ -221,19 +221,24 @@ export class BoxModel {
     parent.add(pivot);
     this.units[p.id] = { pivot, mesh, part: p, group: grp, explodeDir: this._explodeDir(p, grp) };
   }
+  // Exploded position: every part moves away from the middle of its body (box or
+  // drawer) along its own face normal, by an amount that grows with its distance
+  // from the middle, so neighbors that share an insert direction still separate.
   _explodeDir(p, grp) {
     const c = partCenter(p);
-    if (p.insert_direction) {
-      const d = new THREE.Vector3(...p.insert_direction).normalize().negate();
-      return d.multiplyScalar(isDrawer(grp) ? 28 : 85);
-    }
-    // fallback: dominant axis away from the body centre
     let ref = this.center.clone();
     if (isDrawer(grp)) { ref = new THREE.Vector3(); let n = 0; for (const q of this.parts) if (partGroup(q) === grp) { ref.add(partCenter(q)); n++; } ref.divideScalar(n || 1); }
-    const d = c.clone().sub(ref); const ax = ['x', 'y', 'z'].reduce((a, b) => Math.abs(d[b]) > Math.abs(d[a]) ? b : a, 'x');
-    const v = new THREE.Vector3(); v[ax] = Math.sign(d[ax]) || 1;
-    if (/top/i.test(p.id) && !isDrawer(grp)) v.set(0, 0, 1);
-    return v.multiplyScalar(isDrawer(grp) ? 28 : (v.z > 0 ? 110 : 85));
+    const d = c.clone().sub(ref);
+    const nrm = new THREE.Vector3(0, 0, 1).transformDirection(partMatrix(p));
+    const dn = d.dot(nrm);
+    let dir, dist;
+    if (Math.abs(dn) > 8) { dir = nrm.clone().multiplyScalar(Math.sign(dn)); dist = Math.abs(dn); }
+    else if (d.length() > 1) { dir = d.clone().normalize(); dist = d.length(); }
+    else { dir = new THREE.Vector3(0, 0, 1); dist = 0; }
+    const v = dir.multiplyScalar(isDrawer(grp) ? dist * 0.5 + 22 : dist * 1.15 + 40);
+    // the lid also pulls out of the front, so it clears the top panel
+    if (grp === 'lid' && p.insert_direction) v.add(new THREE.Vector3(...p.insert_direction).normalize().multiplyScalar(-70));
+    return v;
   }
   _addMagnets() {
     const mags = (this.data.hardware && this.data.hardware.magnets) || [];
@@ -272,8 +277,8 @@ export class BoxModel {
   layout(s) {
     const e = s.explode;
     for (const u of Object.values(this.units)) u.pivot.position.copy(u.explodeDir).multiplyScalar(e);
-    this.groups.drawer_lower.position.set(150 * s.drawer_lower + 250 * e, 0, 0);
-    this.groups.drawer_upper.position.set(150 * s.drawer_upper + 250 * e, 0, 40 * e);
+    this.groups.drawer_lower.position.set(150 * s.drawer_lower + 560 * e, 0, 0);
+    this.groups.drawer_upper.position.set(150 * s.drawer_upper + 560 * e, 0, 80 * e);
     this.groups.lid.position.set(-62 * s.lid, 0, 0);
     if (this.button) this.button.spin.setRotationFromAxisAngle(this.button.axis, Math.PI * s.button);
   }
@@ -286,15 +291,15 @@ export class BoxModel {
   }
   groupOffset(g, st = this.target) {
     const e = st.explode;
-    if (g === 'drawer_lower') return new THREE.Vector3(150 * st.drawer_lower + 250 * e, 0, 0);
-    if (g === 'drawer_upper') return new THREE.Vector3(150 * st.drawer_upper + 250 * e, 0, 40 * e);
+    if (g === 'drawer_lower') return new THREE.Vector3(150 * st.drawer_lower + 560 * e, 0, 0);
+    if (g === 'drawer_upper') return new THREE.Vector3(150 * st.drawer_upper + 560 * e, 0, 80 * e);
     if (g === 'lid') return new THREE.Vector3(-62 * st.lid, 0, 0);
     return new THREE.Vector3();
   }
   toggleDrawer(g) { this.target[g] = this.target[g] > 0.5 ? 0 : 1; }
   toggleLid() {
     const open = this.target.lid < 0.5;
-    this.target.lid = open ? 1 : 0; this.target.button = open ? 1 : 0;
+    this.target.lid = open ? 1 : 0;
   }
 }
 

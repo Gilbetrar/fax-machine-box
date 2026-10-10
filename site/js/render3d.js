@@ -31,7 +31,7 @@ function initHero(ctx, data) {
     onSelect(p, g) {
       if (!p) { card.hidden = true; return; }
       card.hidden = false; $('#pc-letter').textContent = p.letter || '?'; $('#pc-name').textContent = p.name;
-      $('#pc-hint').textContent = isDrawer(g) ? 'Tap again to slide the drawer' : (g === 'lid' || /button/i.test(p.id)) ? 'Tap again to slide the lid' : (qty[p.letter] > 1 ? `Part ${p.letter} · ${qty[p.letter]} in the kit` : `Part ${p.letter}`);
+      $('#pc-hint').textContent = isDrawer(g) ? 'Tap again to slide the drawer' : g === 'lid' ? 'Tap again to slide the lid (it is held by friction, with no lock)' : (qty[p.letter] > 1 ? `Part ${p.letter} · ${qty[p.letter]} in the kit` : `Part ${p.letter}`);
     },
   });
   const l = $('#hero-loading'); l && l.remove();
@@ -40,7 +40,7 @@ function initHero(ctx, data) {
   $('#explode').addEventListener('input', e => { model.target.explode = +e.target.value; viewer.kick(); refit(); });
   for (const b of document.querySelectorAll('.controls .chip')) b.addEventListener('click', () => {
     const a = b.dataset.act;
-    if (a === 'home') { model.target.explode = 0; $('#explode').value = 0; model.target.drawer_lower = model.target.drawer_upper = model.target.lid = model.target.button = 0; viewer.select(null); viewer.setView(viewer.home); }
+    if (a === 'home') { model.target.explode = 0; $('#explode').value = 0; model.target.drawer_lower = model.target.drawer_upper = model.target.lid = 0; viewer.select(null); viewer.setView(viewer.home); }
     else { if (a === 'lid') model.toggleLid(); else model.toggleDrawer(a); refit(); }
     syncChips(); viewer.kick();
   });
@@ -66,7 +66,7 @@ function initEngraving(ctx, data) {
     const face = man.faces[fid]; const p = data.parts.find(q => q.id === face.part_id); if (!p) return;
     const g = p.group; const fr = artFrame(p);
     const side = isDrawer(g) && Math.abs(fr.n.y) > 0.9;   // drawer sides only show when the drawer is out
-    Object.assign(model.target, { drawer_lower: side && g === 'drawer_lower' ? 1.35 : 0, drawer_upper: side && g === 'drawer_upper' ? 1.35 : 0, lid: 0, button: 0, explode: 0 });
+    Object.assign(model.target, { drawer_lower: side && g === 'drawer_lower' ? 1.35 : 0, drawer_upper: side && g === 'drawer_upper' ? 1.35 : 0, lid: 0, explode: 0 });
     const box = partBox(p).translate(model.groupOffset(g));
     const dir = Math.abs(fr.n.z) > 0.9 ? new THREE.Vector3(-0.45, -0.3, 1.5) : fr.n.clone().add(new THREE.Vector3(0, 0, 0.32)).add(fr.R.clone().multiplyScalar(-0.22));
     viewer.fitTo(box, { dir: dir.toArray(), margin: 1.05 });
@@ -116,17 +116,16 @@ function howPictures(data, R) {
     for (const m of (data.hardware && data.hardware.magnets) || []) R.addMagnet(s, m, null, m.group === 'drawer_upper' ? [120, 0, 0] : [0, 0, 0]);
     out.drawers = R.render(s, b, { dir: [0.95, -1, 0.7] }, 800, 600);
   }
-  if (lid && front) { // lid + button (turned down)
+  if (lid && front) { // lid pulled out
     const s = R._scene(), b = new THREE.Box3();
     for (const p of data.parts) {
       if (isDrawer(p.group)) continue;
       if (p === lid) R.addPart(s, p, 'hi', [-34, 0, 0], b);
-      else if (p === btn) R.addPart(s, btnDownOf(btn), 'hi', [0, 0, 0], b);
       else R.addPart(s, p, 'plain', [0, 0, 0], p === front || p === left ? b : null);
     }
     const lb = partBox(lid).translate(new THREE.Vector3(-34, 0, 0));
     R.addArrow(s, new THREE.Vector3(lb.min.x + 8, (lb.min.y + lb.max.y) / 2, lb.max.z + 16), [-1, 0, 0], 50, b);
-    out.lid = R.render(s, b, { dir: [-1, 0.5, 0.3] }, 800, 600);
+    out.lid = R.render(s, b, { dir: [-1, 0.5, 0.45] }, 800, 600);
   }
   if (front && left && bottom) { // exploded corner
     const s = R._scene(); const e = 14;

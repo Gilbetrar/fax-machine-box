@@ -4,7 +4,7 @@
 // upgrades the page; if it fails, nothing here is lost.
 import { V } from './version.js';
 import { RULES } from './rules.js';
-import { buildSteps, stepParts, cleanName, HOW_CARDS, TOOLS, HARDWARE_FALLBACK, hwIcon, SVG_PAPER, SVG_BUTTON, LASER } from './guide.js';
+import { buildSteps, stepParts, cleanName, HOW_CARDS, TOOLS, HARDWARE_FALLBACK, hwIcon, SVG_PAPER, LASER, withoutRemoved } from './guide.js';
 import { inkCanvas, birchCanvas, artUrl } from './art2d.js';
 
 export const $ = (s, el = document) => el.querySelector(s);
@@ -112,7 +112,7 @@ function renderSteps(ctx) {
     if (s.focus === 'paper') pic = h('div', { class: 'step-pic', html: SVG_PAPER });
     else pic = h('div', { class: 'step-pic' }, picSlot(ctx, 'step-' + s.id, `Step ${num}: ${s.title || ''}`, 'pic'));
     if (s.focus === 'square') pic.append(h('span', { class: 'glue-flag' }, 'clamp'));
-    const extra = s.diagram === 'button' ? h('div', { class: 'step-diagram', html: SVG_BUTTON }) : null;
+    const extra = null;
     const chips = h('div', { class: 'step-parts' },
       [...letters.values()].slice(0, 8).map(p => h('span', { class: 'pchip' }, h('span', { class: 'letter' }, p.letter), cleanName(p.name))),
       s.phase === 'drawer' ? h('span', { class: 'pchip tool' }, '× 2 drawers') : null,
@@ -411,7 +411,7 @@ async function boot() {
   const [text, art, renders] = await Promise.all([getText('data/parts.json'), getJSON('data/art-manifest.json'), getJSON('img/render/index.json')]);
   ctx.renders = renders;
   if (!text) { $('#hero-loading').textContent = 'The parts list could not load.'; return; }
-  ctx.data = JSON.parse(text); ctx.dataHash = hash(text); ctx.art = art;
+  ctx.data = withoutRemoved(JSON.parse(text)); ctx.dataHash = hash(text); ctx.art = art;
   artState.manifest = art;
   initParams(ctx.data);
   renderHow(ctx); renderInventory(ctx); renderSteps(ctx); initEngraving(ctx);
