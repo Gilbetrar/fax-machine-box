@@ -45,6 +45,22 @@ and must never be sent for cutting** — send `sheet_1.svg`, `sheet_2.svg`,
 input: the right SVG to open and inspect before cutting is one of those, not
 `final_layout.svg`.
 
+## Cut files for every stock thickness
+
+    .venv/bin/python scripts/export_cutfiles.py        # site/downloads/
+    .venv/bin/python scripts/export_site_data.py       # site/data/parts.json
+
+`export_cutfiles.py` writes full sets for 2.8 to 3.5 mm in 0.1 mm steps
+(SVG and DXF), a zip per thickness, a test-fit coupon, and layouts for the
+Ponoko sheet (790 x 384 mm), xTool S1 (498 x 319), xTool P2/P2S (600 x 305),
+Glowforge Pro (495 x 279) and a generic 600 x 400 bed. `manifest.json` lists
+the files and the sheet count per bed. Kerf compensation is 0.10 mm per side
+(Ponoko); finger holes are T + 0.1 mm at every thickness. Geometry reads
+`FAXBOX_THICKNESS` (mm) at import time, so one process makes one thickness.
+The generated files are not committed when they pass 30 MB (the folder's
+`.gitignore` then keeps only the manifest). DXF is written without extra
+dependencies (R12 ASCII, layers CUT and ENGRAVE, mm).
+
 ## Test
 
 ```bash
@@ -89,10 +105,8 @@ fax-machine-box/
 ## Color coding
 
 - **Blue (`#0000FF`)** = cut line
-- **Red (`#FF0000`)** = engrave line (the "FAX MACHINE" text on the right
-  wall, and the faceplate glue-up registration outlines) — the "FAX MACHINE"
-  letters are hatched engrave strokes, cut at vector/engrave settings, not
-  filled.
+- **Red (`#FF0000`)** = engrave line (the faceplate glue-up registration
+  outlines; wall art arrives from the art pipeline).
 - **Gray** = reference-only text (part labels, sheet numbers). These are
   *not* laser instructions — ignore/skip this color when setting up the job.
   Sheet cut/engrave strokes themselves are drawn hairline-weight (0.0762mm)
@@ -105,17 +119,17 @@ details.
 
 ## Parts checklist
 
-21 pieces total, all cut from uniform 3.175mm (1/8") plywood, plus the
-iteration-2 retention hardware (1 turn-button piece) and two standalone
-calibration coupons (none are box parts — see "Cut-day checklist"). Matches
-DESIGN.md's parts list exactly.
+22 pieces total (8 shell, 12 drawer, 1 lid, 1 turn button), all cut from
+uniform plywood 2.8-3.5 mm thick (3.175 mm / 1/8" by default; pick the cut-file
+set that matches the sheet you measure), plus standalone calibration coupons
+(none are box parts, see "Cut-day checklist"). Matches DESIGN.md's parts list.
 
 **Outer shell — `output/sheet_*.svg`, 8 pieces, cut once (from
 `outer_shell.svg`):**
 
 - [ ] 1× Bottom panel (inset between the four walls)
 - [ ] 1× Left Wall
-- [ ] 1× Right Wall (carries the "FAX MACHINE" engraving)
+- [ ] 1× Right Wall
 - [ ] 1× Front Wall — iteration 2: carries the sole lid-retention
   turn-button pivot hole (see "Know before you build")
 - [ ] 1× Rear Wall (two drawer openings)
@@ -135,8 +149,9 @@ the same sheet TWICE):**
 - [ ] 2× Bottom (body)
 - [ ] 2× Faceplate (glued to the body front, not finger-jointed)
 
-Drawer body external dimensions: 149.0mm (Y) × **218.6mm (X, pull
-direction)** × 53.5mm (Z). The divider is the drawer's in-stop (see "Know
+Drawer body external dimensions at 3.175 mm stock: 149.0mm (Y) × **218.6mm
+(X, pull direction)** × 53.5mm (Z) (width and length follow the stock
+thickness, see DESIGN.md v2). The divider is the drawer's in-stop (see "Know
 before you build").
 
 **Lid — 1 piece (from `lids.svg`):**
@@ -165,134 +180,116 @@ part of the shell/drawer/lid sheets:**
   part holes (5.5 / 5.65 / 5.8 / 5.95mm). Cut on scrap right after the kerf
   coupon; see "Cut-day checklist" step 3a.
 
+## Hardware list, finishing, paper
+
+**Hardware (not laser cut), exact specs:**
+
+| Qty | Item | Spec |
+|---|---|---|
+| 1 | Bolt | M3 x 14 button head (ISO 7380), A2 stainless |
+| 2 | Washers | M3 flat, ISO 7089: 3.2 ID x 7 OD x 0.5 thick |
+| 1 | Nut | M3 nyloc, DIN 985: 5.5 mm across flats, 4.0 mm tall |
+| 4 (buy 6) | Magnets | 6 x 2 mm disc, N35 neodymium (N52 or 3 mm thick for a stronger pull) |
+
+Stack on the front wall: bolt head outside, washer, turn button, front wall,
+washer, nyloc nut inside the paper compartment. The stack is 5.0 mm plus two
+sheet thicknesses (11.35 mm at 3.175 mm stock, 12.0 mm at 3.5 mm). An M3 x 12
+bolt is flush with the nut face at 3.5 mm stock, so the nylon insert has no
+thread to grip. M3 x 14 leaves 2.0 to 3.4 mm of thread past the nut. Bolt and
+nut stand 6.5 to 7.9 mm out from the front wall's inner face at about Z = 107,
+centered side to side.
+
+**Finishing:**
+
+1. Sand lightly with 220 grit to remove the laser char from the faces you can
+   touch (the edges stay dark unless you wipe them with a damp cloth).
+2. Seal with a thin coat of clear water-based polyurethane or shellac, then
+   scuff lightly. Keep finish off the finger joints before glue-up.
+3. Rub paraffin wax or candle stub on the drawers' bottoms and sides and on
+   the lid edges and slot floors. Waxing is what makes them slide.
+4. Do not wax or seal the faces that get glued.
+
+**Paper:** quarter letter, 4.25 x 5.5 in (107.95 x 139.7 mm), stands on edge in
+the paper compartment with the 5.5 in side across the box. At 3.175 mm stock
+the compartment is 111.95 mm tall under the lid, so the paper has 4.0 mm of
+headroom (3.35 mm at 3.5 mm stock). It is 158.75 mm wide inside, so there is
+19.05 mm of spare width (18.4 mm at 3.5 mm stock). Depth is 76.2 mm less the
+bolt (up to 7.9 mm), so 68 mm of paper stack fits, several hundred sheets.
+Letter paper cut in four gives quarter-letter pages.
+
 ## Wall identification (read this before assembly)
 
-The Left and Right side walls are **mirror images**, not identical parts —
-and after sheet labels were recolored gray (reference-only, ignored by the
-laser), there's no printed "LEFT"/"RIGHT" callout on the cut piece itself.
-Identify a wall by its features:
+The left and right side walls are **mirror images**, not identical parts, and
+the sheet labels are not cut or engraved, so identify a wall by its features:
 
-1. Hold the wall with the **lid slot near the top edge** and the slot's
-   **open mouth pointing left**. The open mouth end is the wall's **front**.
-2. Look at the **divider finger-hole column** — the vertical dashed row
-   about 3" (79.4mm) in from the mouth end. If that column sits **just right
-   of the slot's closed (rear) end**, and the "FAX MACHINE" **engraving
-   faces you**, you're looking at the **Right Wall's exterior** (engraving
-   only ever goes on the right wall's outside face).
-3. The other wall — same silhouette, no engraving — is the **Left Wall**.
-   It's a true mirror image, not the same part flipped over: don't try to
-   flip the engraved wall to "make" a left wall.
+1. Hold the wall with the **lid slot notch near the top edge** and its **open
+   mouth** (the notch reaches the edge of the wall) pointing left. The mouth
+   end is the wall's front.
+2. Look at the vertical divider hole column, about 3 in (79.4 mm) in from the
+   mouth, just behind the closed end of the slot. Count the holes. The
+   **left wall has 8 holes, the right wall has 7** (the divider is keyed this
+   way).
 
-Getting this wrong means the lid slot mouths end up on opposite ends of the
-box and nothing will dry-fit — check this *before* the dry-fit in step (a)
-below.
+Getting this wrong puts the slot mouths at opposite ends of the box and
+nothing dry-fits: check before step 5.
 
 ## Assembly steps
 
-This is the *current* (post-rebuild) design: fixed top panel, through-slot
-sliding lid, glued faceplate drawers, inset bottom panel. See DESIGN.md for
-every number and the reasoning behind each joint.
+This is the order checked in 3D by `src/faxbox/assembly3d.py`
+(`ASSEMBLY_STEPS`, re-derived from collisions in `tests/test_assembly3d.py`).
+Some older orders cannot be done: with the bottom panel in, the divider
+cannot get in, and the divider, shelf and top panel cannot all be pushed into
+one flat side wall and closed with the other. Follow this order.
 
-**The captive-parts problem.** The Divider, Shelf, and Top Panel are each
-captive on *both* side walls — their fingers seat into dashed
-`fingerHolesAt` hole rows cut into both the Left and Right walls. Fingers
-only seat with straight-in, perpendicular motion, and the two side walls
-need that motion from *opposite* directions. That means you **cannot**
-glue up all four walls into a box first and then try to drop the Divider,
-Shelf, or Top Panel in afterward — there is no gap they could enter
-through. Everything captive on both side walls has to go in while one side
-wall is still off, then the second side wall closes over all of it at once.
-That drives the whole order below.
+Use slow-set PVA, a little on finger joints only. Dry-fit every step before
+gluing it. Have clamps staged. Wipe squeeze-out inside the drawer bay at once.
 
-**(a) Full dry-fit — always, no glue.**
-   Before any glue touches anything, dry-fit the *entire* box: both side
-   walls, front wall, rear wall, bottom panel, divider, shelf, top panel,
-   both drawer bodies, both faceplates, and the lid. Confirm the Wall
-   identification step above got Left/Right right — everything should sit
-   together with hand pressure, no forcing. Take it back apart.
+**Identify the parts first.** The side walls are mirror images, see "Wall
+identification". The divider only fits one way (see step 4).
 
-**(b) Lay one side wall flat, interior face up.**
-   Pick either side wall (see "Wall identification" above) and lay it flat
-   on the bench with its interior (hole-row) face up. This wall is your
-   fixture for the next step — everything else pilots into it.
+**Drawers (make two, identical).**
 
-**(c) Insert every captive part into that one wall, simultaneously.**
-   Working on the flat wall, seat all of the following into their hole
-   rows/edges at once:
-   - the **bottom panel**'s edge fingers into the wall's bottom hole row,
-   - the **divider**'s fingers into the wall's vertical divider hole
-     column,
-   - the **shelf**'s and **top panel**'s fingers into the wall's horizontal
-     hole rows,
-   - the **front wall** and **rear wall**'s corner fingers into the wall's
-     front/rear edges,
-   - and, at the same time, the **top panel**'s rear fingers into the
-     **rear wall**'s top hole row (the top panel bridges both the side wall
-     and the rear wall, so this joint has to close together with the rest).
-   This is fiddly with six parts converging on one wall — that's expected.
-   Get everything seated square before moving to (d); nothing is glued yet.
+1. Stand the drawer back (the one with the magnet hole) and the drawer front
+   (the one with the grip slot) upright, finger edges facing each other.
+2. Slide the left side in from the left, then the right side from the right.
+   The four vertical corners close together.
+3. Press the drawer bottom on from below. Its edges are plain; the walls' tabs
+   go through its hole rows.
+4. Glue the faceplate to the front. Put the red-engraved rectangle on the glue
+   side, center the body on it, and line up the two grip slots so a finger
+   reaches through both. Clamp. Do not glue the drawers anywhere else.
 
-**(d) Close the second side wall down over all of it — one motion.**
-   Lower the other side wall (the mirror twin) straight down onto all the
-   protruding fingers from step (c) at once. This is the highest-stress step
-   in the build: every captive joint closes simultaneously and there's no
-   way to adjust one joint without disturbing the others.
-   - **Dry-fit this closing motion twice**, fully, before any glue is
-     involved — you want the exact path memorized.
-   - Use a **slow-set (not fast-tack) PVA** wood glue so you have working
-     time if a joint needs coaxing while others are already engaging.
-   - **Have clamps staged and ready** (across both side walls, front-to-rear
-     and top-to-bottom) before you start — you will not have a free hand to
-     go find them mid-close.
+**Box.**
 
-**(e) Square up and clamp.**
-   With both side walls closed over the captive parts, square the box (measure
-   diagonals) and clamp while the glue sets. **Check squareness using the
-   drawers**: a properly square bay lets both drawer bodies dry-slide into
-   their rear-wall openings evenly on both sides with no binding; if one
-   side drags and the other doesn't, the box is out of square — adjust
-   clamping before the glue sets, not after.
+5. **Frame.** Lay the top panel and the shelf in their relative positions and
+   push the divider toward the rear (+X) into them: the divider's top tabs go
+   into the top panel's front hole row, the shelf's front tabs into the
+   divider's hole row. The divider fits only one way: its two side edges are
+   different lengths (the long finger run goes with the left wall, the side
+   with the shorter run goes with the right wall). If it will not seat, it is
+   turned the wrong way, so turn it; do not force it.
+6. **Right wall.** Move it onto the frame from the right (toward -Y). Lid slot
+   mouth to the front.
+7. **Rear wall.** Fit it from the rear (toward -X).
+8. **Left wall.** Fit it from the left (toward +Y).
+9. **Front wall.** Fit it from the front (toward +X).
+10. **Bottom panel.** Turn the box over and press the bottom in from below. Its
+    rear edge is plain and sits against the rear wall.
+11. Square the box (equal diagonals) and clamp. Check with the drawers: a
+    square bay lets both drawers slide into their openings without binding.
+12. **Turn button.** Bolt it to the front wall (see "Hardware list").
+13. **Lid.** Slide it in from the front, over the front wall, into both slots,
+    until it stops at the divider. Never glue the lid or its slots.
+14. **Drawers.** Slide them in from the rear. Install the magnets as described
+    in "Iteration-2 retention hardware".
 
-**(f) Assemble both drawers (×2, identical), separately.**
-   For each drawer: finger-joint Front + Back + Left Side + Right Side at
-   the vertical corners, then slide the Bottom panel into the hole lines at
-   the base (captive, not edge-jointed). Test-fit each body in its rear-wall
-   opening before gluing the faceplate on.
+**Glue guidance.**
 
-**(g) Glue on the faceplates (×2).**
-   Each Faceplate glues flush to its drawer body's front face — align it
-   using the **red-engraved registration rectangle** (it traces the drawer
-   body's front cross-section: center the body on the rectangle, don't just
-   eyeball edges). The laser engraves whichever face was up on the bed, so
-   **orient the engraved rectangle toward the body** — that face becomes the
-   hidden glue face. (The faceplate is symmetric left-right, so flipping it
-   costs nothing; what matters is the red rectangle ending up inside the
-   joint, not on the drawer's visible front.) Clamp, and check that the
-   faceplate's grip slot lines up with the body Front's grip slot before
-   the glue sets — a finger needs to reach through both into the drawer.
-   Faceplates sit flush with the rear wall's exterior plane when the drawer
-   is closed (closed = bottomed out against the divider, see "Know before
-   you build").
-
-**(h) Slide in the Sliding Lid — last.**
-   Insert the Sliding Lid from the front, over the Front Wall's top edge and
-   into the through-slots cut into both side walls. It travels until it
-   stops against the Vertical Divider's front face. The slots are open at
-   the walls' front edge specifically so the lid *can* be inserted this way
-   — there's no other assembly order that works for this part. **Never
-   glue the lid or its slots** (see "Know before you build" — it's designed
-   to slide, not be fixed).
-
-**Glue guidance:**
-- **PVA wood glue, applied sparingly**, on finger joints only.
-- **Never glue:** the drawers' sliding faces, the inside of the drawer bay,
-  the lid, or the lid slots. Anything meant to slide must stay unglued and
-  clean.
-- **Wipe squeeze-out inside the bay immediately** — dried glue in the
-  drawer bay is the single easiest way to seize a drawer that should slide
-  freely.
-- Faceplate-to-body glue-up is the one exception where alignment matters
-  more than a light touch: see step (g) above.
+- PVA, applied sparingly, on finger joints only.
+- Never glue the drawers' outer faces, the inside of the drawer bay, the lid,
+  or the lid slots.
+- The top panel is held by glue as well as geometry: its holes in the walls
+  open at the top edge, so do not skip glue on that row.
 
 ## Know before you build (honest limitations)
 
@@ -336,31 +333,24 @@ nobody "fixes" them mid-build or is surprised later:
   frame — the drawer body's front face is what stops against the divider
   at the far end of its travel. If a drawer doesn't sit flush, check for
   glue or debris on the divider face, not the rear-wall opening.
-- **The 5mm rail above each lid slot is permanently fragile.** It's a thin
-  (5.0mm) cantilevered strip of ply above the slot cut, unsupported along
-  most of its length. **Never force the lid** — if it binds, stop and check
-  for a swollen/misaligned joint rather than pushing through. For the same
-  reason, **never pick the box up by the lid**: lifting loads the two rails
-  (and, pre-turn-button, just pulls the lid out). Gift recipients won't know
-  this — hand the box over from the bottom.
-- **The rear wall's bottom web is the most fragile spot on any part.** The
-  strip below the lower drawer opening is 3.175mm tall and is itself
-  perforated by the bottom-panel finger-hole row, leaving under 3mm of net
-  material until assembly backs it up. Handle the rear wall by its edges
-  before glue-up; don't push a drawer through its opening while the wall is
-  loose.
+- **The 7.5 mm rail above each lid slot is still the most fragile feature.**
+  It is a thin cantilevered strip of ply above the slot, unsupported along
+  most of its length. **Never force the lid.** If it binds, stop and look for a
+  swollen or misaligned joint. Never pick the box up by the lid. Hand it over
+  from the bottom.
+- **The rear wall's strip under the lower drawer opening is a plain 3.175 mm
+  web** (v2 removed the bottom-panel hole row that used to chop it into
+  chips). It is still thin; handle the rear wall by its edges before glue-up.
 - **The "fixed" Top Panel is fixed by glue, not geometry.** Its finger
   holes in the walls break through the walls' top edge by design (see
   DESIGN.md), so before the PVA cures the panel can lift straight out —
   fingers-in-notches, not fingers-in-holes. Normal finger-joint look once
   assembled; just don't skip glue on the top-panel rows.
-- **The lid slot's vertical clearance is 0.8mm, not the SPEC's 1.5mm.**
-  This is a deliberate, documented deviation (see DESIGN.md), not an error:
-  applying the SPEC's full 1.5mm play across the lid's *thickness* would
-  make it rattle in the slot. The 1.5mm sliding play the SPEC calls for is
-  still honored **in-plane** (lid width vs. slot span, drawer body vs.
-  opening) — it's only the through-thickness clearance on the lid slot that
-  is intentionally tighter, at 0.8mm.
+- **The lid slot's vertical clearance is 1.2 mm, not the SPEC's 1.5 mm.**
+  This is a documented deviation (DESIGN.md), not an error. 1.2 mm absorbs
+  warped sheets and thickness variation without letting the lid rattle. The
+  SPEC's 1.5 mm play is still kept in-plane (lid width vs. slot span, drawer
+  vs. opening).
 
 ## Iteration-2 retention hardware (issue #20)
 
@@ -381,7 +371,7 @@ the holes are already in the parts, this is a final, non-structural step.
   glue backfills there. Force is tunable with no geometry change: buy N52
   for a stronger pull, or 3mm-thick discs — the low-risk choice, since they
   sit near-flush on both sides and can't be recessed wrong.
-- 1× M3×12 button-head bolt (turn-button pivot).
+- 1× M3×14 button-head bolt (turn-button pivot), see "Hardware list".
 - 1× M3 nyloc nut.
 - 2× M3 washer.
 
@@ -446,7 +436,7 @@ this checklist is current.
 2. **Material.** Bring **Baltic Birch specifically**, not generic/cheap
    plywood — cheap ply's interior voids can blow out this design's thinnest
    features (the 3.175mm webs in the rear-wall drawer openings and the
-   5.0mm cantilevered lid rail) when the laser hits a void instead of solid
+   7.5mm cantilevered lid rail) when the laser hits a void instead of solid
    wood. Bring at least **three sheets, each at least 22"×15"**, plus extra
    scrap for the kerf coupon and the magnet-fit coupon (steps 3/3a). Orient
    sheets with the **face grain running along the sheet's long axis** for
@@ -492,7 +482,7 @@ this checklist is current.
    interior finger-joint holes and slots, then cut part outlines free last.
    Cutting outlines before interior holes risks a loose piece shifting
    under the head before its holes are cut.
-6. **Handle cut side walls flat.** The 5.0mm rail above each lid slot is
+6. **Handle cut side walls flat.** The 7.5mm rail above each lid slot is
    thin and cantilevered — it can snap if a side wall is picked up by an
    edge or flexed. Lift and carry side walls flat, supported across their
    full face, until assembly.
