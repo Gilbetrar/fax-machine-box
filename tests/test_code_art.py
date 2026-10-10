@@ -7,17 +7,15 @@ check what a laser would actually receive, not the build's intermediate
 bitmaps.
 
 Rules (see art/code/faxart/raster.py):
-  - min engraved line 0.25 mm   (morphological opening by a 5 px = 0.25 mm
-                                 disk removes < 0.3 % of the ink, counting
-                                 slivers >= 0.05 mm2; corner nibbles excluded)
-  - min unburned gap 0.30 mm    (closing by a 7 px = 0.35 mm disk, stricter
-                                 than the rule, adds < 0.3 % in slivers; kernels are odd
-                                 because an even cv2 kernel is off-centre)
+  - min engraved line 0.25 mm and min unburned gap 0.30 mm PER FEATURE:
+    rendered at 40 px/mm, exact Euclidean opening of the ink (0.25 mm disk)
+    and of the paper (0.30 mm disk); every connected sliver >= 0.02 mm2 fails
+    (faxart/rules.py; the build's repair loop uses the same function)
   - no specks: islands / pinholes < 0.09 mm^2 (allow a handful from curve
                                  smoothing at the 0.05 mm render grid)
   - ink coverage per face within a sane band, dense (> 80 % in a 3 mm
     window) area capped except where display lettering is solid by design
-  - no ink within 0.35 mm of any through-cut (keep-out is 0.5 mm at build)
+  - no ink within 0.40 mm of any through-cut (keep-out is 0.5 mm at build)
   - every SVG is exactly its part's nominal blank in mm, and the blank sits
     inside the generator's drawn piece.
 """
@@ -39,6 +37,7 @@ ART = REPO / "art" / "code"
 sys.path.insert(0, str(ART))
 
 from faxart.geometry import FACES, material_mask, part, size_mm  # noqa: E402
+from faxart import rules  # noqa: E402
 from faxart.vector import rasterize_svg  # noqa: E402
 
 PPM = 20.0
@@ -59,16 +58,6 @@ def ink_of(svg_rel: str) -> np.ndarray:
 
 def disk(d):
     return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (d, d))
-
-
-def blobs_over(diff: np.ndarray, min_px: int = 20) -> int:
-    """Pixels in connected pieces of `diff` of at least min_px (0.05 mm2).
-    Morphology always nibbles a few px at sharp corners and hatch crossings;
-    a real sub-minimum line or gap is a longer sliver that shows up as a
-    larger piece."""
-    n, _, st, _ = cv2.connectedComponentsWithStats(diff.astype(np.uint8), connectivity=8)
-    a = st[1:, cv2.CC_STAT_AREA]
-    return int(a[a >= min_px].sum())
 
 
 def test_manifest_covers_every_face():
@@ -107,20 +96,26 @@ def test_png_preview(fid, v):
     assert Image.open(ART / v["png"]).width == 1200
 
 
-@pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
-def test_min_line_width(fid, v):
-    ink = ink_of(v["svg"])
-    opened = cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, disk(5)).astype(bool)
-    lost = blobs_over(ink & ~opened) / max(1, ink.sum())
-    assert lost < 0.003, f"{lost:.3%} of ink is in features thinner than 0.25 mm"
+@lru_cache(maxsize=None)
+def violations_of(svg_rel: str):
+    return rules.violations(rasterize_svg(ART / svg_rel, rules.RULE_PPM))
 
 
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
-def test_min_gap(fid, v):
-    ink = ink_of(v["svg"])
-    closed = cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_CLOSE, disk(7)).astype(bool)
-    added = blobs_over(closed & ~ink) / max(1, ink.sum())
-    assert added < 0.003, f"gaps under 0.35 mm would add {added:.3%} more burn"
+def test_no_thin_feature(fid, v):
+    """Per feature (red-team pass 1, A8): no connected sliver of ink narrower
+    than 0.25 mm and >= 0.02 mm2 anywhere, measured at 40 px/mm with exact
+    Euclidean morphology."""
+    _, _, n_thin, _ = violations_of(v["svg"])
+    assert n_thin == 0, f"{n_thin} ink features thinner than 0.25 mm"
+
+
+@pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
+def test_no_narrow_gap(fid, v):
+    """Per feature: no connected unburned gap narrower than 0.30 mm and
+    >= 0.02 mm2 (these char shut)."""
+    _, _, _, n_gap = violations_of(v["svg"])
+    assert n_gap == 0, f"{n_gap} gaps narrower than 0.30 mm"
 
 
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
@@ -149,9 +144,9 @@ def test_ink_coverage_and_density(fid, v):
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
 def test_clear_of_cuts(fid, v):
     ink = ink_of(v["svg"])
-    mat = material_mask(fid, PPM, 0.35)
+    mat = material_mask(fid, PPM, 0.40)
     bad = int((ink & ~mat).sum())
-    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.35 mm of a cut"
+    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.40 mm of a cut"
 
 
 PARTS = {p["id"]: p for p in json.loads((REPO / "site" / "data" / "parts.json").read_text())["parts"]}
