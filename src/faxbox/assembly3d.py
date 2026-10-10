@@ -359,7 +359,7 @@ def _is_hardware_hole(bounds) -> bool:
                                  or abs(dia - c.TURN_BUTTON["pivot_hole_dia"]) < 0.3)
 
 
-def unfilled_finger_holes(plates: dict[str, Plate], frac: float = 0.05):
+def unfilled_finger_holes(plates: dict[str, Plate], frac: float = 0.07):
     """Finger holes that no mating part fills (more than `frac` of the hole
     volume empty)."""
     out = []

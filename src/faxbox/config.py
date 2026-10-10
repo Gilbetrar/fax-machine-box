@@ -257,6 +257,37 @@ LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
 # clears the lid's travel path so the lid slides freely when the button is
 # disengaged.
 
+# Hardware stack through the front wall (v2: M3x14, was M3x12).  Bearing
+# stack under the bolt head: washer + button (T) + front wall (T) + washer +
+# nyloc nut.  At T = 3.5 that is 0.5 + 3.5 + 3.5 + 0.5 + 4.0 = 12.0 mm, which
+# leaves an M3x12 flush with the nut face (no thread through the nylon
+# insert); M3x14 leaves 2.0 mm (3.4 mm at T = 2.8).
+HARDWARE = {
+    "bolt": "M3x14 button-head (ISO 7380), A2 stainless",
+    "bolt_length": 14.0,
+    "washer": "M3 flat washer (ISO 7089: 3.2 ID x 7 OD x 0.5)",
+    "washer_thickness": 0.5,
+    "washers": 2,
+    "nut": "M3 nyloc (DIN 985: 5.5 mm across flats, 4.0 mm tall)",
+    "nut_height": 4.0,
+    "magnet": "6 x 2 mm N35 neodymium disc",
+    "magnet_thickness": 2.0,
+    "magnets_needed": 4,
+    "magnets_to_buy": 6,
+}
+BOLT_PROTRUSION_PAST_NUT = (HARDWARE["bolt_length"]
+                            - (2 * HARDWARE["washer_thickness"] + 2 * T + HARDWARE["nut_height"]))
+# How far bolt + nut stick into the paper compartment, measured from the
+# front wall's inner face.
+BOLT_INTRUSION_INTO_PAPER_BAY = HARDWARE["bolt_length"] - (HARDWARE["washer_thickness"] + 2 * T)
+
+# Paper: quarter letter (4.25 x 5.5 in), standing on edge in the compartment
+# with the 5.5 in side along Y and the 4.25 in side vertical.
+PAPER = {"height": 107.95, "width": 139.7}
+PAPER_BAY_HEIGHT = LID_SLOT_BOTTOM - FLOOR_TOP    # floor top -> underside of the lid
+PAPER_HEADROOM = PAPER_BAY_HEIGHT - PAPER["height"]
+PAPER_SIDE_ROOM = INTERIOR_WIDTH - PAPER["width"]
+
 # --- Sliding lid -------------------------------------------------------------
 
 SLIDING_LID = {

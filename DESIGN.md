@@ -7,7 +7,7 @@ wrong. If this document seems wrong, comment on issue #15 — do not silently
 change numbers.
 
 Everything is in **millimeters**. Material is uniform **3.175mm (1/8") plywood**
-(`T` below). Laser kerf is handled by Boxes.py's `burn` parameter (0.08mm
+by default (`T` below; `FAXBOX_THICKNESS` overrides, see v2). Laser kerf is handled by Boxes.py's `burn` parameter (0.08mm
 starting value — calibrate with a test cut before the real run). Finger holes
 and slots are widened by `FINGER_PLAY` (0.1mm), giving a physical hole
 through-dimension of `T + play` = 3.275mm — this covers nominal 3.175 stock
@@ -22,6 +22,70 @@ inside joints — **except the top-panel hole row, see part #7 below.**
 Ben's fully functional cardboard prototype of this exact box (confirmed
 2026-07-07) — the game's components are known to fit these interior volumes.
 No separate component-dimension check is needed.
+
+## Revision v2 (2026-10-10) — geometry fixes and thickness sets
+
+This section is authoritative where it disagrees with the older text below
+(the older sections are patched to match, but read this first).
+
+| Item | Before | After | Why |
+|---|---|---|---|
+| Rear wall, strip under the lower drawer opening | bottom-panel hole row (Z −0.05→3.225) overlapped the opening floor (Z 3.175): the strip fell out as 11 chips | no bottom hole row on the rear wall; the bottom panel's rear edge is plain (`"feff"`) and is glued to the wall's inner face. Strip is one solid 3.175 mm web | a T-tall strip cannot carry a hole row |
+| Lid slot at the side-wall front edge | closed rectangular hole whose front line coincided with the blank's edge (0.0 mm web, doubled cut line) | the slot is an open notch in the outline (`SlotMouthEdge`) | no coincident lines |
+| Divider hole row vs lid slot | top divider hole 0.5 mm below the slot floor (0.5 mm web) | rows stop at the slot floor (`DIVIDER_ROW_TOP_Z` = 115.125); nearest hole ≥ 6.3 mm below the slot | min web 1.5 mm |
+| Lid rail above the slot | 5.0 mm | 7.5 mm | fragile cantilever |
+| Lid slot vertical clearance | 0.8 mm | 1.2 mm | Ponoko panels warp |
+| Front wall top / slot floor | 118.025 | 115.125 (= 127 − 7.5 − (T + 1.2)) | follows rail and clearance |
+| Turn-button pivot Z | 110.0 | 107.125 (`FRONT_WALL_TOP` − 8.0) | keeps 8 mm to the wall top; button-down cap stays 3.5 mm below it |
+| Divider orientation | fitted all four ways (upside down its magnet holes missed by 5.24 mm) | fits one way only (keyed, see "Divider keying") | foolproof assembly |
+| Bolt | M3×12 | M3×14 | M3×12 left the thread flush with the nyloc face at T = 3.5 |
+| Material thickness | fixed 3.175 | `FAXBOX_THICKNESS` (2.8–3.5); external envelope fixed, interior follows T | real 3.2 mm birch measures 2.8–3.5 |
+
+**Thickness parametrisation.** `config.T` reads `FAXBOX_THICKNESS` (default
+3.175). The 12 × 6.5 × 5 in envelope stays fixed, so a thicker sheet makes
+the interior smaller. Derived changes: drawer body length = `BAY_LENGTH` −
+0.475 (bay gap, constant), drawer width = `OPENING_WIDTH` − 3.4, lid length =
+divider face − 0.375, turn-button pivot Z follows the front wall top. At
+3.175 every number equals the v1 value. `FINGER_PLAY` is an absolute 0.1 mm
+(`FINGER_PLAY_RELATIVE = FINGER_PLAY / T` is what Boxes.py receives), so
+finger holes are T + 0.1 wide at every thickness; `BURN` (kerf per side) is
+independent of T. Checked at 2.8, 3.0, 3.2 and 3.5 mm: one-piece parts,
+minimum web ≥ 1.5 mm, all 3D checks (`tests/test_assembly3d.py` at 2.8 and
+3.5).
+
+**Divider keying.** The walls' divider hole rows stop at the lid-slot floor,
+and the RIGHT wall's row is `DIVIDER_KEY_DROP` = 4T (one finger pitch)
+shorter than the left wall's. The divider's side edges are compound edges
+with matching lengths (fingers up to 115.125 on the left, 12.7 mm lower on
+the right, plain above). Turned left-right, upside down, or both, its
+fingers land on wall material (interference 64 mm³ left-right, 670 mm³
+upside down; `tests/test_assembly3d.py::test_divider_fits_only_one_way`).
+Unglued assembly therefore cannot go together wrong.
+
+**Assembly order (verified in 3D, `faxbox.assembly3d.ASSEMBLY_STEPS`).**
+Drawers first: back and front stand up, left side slides in (+Y), right side
+(−Y), bottom from below (+Z), faceplate glued on. Box: top panel + shelf +
+divider as one unit (the divider moves +X into the top panel and shelf);
+right wall (moves −Y); rear wall (−X); left wall (+Y); front wall (+X);
+bottom panel from below (+Z); turn button; lid from the front (+X); drawers
+in from the rear (−X). Bottom-panel-first and "all captive parts into one
+wall" orders are not possible. The order depends on the 0.05 mm
+finger-hole breakouts at the part edges, which stay open.
+
+**Minimum web.** Every part is checked in `tests/test_geometry_v2.py`: one
+piece after a 0.16 / 0.2 / 0.3 mm kerf, no material web under 1.5 mm, and
+only finger holes may break through an outline (by ≤ play/2 + 0.02 mm).
+
+**Hardware stack** (front wall pivot): washer 0.5 + button T + wall T +
+washer 0.5 + nyloc 4.0. M3×14 leaves 2.0 mm (T = 3.5) to 3.4 mm (T = 2.8) of
+thread past the nut and puts 6.5–7.9 mm of bolt and nut into the paper
+compartment at Z ≈ 107, Y = 82.55.
+
+**Paper.** Quarter letter, 4.25 × 5.5 in = 107.95 × 139.7 mm, stands on edge
+with the 5.5 in side along Y. Compartment height under the lid = slot floor −
+floor top = 111.95 mm (3.175), so headroom is 4.0 mm (3.35 at T = 3.5, 4.75 at
+2.8); side room 19.05 mm total (9.5 per side; 18.4 at T = 3.5). Depth 76.2 mm
+less the bolt (≤ 7.9 mm) leaves ≥ 68 mm, about 680 sheets of 20 lb paper.
 
 ## Decisions this design implements (Ben, 2026-07-07)
 
@@ -80,9 +144,9 @@ Origin at the box's **exterior front-left-bottom corner**.
 | Feature | Z span | Notes |
 |---|---|---|
 | Bottom panel | 0 → 3.175 | inset between the walls |
-| Front wall top edge | 118.025 | = lid slot bottom; lid slides over it |
-| Lid slot (through side walls) | 118.025 → 122.0 | height 3.975 = T + 0.8 |
-| Side-wall rail above slot | 122.0 → 127.0 | 5.0 tall, spans slot X range |
+| Front wall top edge | 115.125 | = lid slot bottom; lid slides over it |
+| Lid slot (through side walls) | 115.125 → 119.5 | height 4.375 = T + 1.2 |
+| Side-wall rail above slot | 119.5 → 127.0 | 7.5 tall, spans slot X range |
 | Divider top edge | 123.825 | = top panel underside |
 | Top panel (over bay) | 123.825 → 127.0 | fixed, finger-jointed |
 | Bay interior height | 3.175 → 123.825 | 120.65 |
@@ -90,11 +154,11 @@ Origin at the box's **exterior front-left-bottom corner**.
 | Horizontal shelf | 61.9125 → 65.0875 | T thick |
 | Top drawer slot | 65.0875 → 123.825 | clear height 58.7375 |
 
-**Lid slot vertical clearance is 0.8mm (not the SPEC's 1.5mm).** Deliberate
+**Lid slot vertical clearance is 1.2mm (v2; was 0.8, SPEC says 1.5).** Deliberate
 deviation: the SPEC's 1.5mm play is applied in the sliding *plane* (lid width,
-drawer fits). Across the lid's thickness, 1.5mm would rattle; 0.8mm still
-absorbs plywood thickness variation (+0.2 typical). Recorded here so tests can
-assert 0.8 without someone "fixing" it back.
+drawer fits). Across the lid's thickness, 1.5mm would rattle; 1.2mm
+absorbs plywood thickness variation and warp. Recorded here so tests can
+assert 1.2 without someone "fixing" it back.
 
 ## Parts list
 
@@ -111,6 +175,9 @@ SVG harness (#16) checks each part's bounding box is within
   (hole-line midplane at Z = 1.5875).
 - Through-hole line for the divider's bottom-edge fingers at X = 79.375 →
   82.55 (midplane X = 80.9625).
+- **v2:** the rear edge is plain (no fingers). The rear wall has no
+  bottom-panel hole row (see v2 table); the panel's rear edge butts the wall
+  face and is glued. Front and side edges keep their fingers.
 
 ### 2. Side walls — 2× (left Y=0→3.175, right Y=161.925→165.1)
 
@@ -120,7 +187,7 @@ Convention: draw both with the **exterior face up**; the left wall's features
 are the right wall's mirrored in X. Engraving goes on the right wall only.
 
 - Nominal: **298.45 (X) × 127.0 (Z)**, full height.
-- Vertical edges: finger joints to front wall (only up to Z=118.025 on the
+- Vertical edges: finger joints to front wall (only up to Z=115.125 on the
   front edge — above that is the lid slot mouth and rail end, plain) and rear
   wall (full height).
 - Bottom edge: straight, with a through-hole line just above it (midplane
@@ -129,21 +196,16 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
   **finger-hole line** below the top edge (midplane Z = 125.4125, X = 82.55 →
   301.625) — an edge-to-edge finger joint here would stand proud of the 127mm
   top plane (defect caught in #17 review).
-- **Lid through-slot**: X = 3.175 → 79.375 within the wall, **open at the
-  wall's front edge** (the lid could never be inserted otherwise),
-  Z = 118.025 → 122.0. Construction: drawn as a closed rectangular hole whose
-  front boundary exactly coincides with the blank's front edge — the laser
-  cuts both lines and the mouth opens (in the kerf-compensated output the
-  hole's front boundary and the blank's own front edge are not one
-  coincident line but a parallel pair, 0.11mm apart for the NYC Resistor
-  cut and 0.15mm for Ponoko, overlapping along ~3.1mm of the 3.975mm mouth
-  — the laser burns that gap as a single ~0.3mm channel; still negligible,
-  and since the two lines aren't coincident, Ponoko's doubled-line objection
-  doesn't apply here). Leaves a 5.0mm rail above (Z 122 → 127) cantilevered from
-  X = 79.375 — handle gently until assembled.
-- **Divider finger-hole line**: vertical, X = 79.375 → 82.55, Z = 3.175 →
-  123.825. (A Boxes.py `fingerHolesAt` line — a dashed row of T-wide holes,
-  not one continuous slot.)
+- **Lid through-slot** (v2): X = 3.175 → 79.375 within the wall, Z =
+  115.125 → 119.5, **open at the wall's front edge**. It is an open notch in
+  the outline (`SlotMouthEdge` in `shell_generator.py`), not a closed hole, so
+  no cut line coincides with another. Leaves a 7.5 mm rail above
+  (Z 119.5 → 127) cantilevered from X = 79.375 — handle gently until
+  assembled.
+- **Divider finger-hole line** (v2): vertical, X = 79.375 → 82.55, from
+  Z = 3.175 up to the slot floor (115.125) on the left wall and 12.7 mm lower
+  on the right wall (keying). A Boxes.py `fingerHolesAt` line, a dashed row of
+  T-wide holes. The highest hole ends ≥ 6.3 mm below the slot floor.
 - **Shelf finger-hole line**: horizontal, Z = 61.9125 → 65.0875, X = 82.55 →
   301.625. (Dashed row, as above.)
 - **Engraving: none (as of 2026-07-10).** The original "FAX MACHINE" 5×7
@@ -156,18 +218,19 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 
 ### 3. Front wall — 1×
 
-- Nominal: **158.75 (Y) × 118.025 (Z)** (Z = 0 → 118.025).
+- Nominal: **158.75 (Y) × 115.125 (Z)** (Z = 0 → 115.125; v2, was 118.025).
 - Bottom-panel hole line near the bottom edge (midplane Z = 1.5875); vertical
   edges finger-joint to side walls; top edge plain (the lid slides over it).
 - **Iteration 2**: carries the sole lid-retention turn-button pivot hole
-  (Ø3.2, box Y = 82.55, box Z = 110.0) on its exterior face — see
+  (Ø3.2, box Y = 82.55, box Z = 107.125; v2, was 110.0) on its exterior face — see
   "Retention (iteration 2, magnets + turn-buttons)" section B.
 
 ### 4. Rear wall — 1×
 
 - Nominal: **158.75 (Y) × 127.0 (Z)**, full height.
-- Bottom-panel hole line near the bottom edge; sides → side walls; top edge
-  plain, with a top-panel finger-hole line at midplane Z = 125.4125.
+- Top edge plain, with a top-panel finger-hole line at midplane Z = 125.4125;
+  sides → side walls. **v2: no bottom-panel hole row** (it cut the strip under
+  the lower opening into 11 chips).
 - **Two drawer openings**, each **152.4 wide (= W_INT − 2T) × 55.0 tall**,
   centered in Y (0.875mm inside each interior corner joint; visible frame from
   outside ≈ 6.35mm per side):
@@ -183,8 +246,10 @@ are the right wall's mirrored in X. Engraving goes on the right wall only.
 - Nominal: **158.75 (Y) × 120.65 (Z)** (Z = 3.175 → 123.825, standing on the
   bottom panel).
 - Bottom edge fingers down through the bottom panel's hole line; side edges
-  finger into side-wall hole lines; top edge fingers up into top panel holes.
-  Fully captive on 4 edges → carries the structural load the SPEC requires.
+  finger into side-wall hole lines **up to the lid-slot floor only, plain
+  above, with the right edge's fingers 4T shorter than the left's (keying, see
+  v2)**; top edge fingers up into top panel holes. Captive on 4 edges →
+  carries the structural load the SPEC requires.
 - Its front face (X = 79.375) is the sliding lid's end stop.
 
 ### 6. Horizontal shelf — 1×
@@ -394,6 +459,12 @@ the drawer closed.
 
 ### B. Lid retention — ONE turn-button on the FRONT WALL
 
+> **v2 numbers.** The Z values quoted in this section are the v1 ones. v2:
+> front wall top and slot floor 115.125, lid band 115.125 → 118.3, pivot at
+> Z = 107.125 (8.0 below the wall top), required reach up 11.3 mm against the
+> actual 17.5 (tip at Z = 124.6), button-down cap top at 111.625, 3.5 mm
+> below the wall top. Hardware is M3×14.
+
 **Adversarial-review finding #1 (critical): the original mechanism below
 (REV.A) was geometrically incapable of retention and was caught before any
 part was cut.** REV.A put a pivoting paddle on each SIDE wall, just
@@ -477,7 +548,7 @@ it entirely.
   crosses would all fail this test — a purely positional "hole exists at
   (X,Z)" check (which REV.A had, and which passed) would not have caught
   any of those.
-- Hardware (documented, not laser-cut): **1× M3×12 button-head bolt, 1× M3
+- Hardware (documented, not laser-cut): **1× M3×14 button-head bolt, 1× M3
   nyloc nut, 2× M3 washer** — nyloc tensioned so the button holds position
   by friction, not a spring. The nut lands inside the paper compartment,
   reachable with the lid off.
@@ -526,7 +597,7 @@ on it.
 | Drawer body ↔ slot height | 5.24 | ≥ 1.5 |
 | Drawer body ↔ bay length | 0.475 | > 0 (not a sliding fit) |
 | Lid width ↔ slot span | 1.5 total | ≥ 1.5 |
-| Lid thickness ↔ slot height | 0.8 | = 0.8 (documented deviation) |
+| Lid thickness ↔ slot height | 1.2 | = 1.2 (documented deviation, v2) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
 | Webs in rear wall | 3.175 / 3.7375 | ≥ 3.0 |
 | Magnet hole (drawer Back) ↔ its own edges | ≥ 20 | ≥ 3.0 |
@@ -545,11 +616,10 @@ on it.
   above), which is the interior span, not the cut blank's bounding box.
 - Minimum viable laser bed, allowing a 10mm margin on all four sides of that
   part: **324.96 × 185.26mm**.
-- The rear wall's bottom web (below the bottom drawer opening) measures
-  **3.27mm** in the generated SVG, and is perforated by the bottom panel's
-  finger-hole row (part #4's through-hole line near the bottom edge) — it is
-  structurally sound per the ≥3.0 rule above, but is a thin, hole-perforated
-  strip; handle the rear wall gently before assembly (glue-up) locks it in.
+- v2: the rear wall's web below the bottom drawer opening is one solid 3.175mm
+  strip (no hole row). The largest drawn part is now a side wall at 304.96 ×
+  127.16mm; the bottom/top/shelf panels are 165.26mm deep. Minimum bed is
+  unchanged at 324.96 × 185.26mm.
 
 ## Known deltas from SPEC.md targets
 

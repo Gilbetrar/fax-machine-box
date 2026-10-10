@@ -139,10 +139,12 @@ def test_lid_would_jam_beyond_the_clearance(plates):
     assert worst > 1.0
 
 
-def _hole_centres(plate, lo, hi, axes):
+def _hole_centres(plate, dia, axes):
+    """Centres of the round holes of diameter `dia` (bbox square, +-0.15)."""
     out = []
     for h in plate.hole_polys:
-        if lo < h.area < hi:
+        b = h.bounds
+        if abs(b[2] - b[0] - dia) < 0.15 and abs(b[3] - b[1] - dia) < 0.15:
             ct = h.centroid
             r = {plate.ia: ct.x, plate.ib: ct.y}
             out.append(tuple(round(r[a], 2) for a in axes))
@@ -150,12 +152,10 @@ def _hole_centres(plate, lo, hi, axes):
 
 
 def test_magnet_holes_are_coaxial_at_closed_position(plates):
-    mag_area = np.pi * (c.MAGNET_HOLE_DIA / 2) ** 2
-    lo, hi = mag_area * 0.9, mag_area * 1.1
-    div = _hole_centres(plates["divider"], lo, hi, (a3.Y, a3.Z))
+    div = _hole_centres(plates["divider"], c.MAGNET_HOLE_DIA, (a3.Y, a3.Z))
     assert len(div) == 2
     for tag in "BT":
-        back = _hole_centres(plates[f"{tag}_back"], lo, hi, (a3.Y, a3.Z))
+        back = _hole_centres(plates[f"{tag}_back"], c.MAGNET_HOLE_DIA, (a3.Y, a3.Z))
         assert len(back) == 1
         assert min(np.hypot(back[0][0] - d[0], back[0][1] - d[1]) for d in div) < 0.1, (back, div)
     # and the drawer back panel sits against the divider face
@@ -164,9 +164,8 @@ def test_magnet_holes_are_coaxial_at_closed_position(plates):
 
 def test_turn_button_pivot_is_coaxial_with_front_wall_hole(plates):
     dia = c.TURN_BUTTON["pivot_hole_dia"]
-    lo, hi = np.pi * (dia / 2) ** 2 * 0.9, np.pi * (dia / 2) ** 2 * 1.1
-    fw = _hole_centres(plates["front"], lo, hi, (a3.Y, a3.Z))
-    bt = _hole_centres(plates["button"], lo, hi, (a3.Y, a3.Z))
+    fw = _hole_centres(plates["front"], dia, (a3.Y, a3.Z))
+    bt = _hole_centres(plates["button"], dia, (a3.Y, a3.Z))
     assert fw and bt and np.hypot(fw[0][0] - bt[0][0], fw[0][1] - bt[0][1]) < 0.05
     assert plates["button"].rc[1] == pytest.approx(plates["front"].rc[0])
 

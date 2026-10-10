@@ -145,7 +145,7 @@ def generate_hardware(provider: str | None = None) -> Path:
     print(f"Generated turn-button hardware SVG: {output_file.absolute()}")
     print(f"  1x Turn Button: {BUTTON_LENGTH}mm x {BUTTON_WIDTH}mm, pivot hole "
           f"Ø{PIVOT_HOLE_DIA}mm at {PIVOT_FROM_BLUNT_END}mm from the blunt end")
-    print("  Hardware (not cut, buy separately): 1x M3x12 button-head bolt, "
+    print("  Hardware (not cut, buy separately): 1x M3x14 button-head bolt, "
           "1x M3 nyloc nut, 2x M3 washer.")
     return output_file
 
