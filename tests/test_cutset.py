@@ -26,7 +26,7 @@ def test_every_part_once_per_bed(built):
     out, info = built
     for bed, b in info["beds"].items():
         names = [n for sheet in b["parts"] for n in sheet]
-        assert len(names) == 22 == len(set(names)), bed
+        assert len(names) == 21 == len(set(names)), bed
 
 
 def test_sheet_counts_are_sensible(built):
@@ -72,9 +72,10 @@ def test_dxf_matches_svg_contours(built):
     for name in ("xtool_s1_sheet_1", "coupon"):
         svg = (out / f"{name}.svg").read_text()
         dxf = (out / f"{name}.dxf").read_text()
-        assert dxf.count("POLYLINE\n") - dxf.count("SEQEND") * 0 >= 0
         n_svg = len(re.findall(r"<path ", svg))
-        n_dxf = len(re.findall(r"\nPOLYLINE\n", dxf))
+        # R2000 DXF (units in the header): one LWPOLYLINE per contour
+        n_dxf = len(re.findall(r"\nLWPOLYLINE\n", dxf))
+        assert "$INSUNITS\n 70\n4" in dxf.replace("\n70\n", "\n 70\n") or "$INSUNITS\n70\n4" in dxf
         assert n_svg == n_dxf
         assert dxf.rstrip().endswith("EOF")
 
@@ -84,7 +85,11 @@ def test_svg_has_only_cut_and_engrave_colours_and_no_text(built):
     for f in out.glob("*.svg"):
         txt = f.read_text()
         assert "<text" not in txt
-        assert set(re.findall(r'stroke="([^"]+)"', txt)) <= {"rgb(0,0,255)", "rgb(255,0,0)"}
+        colours = set(re.findall(r'stroke="([^"]+)"', txt))
+        assert colours <= {"rgb(0,0,255)", "rgb(255,0,0)", "#808080"}
+        if not f.stem.endswith(("_engrave", "_marked")):
+            # red-team G4: the cut-only files are blue lines and nothing else
+            assert colours == {"rgb(0,0,255)"}, f.name
 
 
 def test_coupon_has_all_five_tests(built):

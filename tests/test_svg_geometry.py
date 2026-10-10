@@ -790,9 +790,13 @@ def test_drawer_grip_slot_position(synonym):
     assert len(matches) == 1
     slot = matches[0].bbox
     top_below = slot.ymin - piece.bbox.ymin
-    assert abs(top_below - c.DRAWER_GRIP_SLOT["top_below_edge"]) <= 0.6, (
+    # The faceplate is glued FACEPLATE_Z_OFFSET above the body's bottom edge
+    # (centred in the opening, red-team G20), so its slot sits that much
+    # further below the plate's own top edge; the two slots then line up.
+    expected = c.DRAWER_GRIP_SLOT["top_below_edge"] + (c.FACEPLATE_Z_OFFSET if synonym == "faceplate" else 0.0)
+    assert abs(top_below - expected) <= 0.6, (
         f"{synonym}: grip slot is {top_below:.2f}mm below the top edge, expected "
-        f"{c.DRAWER_GRIP_SLOT['top_below_edge']} (+/-0.6)"
+        f"{expected} (+/-0.6)"
     )
     piece_cx = (piece.bbox.xmin + piece.bbox.xmax) / 2
     slot_cx = (slot.xmin + slot.xmax) / 2

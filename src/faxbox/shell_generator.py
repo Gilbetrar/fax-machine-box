@@ -54,9 +54,6 @@ from faxbox.config import (
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
     TOP_PANEL_HOLE_Z,
-    TURN_BUTTON,
-    TURN_BUTTON_PIVOT_BOX_Y,
-    TURN_BUTTON_PIVOT_BOX_Z,
     WALL_HEIGHT,
 )
 from faxbox.svglabels import enforce_reference_labels
@@ -223,21 +220,12 @@ class OuterShell(Boxes):
     def _build_front_wall(self) -> None:
         """Front wall: INTERIOR_WIDTH (local X = box Y - T) x
         FRONT_WALL_HEIGHT (local Y = box Z), Z = 0 -> FRONT_WALL_TOP
-        (DESIGN.md #3).
-
-        Also carries the sole lid-retention turn-button pivot hole
-        (DESIGN.md "Retention (iteration 2)" section B, adversarial-review
-        REV.B): a single M3-clearance hole on this wall's exterior face, at
-        box (Y, Z) = (TURN_BUTTON_PIVOT_BOX_Y, TURN_BUTTON_PIVOT_BOX_Z). No
-        mirroring needed -- there is only one front wall and only one
-        button. Local X = box Y - T, same mapping the bottom-panel hole
-        line above already uses; local Y = box Z directly (this wall's Z
-        axis is unextended -- see test_front_wall_blank_size)."""
+        (DESIGN.md #3).  Plain panel apart from the bottom-panel finger-hole
+        row: the turn-button pivot hole it used to carry was removed with the
+        lid lock (2026-10-10)."""
 
         def callback() -> None:
             self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
-            pivot_local_x = TURN_BUTTON_PIVOT_BOX_Y - T
-            self.hole(pivot_local_x, TURN_BUTTON_PIVOT_BOX_Z, d=TURN_BUTTON["pivot_hole_dia"])
 
         self.rectangularWall(
             INTERIOR_WIDTH, FRONT_WALL_HEIGHT, "eFeF",
@@ -363,8 +351,11 @@ class OuterShell(Boxes):
         self._build_top_panel()
 
 
-def generate_shell(provider: str | None = None) -> Path:
+def generate_shell(provider: str | None = None, burn: float | None = None) -> Path:
     """Generate outer shell SVG file.
+
+    `burn` overrides the provider's per-side kerf compensation (mm); the cut
+    sets use it to generate one file set per laser kerf.
 
     `provider` selects a faxbox.config.PROVIDERS entry (falls back to the
     FAXBOX_PROVIDER env var, then "nycr" -- see config.resolve_provider).
@@ -381,7 +372,7 @@ def generate_shell(provider: str | None = None) -> Path:
     shell.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(provider_cfg["burn"]),
+        "--burn", str(provider_cfg["burn"] if burn is None else burn),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])

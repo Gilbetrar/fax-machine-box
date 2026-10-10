@@ -57,8 +57,11 @@ class LidGenerator(Boxes):
         )
 
 
-def generate_lids(provider: str | None = None) -> Path:
+def generate_lids(provider: str | None = None, burn: float | None = None) -> Path:
     """Generate the lids SVG file.
+
+    `burn` overrides the provider's per-side kerf compensation (mm); the cut
+    sets use it to generate one file set per laser kerf.
 
     `provider` selects a faxbox.config.PROVIDERS entry (see
     shell_generator.generate_shell's docstring). Passing nothing reproduces
@@ -78,7 +81,7 @@ def generate_lids(provider: str | None = None) -> Path:
     lids.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(provider_cfg["burn"]),
+        "--burn", str(provider_cfg["burn"] if burn is None else burn),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])

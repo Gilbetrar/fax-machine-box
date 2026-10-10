@@ -555,12 +555,9 @@ def generate_layout(
 
 # --- Ponoko export mode (additive; never touches the NYCR path above) --------
 
-# 21 NYCR parts (8 shell + 12 drawer + 1 lid) + the turn-button hardware
-# piece, which the NYCR default path deliberately keeps standalone (see
-# generate_layout's docstring / DESIGN.md section B) but the Ponoko path
-# nests like every other part, since a single Ponoko order should carry
-# every laser-cut piece the box needs.
-PONOKO_EXPECTED_PARTS = 22
+# 21 parts (8 shell + 12 drawer + 1 lid): every laser-cut piece the box
+# needs, so a single Ponoko order carries all of them.
+PONOKO_EXPECTED_PARTS = 21
 # The combined kerf-square + magnet-gauge-row self-calibration coupon
 # (faxbox.calibration.generate_ponoko_coupon) -- see README "Ordering from
 # Ponoko" for why Ponoko orders need this nested onto the real sheet rather
@@ -600,7 +597,7 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     """Regenerate every part with Ponoko's provider settings (kerf-derived
     BURN, Ponoko's cut/vector-engrave colors, no reference labels -- see
     config.PROVIDERS["ponoko"]) and re-nest ALL of them -- the 21 NYCR parts,
-    the turn-button hardware piece, and a small self-calibration coupon
+    and a small self-calibration coupon
     (kerf square + magnet press-fit gauge row) -- onto sheets sized within
     Ponoko's published birch-plywood workable area. Output:
     config.PROVIDERS["ponoko"]["output_dir"] (output/ponoko/).
@@ -622,12 +619,11 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     # module level) purely to keep this Ponoko-only dependency scoped to
     # where it's used -- these modules only import faxbox.config, so there
     # is no import cycle either way.
-    from faxbox import calibration, generate_drawers, generate_hardware, generate_lids, shell_generator
+    from faxbox import calibration, generate_drawers, generate_lids, shell_generator
 
     shell_svg = shell_generator.generate_shell(provider=name)
     drawer_svg = generate_drawers.generate_drawer(provider=name)
     lids_svg = generate_lids.generate_lids(provider=name)
-    hardware_svg = generate_hardware.generate_hardware(provider=name)
     coupon_svg = calibration.generate_ponoko_coupon(provider=name)
 
     strip = provider_cfg["strip_labels"]
@@ -636,7 +632,6 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     pieces += _load_pieces(drawer_svg, "Drawer 1", strip_labels=strip)
     pieces += _load_pieces(drawer_svg, "Drawer 2", strip_labels=strip)
     pieces += _load_pieces(lids_svg, "Lid", strip_labels=strip)
-    pieces += _load_pieces(hardware_svg, "Hardware", strip_labels=strip)
     pieces += _load_pieces(coupon_svg, "Calibration", strip_labels=strip)
 
     sheets = _pack_pieces(
@@ -673,7 +668,7 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     print(
         f"Total parts placed: {total_parts} (expected "
         f"{PONOKO_EXPECTED_PARTS + PONOKO_EXPECTED_COUPONS}: {PONOKO_EXPECTED_PARTS} real parts "
-        "[21 NYCR parts + 1 turn button] + "
+        "[8 shell + 12 drawer + 1 lid] + "
         f"{PONOKO_EXPECTED_COUPONS} self-calibration coupon)"
     )
     print(

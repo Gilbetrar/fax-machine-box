@@ -159,16 +159,9 @@ def _red_text_contents(svg_path):
     return out
 
 
-def test_hardware_labels_never_engrave():
-    """The turn button is a real, visible part: any red-filled text on it
-    would be burned into the show face (the v1 red-label bug class)."""
-    assert _red_text_contents(OUTPUT_DIR / "hardware.svg") == []
-
-
 # =============================================================================
-# Generalized guard (issue #25 adversarial QA finding): the check above only
-# ever covered hardware.svg, and every OTHER standalone generator (drawers,
-# lids, shell, calibration coupons) was still shipping Boxes.py's raw
+# Guard (issue #25 adversarial QA finding): every standalone generator
+# (drawers, lids, shell, calibration coupons) was shipping Boxes.py's raw
 # engrave-red part-name/title label untouched. This block regenerates every
 # generator this project has, in BOTH provider trees (default NYCR
 # output/*.svg and output/ponoko/*.svg), and scans every *.svg that comes
@@ -199,7 +192,7 @@ def all_generated_svgs(regenerate_svgs):
     nesting passes, then return every *.svg under output/ and
     output/ponoko/ -- the full set a human could ever open or send to a
     laser."""
-    for module in ("faxbox.generate_hardware", "faxbox.calibration", "faxbox.layout", "faxbox.ponoko"):
+    for module in ("faxbox.calibration", "faxbox.layout", "faxbox.ponoko"):
         subprocess.run([sys.executable, "-m", module], check=True, cwd=REPO_ROOT, capture_output=True)
     paths = sorted(OUTPUT_DIR.glob("*.svg")) + sorted(PONOKO_DIR.glob("*.svg"))
     assert paths, "no *.svg files found under output/ or output/ponoko/"

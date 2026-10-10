@@ -117,7 +117,10 @@ def test_total_drawer_length_within_spec_target():
 
 def test_openings_are_sill_free():
     """Opening floors must be exactly at bay floor / shelf top or drawers catch."""
-    assert c.BOTTOM_OPENING_Z0 == pytest.approx(c.FLOOR_TOP, **APPROX)
+    # at stock thinner than MIN_WEB the lower drawer and its opening are raised
+    # together (red-team G22); at this thickness that is the bay floor itself
+    assert c.BOTTOM_OPENING_Z0 == pytest.approx(c.BOTTOM_DRAWER_Z0, **APPROX)
+    assert c.BOTTOM_OPENING_Z0 == pytest.approx(max(c.FLOOR_TOP, c.MIN_WEB), **APPROX)
     assert c.TOP_OPENING_Z0 == pytest.approx(c.SHELF_Z1, **APPROX)
 
 
