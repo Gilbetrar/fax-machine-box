@@ -67,10 +67,25 @@ def outline_fill(ink: np.ndarray, letters: np.ndarray, ring_mm: float = 0.9,
     return (ink & ~core) | fill
 
 
+WALL_AREA = (4.0, 1.0, 294.45, 126.0)
+
+
+def clear_above_lid_slot(ink: np.ndarray, x0_mm: float, x1_mm: float) -> np.ndarray:
+    """The 3.5 mm strip between the wall's top edge and the lid through-slot
+    is too thin to carry art; fragments left there read as strays."""
+    out = ink.copy()
+    out[: int(5.2 * R.PPM), int(x0_mm * R.PPM): int(x1_mm * R.PPM)] = False
+    return out
+
+
 def left_wall(face_id):
     # source crop = the approved composition (PLACEMENTS.md: drawn frame
     # dropped, robust content bbox), cover-fit to the full wall
-    ink = ai_ink(face_id, "IMG_4228_ai_vH1.png", (247, 116, 6151, 2628))
+    # contain-fit with 4 mm clear of the finger-jointed front/rear edges (the
+    # July cover-fit clipped the E of MACHINE into the finger notches)
+    box = (247, 116, 6151, 2628)
+    ink = ai_ink(face_id, "IMG_4228_ai_vH1.png", box, fit_contain(box, WALL_AREA))
+    ink = clear_above_lid_slot(ink, 222.0, 298.45)   # left wall: front (slot) is at the right
     W = ink.shape[1]
     lettering = solid_regions(ink)
     lettering[:, : int(0.42 * W)] = False  # parrot side: the spray can is not lettering
@@ -89,7 +104,9 @@ def left_wall(face_id):
 
 
 def right_wall(face_id):
-    ink = ai_ink(face_id, "IMG_4230_ai_vH2.png", (357, 182, 5969, 2570))
+    box = (357, 182, 5969, 2570)
+    ink = ai_ink(face_id, "IMG_4230_ai_vH2.png", box, fit_contain(box, WALL_AREA))
+    ink = clear_above_lid_slot(ink, 0.0, 76.5)       # right wall: front (slot) is at the left
     H, W = ink.shape
     src = "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)"
     lettering = solid_regions(ink, 1.6)
@@ -101,7 +118,12 @@ def right_wall(face_id):
     a = cv2.imread(str(REPO / "art/engrave/right_wall.png"), cv2.IMREAD_GRAYSCALE)
     b = cv2.imread(str(REPO / "art/engrave/right_wall_VARIANT_NOFUNFOR.png"), cv2.IMREAD_GRAYSCALE)
     erased = R.u8((a < 128) & (b >= 128)) * 255
-    erased = cv2.resize(erased, (W, H), interpolation=cv2.INTER_LINEAR) > 60
+    # the July canvas = the source box cover-fit to the full wall; map it into
+    # this build's contain-fit box
+    X0, Y0, X1, Y1 = [int(round(v * R.PPM)) for v in fit_contain(box, WALL_AREA)]
+    small = cv2.resize(erased, (X1 - X0, Y1 - Y0), interpolation=cv2.INTER_LINEAR) > 60
+    erased = np.zeros((H, W), bool)
+    erased[Y0:Y1, X0:X1] = small[: H - Y0, : W - X0]
     corner = np.zeros((H, W), bool)
     corner[: int(0.2 * H), int(0.08 * W): int(0.3 * W)] = True
     n, lab = cv2.connectedComponents(R.u8(ink & corner))

@@ -33,7 +33,7 @@ def canvas_shape(face_id):
 DRAWER_SIDES = {
     "drawer_side_1": dict(src="IMG_4233", x=(0, 3885),
                           top=[1.8e-06, -0.01182261, 40.6], bot=[-3.43e-06, -0.02692512, 1031.17],
-                          inset=(10, 12), ink_t=0.5, tone_ths=(0.22, 0.32, 0.45),
+                          inset=(20, 12), ink_t=0.42, tone_ths=(0.22, 0.32, 0.45),
                           colour_line_kw=dict(sat_t=0.5), seed=11),
     "drawer_side_2": dict(src="IMG_4235", x=(0, 3225),
                           top=[-2.49e-06, 0.01411701, 3.37], bot=[3.62e-06, -0.03796397, 832.75],
@@ -41,7 +41,7 @@ DRAWER_SIDES = {
                           colour_line_kw=None, seed=12),
     "drawer_side_3": dict(src="IMG_4237", x=(0, 3770),
                           top=[1.92e-06, -0.01088373, 23.53], bot=[2.71e-06, -0.03814268, 968.35],
-                          inset=(8, 10), ink_t=0.45, tone_ths=(0.22, 0.34, 0.48),
+                          inset=(8, 10), ink_t=0.45, tone_ths=(0.24, 0.37, 0.50),
                           colour_line_kw=None, seed=13),
     "drawer_side_4": dict(src="IMG_4239", x=(12, 3725),
                           top=[2.1e-06, -0.00685499, 30.25], bot=[5.98e-06, -0.03640593, 939.44],

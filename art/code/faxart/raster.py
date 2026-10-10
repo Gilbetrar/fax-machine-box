@@ -176,7 +176,8 @@ def line_angles(ink: np.ndarray, sigma_mm: float = 1.5) -> np.ndarray:
 
 def knock_out_solids(mask: np.ndarray, protect: np.ndarray | None = None, solid_mm: float = 2.4,
                      border_mm: float = 0.6, pitch_mm: float = 1.0, gap_mm: float = 0.42,
-                     orient_from: np.ndarray | None = None, seed: int = 3
+                     orient_from: np.ndarray | None = None, seed: int = 3,
+                     min_area_mm2: float = 45.0
                      ) -> tuple[np.ndarray, np.ndarray]:
     """Large solid blacks char and take forever, and merged dense hatching is
     the same problem. Keep a border_mm rim and cut gap_mm unburned channels
@@ -190,6 +191,10 @@ def knock_out_solids(mask: np.ndarray, protect: np.ndarray | None = None, solid_
     core = cv2.erode(u8(big), disk(2 * px(border_mm) + 1)).astype(bool)
     if protect is not None:
         core &= ~protect
+    # small solids (pupils, buttons, a beak tip) burn fine and carry the
+    # drawing's punch: only open up solid areas bigger than min_area_mm2
+    big = remove_small(big, min_area_mm2)
+    core &= big
     if not core.any():
         return mask, core
     J = line_angles(orient_from if orient_from is not None else mask)
@@ -237,10 +242,10 @@ def enforce_laser_rules(mask: np.ndarray, material: np.ndarray | None = None,
 # ---------------------------------------------------------------- coded hatching
 
 def hatch(region: np.ndarray, pitch_mm: float, angle_deg: float, width_mm: float = 0.35,
-          seed: int = 0, phase_mm: float | None = None, stroke_mm: tuple[float, float] = (5.0, 13.0),
+          seed: int = 0, phase_mm: float | None = None, stroke_mm: tuple[float, float] = (3.0, 9.0),
           lift_mm: tuple[float, float] = (0.3, 0.9), trim_mm: tuple[float, float] = (0.1, 0.5),
-          min_len_mm: float = 0.9, jitter_deg: float = 1.2, wobble_mm: float = 0.07,
-          offset_jitter: float = 0.05) -> np.ndarray:
+          min_len_mm: float = 0.9, jitter_deg: float = 2.2, wobble_mm: float = 0.09,
+          offset_jitter: float = 0.07) -> np.ndarray:
     """Hand hatching in code. Parallel rows at `pitch_mm`; along each row the
     region is filled with SHORT strokes (stroke_mm long, small pen-lift gaps
     between them), each stroke with its own tiny angle tilt, sideways offset
@@ -312,7 +317,7 @@ def tone_hatch(levels: np.ndarray, region_ok: np.ndarray, spec: list[dict], seed
 
 
 def quantize_tone(tone: np.ndarray, thresholds: list[float], smooth_mm: float = 0.8,
-                  min_area_mm2: float = 6.0, exclude: np.ndarray | None = None) -> np.ndarray:
+                  min_area_mm2: float = 20.0, exclude: np.ndarray | None = None) -> np.ndarray:
     t = cv2.GaussianBlur(tone.astype(np.float32), (0, 0), smooth_mm * PPM)
     lev = np.zeros(t.shape, np.int32)
     for i, th in enumerate(thresholds, start=1):

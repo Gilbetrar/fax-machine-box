@@ -72,7 +72,7 @@ def circles(region, spacing=1.5, d=1.2, width=0.32, seed=0):
 
 
 def pattern(name, region, seed):
-    h = lambda **k: R.hatch(region, seed=seed, stroke_mm=(4, 10), **k)  # noqa: E731
+    h = lambda **k: R.hatch(region, seed=seed, stroke_mm=(3, 8), **k)  # noqa: E731
     if name == "diag":
         return h(pitch_mm=1.0, angle_deg=45, width_mm=0.34)
     if name == "diag_r":
@@ -83,13 +83,13 @@ def pattern(name, region, seed):
         return h(pitch_mm=0.95, angle_deg=0, width_mm=0.34)
     if name == "cross":
         return h(pitch_mm=1.3, angle_deg=45, width_mm=0.32) | \
-            R.hatch(region, seed=seed + 1, stroke_mm=(4, 10), pitch_mm=1.3, angle_deg=-45, width_mm=0.32)
+            R.hatch(region, seed=seed + 1, stroke_mm=(3, 8), pitch_mm=1.3, angle_deg=-45, width_mm=0.32)
     if name == "cross_dense":
         return h(pitch_mm=1.05, angle_deg=40, width_mm=0.32) | \
-            R.hatch(region, seed=seed + 1, stroke_mm=(4, 10), pitch_mm=1.15, angle_deg=-50, width_mm=0.32)
+            R.hatch(region, seed=seed + 1, stroke_mm=(3, 8), pitch_mm=1.15, angle_deg=-50, width_mm=0.32)
     if name == "grid":
         return h(pitch_mm=1.3, angle_deg=0, width_mm=0.32) | \
-            R.hatch(region, seed=seed + 1, stroke_mm=(4, 10), pitch_mm=1.3, angle_deg=90, width_mm=0.32)
+            R.hatch(region, seed=seed + 1, stroke_mm=(3, 8), pitch_mm=1.3, angle_deg=90, width_mm=0.32)
     if name == "wave":
         return waves(region, seed=seed)
     if name == "circles":
