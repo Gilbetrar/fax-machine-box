@@ -56,7 +56,12 @@ LID_SQUASH_A = 0.95
 A_HEAD_SHIFT = 27.0
 
 
+TOP_U0 = 79.0   # the top panel's art starts at field u = 79 mm (box geometry)
+
+
 def split_mm() -> float:
+    """Lid length from partgeom (78.0 since the slot-end corners were rounded;
+    the lost millimetre is at the lid's rear, under the top panel's edge)."""
     return size_mm("lid")[0]
 
 
@@ -65,8 +70,8 @@ def field_ink(variant: str) -> np.ndarray:
     if variant == "A":
         w0 = WINDOWS["A"] + A_HEAD_SHIFT
         lid = R.warp_affine(master, field_affine(w0, LID_SQUASH_A), FIELD)
-        top = R.warp_affine(master, field_affine(w0 + split_mm() / LID_SQUASH_A - split_mm()), FIELD)
-        cut = int(round(split_mm() * R.PPM))
+        top = R.warp_affine(master, field_affine(w0 + TOP_U0 / LID_SQUASH_A - TOP_U0), FIELD)
+        cut = int(round(TOP_U0 * R.PPM))
         g = np.concatenate([lid[:, :cut], top[:, cut:]], axis=1)
     else:
         g = R.warp_affine(master, field_affine(WINDOWS[variant]), FIELD)
@@ -106,7 +111,7 @@ def fill_capsule(ink: np.ndarray) -> np.ndarray:
 def split(ink_field: np.ndarray):
     sp = int(round(split_mm() * R.PPM))
     lid_part = ink_field[:, :sp]
-    top = ink_field[:, sp:]
+    top = ink_field[:, int(round(TOP_U0 * R.PPM)):]
     W_lid, H_lid = size_mm("lid")
     top_w = int(round(size_mm("top")[0] * R.PPM))
     top = top[:, :top_w]

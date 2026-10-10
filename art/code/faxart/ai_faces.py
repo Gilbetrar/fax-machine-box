@@ -197,6 +197,10 @@ def blank_invented_spines(ink: np.ndarray) -> np.ndarray:
     return out
 
 
+DIGITS_BOX = (47.0, 95.5, 53.5, 108.8)   # measured on the build's front canvas
+DIGITS_RAISE_MM = 1.5
+
+
 def front_dots(ink: np.ndarray) -> np.ndarray:
     """Ben's photo (IMG_4229) has '1 ●  2 ●  3 ●  4 ●': digit + filled dot.
     The AI redraw turned the dots into 0s and a second 4 ('10 20 30 44').

@@ -37,7 +37,8 @@ from faxbox import engrave as eg
 ROOT = Path(__file__).resolve().parent.parent
 T = c.T
 
-EXPECTED_DEFAULTS = {"left": "solid", "right": "nofunfor", "top": "a", "lid": "a"}
+# front gained an "outline" variant in art red-team pass 2 (B10); its default stays "traced"
+EXPECTED_DEFAULTS = {"left": "solid", "right": "nofunfor", "top": "a", "lid": "a", "front": "traced"}
 FLIPPED = {"top", "lid", "B_face", "T_face", "B_left", "T_left"}
 NOT_FLIPPED = {"left", "right", "front", "B_right", "T_right"}
 
@@ -457,7 +458,9 @@ def test_no_engrave_crosses_a_cut_and_all_stay_clear(built, parts_built):
     pout, pinfo = parts_built
     _check_set(out, pout)
     clear = pinfo["min_clearance_mm"]
-    assert len(clear) == 15
+    # every art variant is checked: count them from the art manifest (17 since
+    # red-team pass 2 added front/outline and right/outline)
+    assert len(clear) == sum(len(eg.variants(f)) for f in eg.faces()) == 17
     assert min(clear.values()) >= MIN_CLEAR
 
 
