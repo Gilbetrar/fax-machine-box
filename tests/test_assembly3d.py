@@ -3,8 +3,7 @@
 Every part is placed in box coordinates from its zero-kerf outline.  These
 tests re-derive from volumes that the box assembles: no interference, every
 finger lands in a hole, the divider only fits one way, the assembly order is
-possible step by step, the drawers and the lid slide, the magnet and bolt
-holes line up.
+possible step by step, the drawers and the lid slide, the magnet holes line up.
 """
 
 import itertools
@@ -51,7 +50,7 @@ def test_divider_correct_way_is_clean(plates):
     assert not [i for i in a3.interferences(plates, thr=1.0) if "divider" in i[1:]]
 
 
-@pytest.mark.parametrize("pid", ["right", "left", "top", "shelf", "bottom"])
+@pytest.mark.parametrize("pid", ["right", "left", "top", "shelf", "bottom", "rear", "front"])
 def test_wrong_flip_of_walls_and_panels_is_blocked_or_symmetric(plates, pid):
     """Each of these either fits only one way or is mirror-symmetric (the
     shelf, top and bottom are symmetric about the box centre line)."""
@@ -65,6 +64,9 @@ def test_wrong_flip_of_walls_and_panels_is_blocked_or_symmetric(plates, pid):
         if not i and u == base_unfilled:
             ok_flips.append(flip)
     assert plates[pid].flip in ok_flips
+    if pid in ("rear", "front"):
+        # upside down is blocked; turned left for right it is symmetric
+        assert (0, 1) not in ok_flips and (1, 1) not in ok_flips, ok_flips
     if pid in ("right", "left"):
         assert ok_flips == [plates[pid].flip]
 
@@ -162,12 +164,11 @@ def test_magnet_holes_are_coaxial_at_closed_position(plates):
     assert plates["B_back"].rc[0] == pytest.approx(plates["divider"].rc[1], abs=c.DRAWER_BAY_GAP + 1e-6)
 
 
-def test_turn_button_pivot_is_coaxial_with_front_wall_hole(plates):
-    dia = c.TURN_BUTTON["pivot_hole_dia"]
-    fw = _hole_centres(plates["front"], dia, (a3.Y, a3.Z))
-    bt = _hole_centres(plates["button"], dia, (a3.Y, a3.Z))
-    assert fw and bt and np.hypot(fw[0][0] - bt[0][0], fw[0][1] - bt[0][1]) < 0.05
-    assert plates["button"].rc[1] == pytest.approx(plates["front"].rc[0])
+def test_no_button_plate_and_front_wall_has_no_pivot_hole(plates):
+    assert "button" not in plates
+    assert not _hole_centres(plates["front"], 3.2, (a3.Y, a3.Z))
+    assert all(p[1] != "button" for p in a3.INVENTORY)
+    assert all("button" not in s["parts"] for s in a3.ASSEMBLY_STEPS)
 
 
 def test_matrices_map_outline_corners_into_box_bounds(plates):
@@ -190,7 +191,7 @@ def test_all_placements_have_the_same_handedness(plates):
 def test_overall_envelope(plates):
     lo = [min(p.box_bounds()[a][0] for p in plates.values()) for a in range(3)]
     hi = [max(p.box_bounds()[a][1] for p in plates.values()) for a in range(3)]
-    assert lo[a3.X] == pytest.approx(-T, abs=1e-6)       # turn button on the front
+    assert lo[a3.X] == pytest.approx(0, abs=1e-6)
     assert hi[a3.X] == pytest.approx(c.SHELL_EXT["length"], abs=1e-6)
     assert lo[a3.Y] == pytest.approx(0, abs=1e-6) and hi[a3.Y] == pytest.approx(c.SHELL_EXT["width"], abs=1e-6)
     assert lo[a3.Z] == pytest.approx(0, abs=1e-6) and hi[a3.Z] == pytest.approx(c.SHELL_EXT["height"], abs=1e-6)

@@ -50,6 +50,13 @@ def built(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
+def parts_built(tmp_path_factory):
+    out = tmp_path_factory.mktemp("parts_set")
+    info = cs.build_parts(out)
+    return out, info
+
+
+@pytest.fixture(scope="module")
 def items(tmp_path_factory):
     return cs.generate_items(tmp_path_factory.mktemp("items"))
 
@@ -72,7 +79,7 @@ def parse_sheet(path: Path):
     parts = []
     for m in re.finditer(r"<g ([^>]*)>(.*?)</g>", txt, flags=re.S):
         attrs = dict(re.findall(r'([\w-]+)="([^"]*)"', m.group(1)))
-        rec = {"attrs": attrs, "part": attrs["data-part"], "cuts": [], "fills": [], "strokes": []}
+        rec = {"attrs": attrs, "part": attrs["data-part"], "cuts": [], "fills": [], "strokes": [], "labels": []}
         for p in re.finditer(r"<path ([^>]*?)/>", m.group(2)):
             a = dict(re.findall(r'([\w-]+)="([^"]*)"', p.group(1)))
             subs = eg.parse_subpaths(a["d"])
@@ -82,6 +89,8 @@ def parse_sheet(path: Path):
                 rec["fills"].extend(subs)
             elif a.get("stroke") == "rgb(255,0,0)":
                 rec["strokes"].extend(subs)
+            elif a.get("stroke") == "#808080":
+                rec["labels"].extend(subs)
             else:
                 raise AssertionError(a)
         parts.append(rec)
@@ -133,6 +142,8 @@ def test_flip_flags_match_the_art_manifest(plates):
 def test_engrave_sheets_keep_the_cut_layout(built):
     out, info = built
     for bed, b in info["beds"].items():
+        if not info["engrave_files"][bed]:
+            continue
         for n in range(1, b["sheets"] + 1):
             plain = parse_sheet(out / f"{bed}_sheet_{n}.svg")
             eng = parse_sheet(out / f"{bed}_sheet_{n}_engrave.svg")
@@ -143,12 +154,15 @@ def test_engrave_sheets_keep_the_cut_layout(built):
                 ba = unary_union([LineString(p) for p, _ in eg.flatten(a["cuts"], 0.05)]).bounds
                 be = unary_union([LineString(p) for p, _ in eg.flatten(e["cuts"], 0.05)]).bounds
                 assert np.allclose(ba, be, atol=0.01), (bed, n, a["part"], ba, be)
-    assert "ponoko_sheet_1_engrave.svg" in " ".join(info["engrave_files"])
+    assert "ponoko_sheet_1_engrave.svg" in info["engrave_files"]["ponoko"]
+    assert info["engrave_files"]["xtool_s1"] == []          # no diode/CO2 engrave set at the Ponoko kerf
 
 
 def test_art_parts_are_the_eleven_faces_and_stay_upright(built):
     out, info = built
     for bed, b in info["beds"].items():
+        if not info["engrave_files"][bed]:
+            continue
         seen = []
         for n in range(1, b["sheets"] + 1):
             for rec in parse_sheet(out / f"{bed}_sheet_{n}_engrave.svg"):
@@ -162,38 +176,47 @@ def test_art_parts_are_the_eleven_faces_and_stay_upright(built):
     assert rec["attrs"]["data-engrave"] == "left/solid"
 
 
-def test_colours_and_no_text(built):
+def test_colours_and_no_text(built, parts_built):
     out, info = built
-    for f in list(out.glob("*_engrave.svg")) + list((out / "faces").glob("*.svg")):
+    pout, _ = parts_built
+    for f in list(out.glob("*_engrave.svg")) + list((pout / "faces").glob("*.svg")):
         txt = f.read_text()
         assert "<text" not in txt
-        assert set(re.findall(r'stroke="([^"]+)"', txt)) <= {"rgb(0,0,255)", "rgb(255,0,0)"}
+        assert set(re.findall(r'stroke="([^"]+)"', txt)) <= {"rgb(0,0,255)", "#808080"}
         assert set(re.findall(r'fill="([^"]+)"', txt)) <= {"none", "#000000"}
         assert 'stroke="rgb(0,0,255)"' in txt and 'fill="#000000"' in txt
         assert 'stroke-width="0.0762"' in txt              # hairline
-    # cut-only files stay cut-only and carry the generator's glue-up outline on the faceplates
-    plain = (out / "ponoko_sheet_2.svg").read_text() + (out / "ponoko_sheet_1.svg").read_text()
-    assert "#000000" not in plain
+    # cut-only files stay cut-only: blue and nothing else
+    for f in out.glob("*_sheet_?.svg"):
+        assert set(re.findall(r'stroke="([^"]+)"', f.read_text())) == {"rgb(0,0,255)"}, f.name
+        assert "#000000" not in f.read_text()
 
 
-def test_dxf_layers(built):
+def _lw(dxf):
+    return re.findall(r"LWPOLYLINE\n5\n\w+\n100\nAcDbEntity\n8\n(\w+)\n100\nAcDbPolyline\n90\n\d+\n70\n(\d)", dxf)
+
+
+def test_dxf_layers_and_units(built, parts_built):
     out, _ = built
-    for name in ("ponoko_sheet_1_engrave", "faces/left__solid", "faces/lid__a"):
-        dxf = (out / f"{name}.dxf").read_text()
-        svg = parse_sheet(out / f"{name}.svg")
+    pout, _ = parts_built
+    for path in (out / "ponoko_sheet_1_engrave", pout / "faces" / "left__solid", pout / "faces" / "lid__a"):
+        dxf = path.with_suffix(".dxf").read_text()
+        svg = parse_sheet(path.with_suffix(".svg"))
         assert dxf.rstrip().endswith("EOF")
-        layers = re.findall(r"POLYLINE\n8\n(\w+)\n66\n1\n70\n(\d)", dxf)
+        assert "$ACADVER\n1\nAC1015" in dxf and "$INSUNITS\n70\n4" in dxf      # R2000, millimetres
+        layers = _lw(dxf)
         cut = [cl for l, cl in layers if l == "CUT"]
         eng = [cl for l, cl in layers if l == "ENGRAVE"]
-        assert set(l for l, _ in layers) == {"CUT", "ENGRAVE"}
+        assert {l for l, _ in layers} <= {"CUT", "ENGRAVE", "LABELS"}
         assert len(cut) == sum(len(r["cuts"]) for r in svg)
         assert all(cl == "1" for cl in eng), "engrave fills must be closed polylines"
         assert len(eng) >= sum(len(r["fills"]) for r in svg) * 0.95   # DXF thinning never drops a ring wholesale
-        assert "LAYER\n2\nCUT" in dxf and "LAYER\n2\nENGRAVE" in dxf
+        for name in ("CUT", "ENGRAVE", "LABELS"):
+            assert f"LAYER\n5" in dxf and f"\n2\n{name}\n70" in dxf
 
 
-def test_every_variant_has_a_face_file(built):
-    out, info = built
+def test_every_variant_has_a_face_file(parts_built):
+    out, info = parts_built
     want = {f"{f}__{v['id']}" for f in eg.faces() for v in eg.variants(f)}
     have = {Path(p).stem for p in info["face_files"] if p.endswith(".svg")}
     assert have == want
@@ -412,8 +435,9 @@ def test_flipped_outlines_are_symmetric_under_the_turn_over(plates):
 MIN_CLEAR = cs.CLEARANCE_MIN
 
 
-def _check_set(out: Path):
-    for f in sorted(out.glob("*_engrave.svg")) + sorted((out / "faces").glob("*.svg")):
+def _check_set(out: Path, parts: Path | None = None):
+    files = sorted(out.glob("*_engrave.svg")) + (sorted((parts / "faces").glob("*.svg")) if parts else [])
+    for f in files:
         for rec in parse_sheet(f):
             if not rec["fills"] and not rec["strokes"]:
                 continue
@@ -424,17 +448,18 @@ def _check_set(out: Path):
             assert r["distance"] >= MIN_CLEAR - 1e-9, (where, r["distance"])
 
 
-def test_no_engrave_crosses_a_cut_and_all_stay_clear(built):
+def test_no_engrave_crosses_a_cut_and_all_stay_clear(built, parts_built):
     out, info = built
-    _check_set(out)
-    clear = info["engrave"]["min_clearance_mm"]
+    pout, pinfo = parts_built
+    _check_set(out, pout)
+    clear = pinfo["min_clearance_mm"]
     assert len(clear) == 15
     assert min(clear.values()) >= MIN_CLEAR
 
 
-def test_art_is_substantial_after_clearance_trim(built):
+def test_art_is_substantial_after_clearance_trim(parts_built):
     """The trim must not eat the art: ink area stays within 1% of the art's own."""
-    out, info = built
+    out, info = parts_built
     for f in (out / "faces").glob("*.svg"):
         rec = parse_sheet(f)[0]
         face, var = rec["attrs"]["data-engrave"].split("/")
@@ -449,43 +474,234 @@ def test_art_is_substantial_after_clearance_trim(built):
 def test_clearance_holds_at_both_ends_of_the_stock_range(t, tmp_path):
     """Own process: the geometry reads FAXBOX_THICKNESS at import."""
     code = (
-        "import sys, json; from pathlib import Path; from faxbox import cutset as cs;"
-        "cs.build_set(Path(sys.argv[1]))"
+        "import sys; from pathlib import Path; from faxbox import cutset as cs;"
+        "cs.build_set(Path(sys.argv[1]), 0.18); cs.build_parts(Path(sys.argv[2]))"
     )
     env = dict(os.environ, FAXBOX_THICKNESS=str(t), PYTHONPATH=str(ROOT / "src"))
-    r = subprocess.run([sys.executable, "-c", code, str(tmp_path)], env=env, capture_output=True, text=True, cwd=ROOT)
+    r = subprocess.run([sys.executable, "-c", code, str(tmp_path / "s"), str(tmp_path / "p")], env=env,
+                       capture_output=True, text=True, cwd=ROOT)
     assert r.returncode == 0, r.stderr[-2000:]
-    _check_set(tmp_path)
-    info = json.loads((tmp_path / "set.json").read_text())
-    assert min(info["engrave"]["min_clearance_mm"].values()) >= MIN_CLEAR
+    _check_set(tmp_path / "s", tmp_path / "p")
+    info = json.loads((tmp_path / "s" / "set.json").read_text())
+    assert info["wall_id"]["left_divider_holes"] == info["wall_id"]["right_divider_holes"] + 1
 
 
-def test_exporter_manifest_schema(tmp_path):
+# --- kerf variants (G1) ---------------------------------------------------------------------------
+
+def _finger_fit(kerf_file: float, kerf_laser: float, workdir: Path) -> float:
+    """hole width - finger width, physical, for a three-finger coupon corner
+    drawn for `kerf_file` and cut by a laser that really removes `kerf_laser`."""
+    from shapely.geometry import LineString as LS
+    items = cs.coupon_items(workdir)
+    kid = next(k for k, v in cs.KERFS.items() if abs(v - kerf_file) < 1e-9)
+    tag = f"kerf {cs.KERFS[kid]:.2f}"
+    fingers = next(i for i in items if tag in i.name and "finger piece" in i.name)
+    holes = next(i for i in items if tag in i.name and "hole piece" in i.name)
+
+    def drawn(item):
+        mat, _ = cs.cut_geometry(cs.bed_subpaths(item, None, "cut")[0])
+        return mat
+
+    # the beam removes kerf_laser / 2 from each side of every drawn line: a drawn finger comes out
+    # kerf_laser narrower, a drawn hole kerf_laser wider
+    pf, ph = drawn(fingers), drawn(holes)
+    x0, y0, x1, y1 = pf.bounds
+    ymid = y1 - T / 2                        # the fingers stick out of the bottom (largest y)
+    fw = [seg.length for seg in _segments(pf.intersection(LS([(x0 - 1, ymid), (x1 + 1, ymid)])))]
+    assert len(fw) == 3, fw
+    hw = [Polygon(r).bounds[2] - Polygon(r).bounds[0] for r in ph.interiors]
+    assert len(hw) == 3, hw
+    return float((np.mean(hw) + kerf_laser) - (np.mean(fw) - kerf_laser))
+
+
+def _segments(g):
+    return list(g.geoms) if hasattr(g, "geoms") else [g]
+
+
+@pytest.mark.parametrize("kid", ["diode", "co2", "ponoko"])
+def test_kerf_variant_restores_the_finger_play(kid, tmp_path):
+    """G1: at the kerf a file was drawn for, hole - finger = FINGER_PLAY; with the
+    old single 0.20 file on a 0.12 laser the joint was 0.16 mm too tight."""
+    k = cs.KERFS[kid]
+    fit = _finger_fit(k, k, tmp_path)
+    assert fit == pytest.approx(c.FINGER_PLAY, abs=0.03), (kid, fit)
+    if kid == "diode":
+        old = _finger_fit(0.20, 0.12, tmp_path)         # the Ponoko file cut on a diode laser
+        assert old < c.FINGER_PLAY - 0.1, old            # interference by about 0.06
+        assert old < 0.0
+
+
+def test_kerf_variants_exist_and_differ():
+    assert cs.KERFS == {"diode": 0.12, "co2": 0.18, "ponoko": 0.20}
+
+
+# --- cut file hygiene (G5, G6, G4) ----------------------------------------------------------------
+
+def test_no_zero_length_corner_loops_in_any_cut_file(built):
+    out, info = built
+    bad = 0
+    for f in list(out.glob("*_sheet_?.svg")) + list(out.glob("*_engrave.svg")) + [out / "coupon.svg"]:
+        for rec in parse_sheet(f):
+            for sp in rec["cuts"]:
+                cur = None
+                for seg in sp:
+                    if seg[0] == "C" and abs(seg[3][0] - cur[0]) < 1e-6 and abs(seg[3][1] - cur[1]) < 1e-6:
+                        bad += 1
+                    if seg[0] != "Z":
+                        cur = seg[-1]
+    assert bad == 0, bad
+
+
+def test_registration_lines_are_only_in_the_labels_set(built):
+    out, info = built
+    for f in out.glob("*_sheet_?.svg"):
+        assert "rgb(255,0,0)" not in f.read_text(), f.name
+    red = [r for f in (out / "labels").glob("*.svg") for rec in parse_sheet(f) for r in rec["strokes"]]
+    assert len(red) >= 8                            # 2 faceplates x (3 lines) + coupon not here
+
+
+# --- labels and joint map (G3, G10) ------------------------------------------------------------------
+
+def test_joint_map_is_structured_and_matches_the_3d_model():
+    from faxbox import joints as jt
+    jm = jt.joint_map()
+    ids = [j["id"] for j in jm["joints"]]
+    assert len(ids) == len(set(ids)) == 25
+    for j in jm["joints"]:
+        a, b = j["parts"]
+        assert a["part"] != b["part"] and a["edge"] in ("left", "right", "top", "bottom")
+        assert j["id"][0] == min(a["part"], b["part"])           # named for the lower letter
+        for p in j["parts"]:
+            assert isinstance(p["x_mm"], float) and isinstance(p["y_mm"], float)
+    # the right wall meets front, rear, bottom, divider, shelf and top (not the lid, not the button)
+    mates = {p["part"] for j in jm["joints"] if any(p["part"] == "B" for p in j["parts"]) for p in j["parts"]}
+    assert mates == {"A", "B", "D", "E", "F", "G", "H"}
+    # drawer joints exist for both drawers with the same names
+    assert set(jm["by_plate"]["B_front"][i][0] for i in range(3)) == set(jm["by_plate"]["T_front"][i][0] for i in range(3))
+
+
+def test_labels_set_marks_every_joint_on_both_parts(built):
+    out, info = built
+    lab = info["joint_map"]["labelled_on_inside_face"]
+    jm = info["joint_map"]["joints"]
+    for j in jm:
+        for p in j["parts"]:
+            assert j["id"] in lab[p["part"]], (j["id"], p["part"], lab[p["part"]])
+    # every part with joints was labelled in the labels set, and the labels are gray, on the LABELS layer
+    n = 0
+    for f in (out / "labels").glob("*.svg"):
+        for rec in parse_sheet(f):
+            if rec["part"][0] in lab and lab[rec["part"][0]]:
+                assert rec["labels"], rec["part"]
+                n += 1
+    assert n >= 20
+
+
+def test_labels_stay_clear_of_cuts_and_art_parts_carry_none_outside(built):
+    out, info = built
+    ph = info["joint_map"]["art_parts_unlabelled"]
+    assert set(ph) == {"B", "C", "D", "H", "I", "M", "N", "P"}
+    for f in out.glob("*_engrave.svg"):
+        for rec in parse_sheet(f):
+            letter = rec["part"][0]
+            if rec["attrs"].get("data-engrave"):
+                assert not rec["labels"], "no marks on a part with exterior art"
+            elif letter not in ("J", "I"):
+                pass
+            if rec["labels"]:
+                cut = unary_union([LineString(p + ([p[0]] if cl else [])) for p, cl in eg.flatten(rec["cuts"], 0.01)])
+                text = unary_union([LineString(p) for sub in rec["labels"] for p, _ in eg.flatten([sub], 0.01) if len(p) > 1])
+                assert cut.distance(text) >= 1.0 - 1e-6, (f.name, rec["part"], cut.distance(text))
+    for f in (out / "labels").glob("*.svg"):
+        for rec in parse_sheet(f):
+            if rec["labels"]:
+                cut = unary_union([LineString(p + ([p[0]] if cl else [])) for p, cl in eg.flatten(rec["cuts"], 0.01)])
+                text = unary_union([LineString(p) for sub in rec["labels"] for p, _ in eg.flatten([sub], 0.01) if len(p) > 1])
+                assert cut.distance(text) >= 1.0 - 1e-6, (f.name, rec["part"], cut.distance(text))
+
+
+def test_wall_id_rule_is_one_more_hole_on_the_left(built):
+    _, info = built
+    w = info["wall_id"]
+    assert w["left_divider_holes"] == w["right_divider_holes"] + 1 >= 6
+
+
+# --- beds and stock (G8), parts (G9) ----------------------------------------------------------------
+
+def test_every_layout_fits_its_bed_and_stock(built):
+    out, info = built
+    for bed, b in info["beds"].items():
+        bw, bh, margin, _ = cs.BEDS[bed]
+        stock = cs.BED_INFO[bed]["stock"]
+        for n in range(1, b["sheets"] + 1):
+            txt = (out / f"{bed}_sheet_{n}.svg").read_text()
+            w = float(re.search(r'width="([\d.]+)mm"', txt).group(1))
+            h = float(re.search(r'height="([\d.]+)mm"', txt).group(1))
+            assert w <= bw + 0.01 and h <= bh + 0.01, (bed, n, w, h)
+            if stock["width_mm"]:
+                assert w <= stock["width_mm"] + 0.01 and h <= stock["height_mm"] + 0.01, (bed, n, w, h)
+    # the 12 x 24 in stock layout: Woodpeckers true size 301.6 x 606.4
+    p2 = cs.BED_INFO["xtool_p2"]["stock"]
+    assert (p2["width_mm"], p2["height_mm"]) == (606.4, 301.6)
+    assert cs.BEDS["xtool_p2"][0] <= 606.4 and cs.BEDS["xtool_p2"][1] <= 301.6
+    assert cs.BEDS["xtool_s1"][1] <= 301.6                    # S1 layout cut from the same stock
+
+
+def test_single_part_files_are_zero_kerf_and_complete(parts_built, plates):
+    out, info = parts_built
+    assert len(info["parts"]) == 15 and sum(p["qty"] for p in info["parts"]) == 21
+    from faxbox import partgeom as pg
+    for p in info["parts"]:
+        rec = parse_sheet(out / f"{p['stem']}.svg")
+        assert len(rec) == 1 and not rec[0]["fills"] and not rec[0]["strokes"] and not rec[0]["labels"]
+        mat, _ = cs.cut_geometry(rec[0]["cuts"])
+        letter_part = next(pl for l, pl, n, q in a3.INVENTORY if l == p["letter"])
+        g = pg.load_part(letter_part)
+        assert mat.area == pytest.approx(g.solid.area, rel=2e-3), p["stem"]      # no kerf offset
+    assert (out / "README.txt").exists()
+
+
+# --- the exporter and its manifest (G7, G23) -----------------------------------------------------------
+
+def test_exporter_manifest_schema_and_zips(tmp_path):
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "export_cutfiles.py"), "--out", str(tmp_path), "--only", "3.2"],
                        capture_output=True, text=True, cwd=ROOT)
     assert r.returncode == 0, r.stderr[-2000:]
+    import zipfile
     m = json.loads((tmp_path / "manifest.json").read_text())
-    assert m["schema"] == 2
+    assert m["schema"] == 3
+    assert set(m["kerfs"]) == {"diode", "co2", "ponoko"}
+    assert set(m["versions"]) == {"cut_only", "cut_labels", "cut_engrave"}
+    for bed, b in m["beds"].items():
+        assert {"label", "width_mm", "height_mm", "stock", "kerfs", "engrave_kerfs"} <= set(b)
     e = m["engrave"]
-    assert e["colors"]["cut"] == "#0000FF" and e["colors"]["engrave_fill"] == "#000000"
-    assert e["dxf_layers"] == {"cut": "CUT", "engrave": "ENGRAVE"}
+    assert e["colors"]["cut"] == "#0000FF" and e["colors"]["engrave_fill"] == "#000000" and e["colors"]["labels"] == "#808080"
+    assert e["dxf_layers"] == {"cut": "CUT", "engrave": "ENGRAVE", "labels": "LABELS"}
     assert "fill" in e["dxf_note"].lower() and "raster" in e["dxf_note"].lower()
     assert set(e["faces"]) == set(eg.faces())
     assert e["faces"]["lid"]["flipped"] is True and e["faces"]["left"]["flipped"] is False
-    assert [v["id"] for v in e["faces"]["top"]["variants"]] == ["a", "c"]
     assert e["default_variants"]["right"] == "nofunfor"
+    assert {f["id"] for f in m["coupon_guide"]["features"]} >= {"kerf_square", "thickness_slots", "magnet_holes", "finger_joints"}
     s = m["thicknesses"]["3.2"]
-    for kind in ("cut_only", "cut_engrave"):
-        v = s[kind]
-        assert (tmp_path / v["zip"]).exists()
-        assert set(v["sheets"]) == set(m["beds"])
-        for f in v["files"]:
-            assert (tmp_path / s["folder"] / f).exists(), f
-    assert all(f.endswith((".svg", ".dxf")) or f in ("set.json", "README_engrave.txt") for f in s["cut_engrave"]["files"])
-    assert "README_engrave.txt" in s["cut_engrave"]["files"]
-    assert any(f.startswith("faces/") for f in s["cut_engrave"]["files"])
-    assert not any(f.endswith("_engrave.svg") for f in s["cut_only"]["files"])
-    assert s["faces"]["lid"]["a"]["svg"] == "faces/lid__a.svg"
-    assert s["faces"]["lid"]["a"]["min_clearance_mm"] >= MIN_CLEAR
-    # legacy keys the first site data used
-    assert s["zip"] == s["cut_only"]["zip"] and s["files"] == s["cut_only"]["files"]
+    assert set(s["kerfs"]) == {"0.12", "0.18", "0.20"}
+    assert s["wall_id"]["left_divider_holes"] == s["wall_id"]["right_divider_holes"] + 1
+    assert len(s["joint_map"]["joints"]) == 25
+    assert (tmp_path / s["coupon"]["svg"]).exists() and (tmp_path / s["coupon"]["dxf_marked"]).exists()
+    assert s["coupon"]["layout"] and (tmp_path / s["parts"]["zip"]).exists()
+    seen_beds = set()
+    for kk, kv in s["kerfs"].items():
+        for kind in ("cut_only", "cut_labels"):
+            z = tmp_path / kv[kind]["zip"]
+            names = zipfile.ZipFile(z).namelist()
+            assert any(n.endswith("README.txt") for n in names), (z.name, names[:3])
+        for bed, be in kv["cut_engrave"]["beds"].items():
+            assert kv["id"] in m["beds"][bed]["engrave_kerfs"]
+            names = zipfile.ZipFile(tmp_path / be["zip"]).namelist()
+            assert any(n.endswith("README_engrave.txt") for n in names)
+            assert any(n.endswith(".dxf") for n in names) and any(n.endswith(".svg") for n in names)
+            seen_beds.add(bed)
+    assert seen_beds == set(m["beds"])
+    assert "ponoko" not in {b for kk in ("0.12", "0.18") for b in s["kerfs"][kk]["cut_only"]["sheets"]}
+    assert (tmp_path / "README.md").exists() and "schema 3" in (tmp_path / "README.md").read_text()
+    total = sum(f.stat().st_size for f in tmp_path.rglob("*") if f.is_file())
+    assert total < 150e6 / 8 * 1.3, total          # about 15 MB per thickness keeps all eight under 150 MB

@@ -34,7 +34,6 @@ from faxbox.config import (
     SLIDING_LID,
 )
 from faxbox.generate_drawers import DrawerBox
-from faxbox.generate_hardware import TurnButton
 from faxbox.generate_lids import LidGenerator
 from faxbox.shell_generator import OuterShell
 
@@ -76,7 +75,6 @@ PART_SPECS: dict[str, PartSpec] = {p.id: p for p in [
     PartSpec("d_bottom", "Drawer Bottom", DrawerBox, lambda o: o._build_bottom(), (0, 0, 0, 0)),
     PartSpec("d_face", "Drawer Faceplate", DrawerBox, lambda o: o._build_faceplate(), (0, 0, 0, 0)),
     PartSpec("lid", "Sliding Lid", LidGenerator, _lid, (0, 0, 0, 0)),
-    PartSpec("button", "Turn Button", TurnButton, lambda o: o._build_button("Turn Button"), (0, 0, 0, 0)),
 ]}
 
 

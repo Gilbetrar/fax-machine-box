@@ -33,6 +33,8 @@ from faxbox.config import (
     DRAWER_BODY,
     DRAWER_GRIP_SLOT,
     FACEPLATE,
+    FACEPLATE_SLOT_TOP_BELOW_EDGE,
+    FACEPLATE_Z_OFFSET,
     MAGNET_HOLE_DIA,
     MAGNET_Y_OFFSET,
     MATERIAL_THICKNESS,
@@ -65,7 +67,7 @@ GRIP_SLOT_TOP_BELOW_EDGE = DRAWER_GRIP_SLOT["top_below_edge"]  # 8.0
 # nominal/unextended blank -- same relationship DESIGN.md's grip-slot formula
 # on Front relies on, cross-checked there against the physical 30.5->45.5
 # span), hence the "- T" correction here.
-MAGNET_BACK_LOCAL_X = BODY_INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET
+MAGNET_BACK_LOCAL_X = BODY_INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET     # centred (MAGNET_Y_OFFSET = 0)
 MAGNET_BACK_LOCAL_Y = DRAWER_BODY["height"] / 2 - T
 
 
@@ -90,43 +92,40 @@ class DrawerBox(Boxes):
     # slots up on the same physical Z once the faceplate is glued flush over
     # the body front.
 
-    def _grip_slot_center_y(self, panel_height: float) -> float:
-        slot_top = panel_height - GRIP_SLOT_TOP_BELOW_EDGE
+    def _grip_slot_center_y(self, panel_height: float, below_edge: float = GRIP_SLOT_TOP_BELOW_EDGE) -> float:
+        slot_top = panel_height - below_edge
         return slot_top - GRIP_SLOT_H / 2
 
-    def _draw_engraved_rect_outline(self, cx: float, cy: float, width: float, height: float) -> None:
-        """Red-engraved rectangle outline, drawn as 4 disjoint line segments
-        (small gaps left at the corners) rather than one closed path.
+    def _draw_engraved_rect_outline(self, cx: float, cy_unused: float, width: float, height: float) -> None:
+        """Red-engraved glue-up registration lines for the drawer body's
+        front face: its left and right edges and its top edge, as 3
+        disjoint segments with small gaps at the corners (see below).
 
-        A single closed rectangle path here would have a bbox ~99% of the
-        Faceplate's own bbox area (the registration outline "covers the body
-        cross-section exactly in height" per DESIGN.md #9) -- well above
-        svg_utils.HOLE_AREA_RATIO (0.5), so the piece-clustering harness
-        would treat it as a second same-scale *piece* nested in the
-        Faceplate's bbox (exactly the overlap defect that harness exists to
-        catch) instead of decoration on it. Cairo's SVG backend also merges
-        consecutive same-style strokes into one `<path>` when one segment's
-        endpoint exactly matches the next segment's start point (verified
-        empirically), so a *connected* 4-segment loop collapses right back
-        into one big closed path -- a small corner gap keeps every segment a
-        distinct near-zero-area path, each safely clustered as Faceplate
-        decoration.
+        The faceplate is glued FACEPLATE_Z_OFFSET (0.75 mm) above the body's
+        bottom edge so the plate is centred in the rear-wall opening, which
+        puts the body's bottom edge 0.75 mm BELOW the plate: there is no
+        bottom line.  Every line stays at least 0.5 mm from the plate's cut
+        edge (sides 0.95 in, top 0.75 in, side lines stop 0.6 above the
+        bottom edge), so a cut-only service that cuts every line still
+        leaves the plate whole, and the lines do not read as part of the
+        outline.
 
-        Gap size: 0.3mm, not more. Any nonzero gap defeats Cairo's
-        exact-endpoint merging, but the original 1.0mm gap + round line-caps
-        rendered as "corners don't close / dots at the corners" and was
-        flagged as a defect by the first outside human to inspect a sheet
-        (Clark, 2026-07-09). 0.3mm is invisible at normal viewing zoom.
+        Disjoint segments: Cairo's SVG backend merges consecutive same-style
+        strokes into one `<path>` when one segment's endpoint exactly
+        matches the next segment's start point, and a merged loop would be
+        clustered by svg_utils as a second piece nested in the faceplate.
+        A 0.3 mm corner gap keeps each segment its own near-zero-area path
+        and is invisible at normal zoom.
         """
         gap = 0.3
+        inset_bottom = 0.6
         x0, x1 = cx - width / 2, cx + width / 2
-        y0, y1 = cy - height / 2, cy + height / 2
+        y_top = FACEPLATE["height"] - FACEPLATE_Z_OFFSET
         self.set_source_color(self.engrave_color)
         for (ax, ay), (bx, by) in (
-            ((x0 + gap, y0), (x1 - gap, y0)),
-            ((x1, y0 + gap), (x1, y1 - gap)),
-            ((x1 - gap, y1), (x0 + gap, y1)),
-            ((x0, y1 - gap), (x0, y0 + gap)),
+            ((x0 + gap, y_top), (x1 - gap, y_top)),
+            ((x1, y_top - gap), (x1, inset_bottom)),
+            ((x0, inset_bottom), (x0, y_top - gap)),
         ):
             self.ctx.move_to(ax, ay)
             self.ctx.line_to(bx, by)
@@ -208,11 +207,10 @@ class DrawerBox(Boxes):
         front cross-section (DRAWER_BODY width x height, centered)."""
 
         def callback() -> None:
-            cy = self._grip_slot_center_y(FACEPLATE["height"])
+            cy = self._grip_slot_center_y(FACEPLATE["height"], FACEPLATE_SLOT_TOP_BELOW_EDGE)
             self.rectangularHole(FACEPLATE["width"] / 2, cy, GRIP_SLOT_W, GRIP_SLOT_H, r=GRIP_SLOT_R)
             self._draw_engraved_rect_outline(
-                FACEPLATE["width"] / 2, FACEPLATE["height"] / 2,
-                DRAWER_BODY["width"], DRAWER_BODY["height"],
+                FACEPLATE["width"] / 2, 0.0, DRAWER_BODY["width"], DRAWER_BODY["height"],
             )
 
         self.rectangularWall(
@@ -234,8 +232,11 @@ class DrawerBox(Boxes):
         self._build_faceplate()
 
 
-def generate_drawer(provider: str | None = None) -> Path:
+def generate_drawer(provider: str | None = None, burn: float | None = None) -> Path:
     """Generate a drawer SVG file (one drawer's 6 pieces; cut twice).
+
+    `burn` overrides the provider's per-side kerf compensation (mm); the cut
+    sets use it to generate one file set per laser kerf.
 
     `provider` selects a faxbox.config.PROVIDERS entry (see
     shell_generator.generate_shell's docstring). Passing nothing reproduces
@@ -254,7 +255,7 @@ def generate_drawer(provider: str | None = None) -> Path:
     drawer.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(provider_cfg["burn"]),
+        "--burn", str(provider_cfg["burn"] if burn is None else burn),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])

@@ -35,10 +35,10 @@ CLEARANCE_MM = 1.0
 # within ~SAMPLE_MM/2 of each other, far under CLEARANCE_MM.
 SAMPLE_MM = 0.5
 
-# Exception 1 — faceplates: the registration outline (glue-up jig for the
-# drawer body) is DESIGNED to abut the cut boundary: flush with the top and
-# bottom edges, 0.95mm inside each side edge (DESIGN.md part #9). Its
-# correctness is asserted by the registration-outline tests, not here.
+# Exception 1 — faceplates: the registration lines (glue-up jig for the
+# drawer body) are DESIGNED to sit near the cut boundary: 0.95 mm inside each
+# side edge, 0.75 mm below the top edge, none along the bottom (DESIGN.md part
+# #9, red-team G4/G20). Their inset is asserted by the registration test, not here.
 #
 # (Resolved 2026-07-10: the right wall's "FAX MACHINE" pixel text — which
 # overlapped the shelf/divider finger-hole cuts, text center Z=63.5 == shelf
@@ -114,18 +114,20 @@ def test_engrave_clears_cuts_on_all_parts():
     assert checked >= 0  # non-exception engraved pieces may legitimately be 0 today
 
 
-def test_faceplate_registration_outline_still_flush():
+def test_faceplate_registration_outline_is_inset_from_the_cut():
+    """Red-team G4: the glue-up registration lines used to sit 0.1 mm from the
+    cut edge, so a cut-only service that cuts every line could split the
+    plate.  They now stay at least 0.5 mm from every cut (the generator's
+    own rule: sides 0.95 in, top 0.75 in, side lines stop 0.6 above the
+    bottom edge); the 1 mm general rule above still exempts faceplates
+    because the lines are meant to sit near the edge."""
     seen = 0
     for _, piece, dist in _pieces_with_engraving():
         if "Faceplate" in (piece.label or ""):
             seen += 1
-            # Flush top/bottom => true gap is exactly BURN (0.08mm); point
-            # sampling at SAMPLE_MM spacing can overstate it by up to
-            # ~SAMPLE_MM/2, so the bound is 0.08 + 0.25 + slack.
-            assert dist < 0.4, (
-                f"faceplate registration outline no longer abuts the cut "
-                f"boundary (min distance {dist:.3f}mm) — if the outline was "
-                f"redesigned, update FLUSH_BY_DESIGN and this assertion"
+            assert 0.5 <= dist < CLEARANCE_MM, (
+                f"faceplate registration outline is {dist:.3f}mm from the cut "
+                f"boundary; the design is 0.5 mm <= distance < 1 mm"
             )
     assert seen >= 1, "no faceplate with engraving found — clustering or labels changed"
 

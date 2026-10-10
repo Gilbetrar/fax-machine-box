@@ -291,8 +291,6 @@ def classify_hole(h: PathInfo) -> str:
         return f"lid through-slot mouth ({w:.1f}x{hh:.1f}mm)"
     if close(w, hh, tol=1.0) and close(w, 5.65, tol=1.2):
         return f"magnet hole (~{w:.1f}mm dia)"
-    if close(w, hh, tol=1.0) and close(w, 3.2, tol=1.0):
-        return f"turn-button pivot hole (~{w:.1f}mm dia)"
     if min(w, hh) < 4.5:
         return f"finger-hole dash ({w:.1f}x{hh:.1f}mm)"
     return f"cutout {w:.1f}x{hh:.1f}mm"

@@ -299,14 +299,19 @@ def local_to_piece(piece, src_part: str, burn: float) -> Affine:
             piece.ymin + piece.height - bottom - burn)
 
 
-def bed_flip(piece, face: str | None) -> Affine:
-    """Mirror inside the piece's own bounding box (so the bbox stays put)."""
-    kind = flip_kind(face) if face else None
+def flip_affine(piece, kind: str | None) -> Affine:
+    """Mirror inside the piece's own bounding box (so the bbox stays put):
+    'v' left-right, 'h' top-bottom, None identity."""
     if kind == "v":
         return (-1.0, 0.0, 0.0, 1.0, 2 * piece.xmin + piece.width, 0.0)
     if kind == "h":
         return (1.0, 0.0, 0.0, -1.0, 0.0, 2 * piece.ymin + piece.height)
     return IDENT
+
+
+def bed_flip(piece, face: str | None) -> Affine:
+    """The art manifest's flip for `face` (exterior face up)."""
+    return flip_affine(piece, flip_kind(face) if face else None)
 
 
 def art_to_piece_svg(piece, face: str, src_part: str, burn: float) -> Affine:
@@ -374,4 +379,58 @@ def flatten_simplified(subs, tol: float = 0.03):
             if len(q) >= (3 if closed else 2):
                 pts = q
         out.append((pts, closed))
+    return out
+
+
+# --- which face is up on the bed --------------------------------------------------------------
+
+@lru_cache(maxsize=None)
+def plate_orientation(pid: str) -> tuple[int, bool]:
+    """(outward_sign, horizontal) of an assembled plate: +1 when the face
+    drawn in the cut file (the outline as drawn, local +z) is the OUTSIDE of
+    the finished box, -1 when it is the inside; `horizontal` when the plate's
+    thickness runs along the box's Z (top panel, lid, shelf, bottoms)."""
+    from faxbox import assembly3d as A
+    P = A.all_plates()[pid]
+    sign = P.outward_sign(A._view_reference(pid))
+    R = np.asarray(P.matrix())[:3, :3]
+    return int(sign), bool(abs(R[:, 2][2]) > 0.9)
+
+
+def flip_for(pid: str | None, up: str) -> str | None:
+    """Mirror kind that puts the `up` face ('exterior', 'interior' or
+    'drawn') of plate `pid` on top of the laser bed: None when the outline as
+    drawn already does, 'v' (mirror left-right) for vertical parts, 'h'
+    (mirror front-rear) for horizontal ones."""
+    if pid is None or up == "drawn":
+        return None
+    sign, horizontal = plate_orientation(pid)
+    drawn_is_exterior = sign > 0
+    if drawn_is_exterior == (up == "exterior"):
+        return None
+    return "h" if horizontal else "v"
+
+
+# --- degenerate corner loops ---------------------------------------------------------------------
+
+def drop_degenerate_loops(subs, tol: float = 0.3):
+    """Remove zero-length self-looping cubic segments (start == end, control
+    points within `tol`).  Boxes.py writes one at every inner corner when the
+    kerf offset is non-zero (`L 10.15,24.95 C 10.15,24.85 10.05,24.95 10.15,24.95`):
+    a 0.1 mm self-intersecting loop the laser would dwell on.  The path is
+    continuous without it, so the corner is just the clean intersection."""
+    out = []
+    for sp in subs:
+        new = []
+        cur = None
+        for s in sp:
+            if s[0] == "C":
+                p0, (c1, c2, p3) = cur, s[1:]
+                if (abs(p3[0] - p0[0]) < 1e-6 and abs(p3[1] - p0[1]) < 1e-6
+                        and max(abs(c1[0] - p0[0]), abs(c1[1] - p0[1]), abs(c2[0] - p0[0]), abs(c2[1] - p0[1])) < tol):
+                    continue
+            if s[0] != "Z":
+                cur = s[-1]
+            new.append(s)
+        out.append(new)
     return out

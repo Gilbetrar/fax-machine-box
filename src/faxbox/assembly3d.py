@@ -82,17 +82,12 @@ def _placements() -> dict[str, Placement]:
     lid_len, lid_w = c.SLIDING_LID["length"], c.SLIDING_LID["width"]
     add("lid", X, (c.DIVIDER_X0 - lid_len, c.DIVIDER_X0), Y, ((W - lid_w) / 2, (W + lid_w) / 2),
         Z, (c.LID_SLOT_BOTTOM, c.LID_SLOT_BOTTOM + T), step="lid")
-    # turn button, pointing down: local x runs along -Z, pivot at local (r, r)
-    r = c.TURN_BUTTON["pivot_from_blunt_end"]
-    zp, yp = c.TURN_BUTTON_PIVOT_BOX_Z, c.TURN_BUTTON_PIVOT_BOX_Y
-    add("button", Z, (zp + r - c.TURN_BUTTON["length"], zp + r), Y, (yp - r, yp + r), X, (-T, 0),
-        flip=(1, 0), group="hardware", step="button", color="accent")
     D = c.DRAWER_BODY
     yc = W / 2
     y0, y1 = yc - D["width"] / 2, yc + D["width"] / 2
     xb0 = c.BAY_X0
     xb1 = xb0 + D["length"]
-    for tag, z0 in (("B", c.FLOOR_TOP), ("T", c.SHELF_Z1)):
+    for tag, z0 in (("B", c.BOTTOM_DRAWER_Z0), ("T", c.SHELF_Z1)):
         zt = z0 + D["height"]
         add(f"{tag}_back", Y, (y0 + T, y1 - T), Z, (z0 + T, zt), X, (xb0, xb0 + T), group="drawer", step=f"drawer_{tag}")
         add(f"{tag}_front", Y, (y0 + T, y1 - T), Z, (z0 + T, zt), X, (xb1 - T, xb1), group="drawer", step=f"drawer_{tag}")
@@ -100,7 +95,8 @@ def _placements() -> dict[str, Placement]:
         add(f"{tag}_right", X, (xb0 + T, xb1 - T), Z, (z0 + T, zt), Y, (y1 - T, y1), group="drawer", step=f"drawer_{tag}")
         add(f"{tag}_bottom", X, (xb0, xb1), Y, (y0, y1), Z, (z0, z0 + T), group="drawer", step=f"drawer_{tag}")
         fw, fh = c.FACEPLATE["width"], c.FACEPLATE["height"]
-        add(f"{tag}_face", Y, (yc - fw / 2, yc + fw / 2), Z, (z0, z0 + fh), X, (xb1, xb1 + T),
+        zf = z0 + c.FACEPLATE_Z_OFFSET
+        add(f"{tag}_face", Y, (yc - fw / 2, yc + fw / 2), Z, (zf, zf + fh), X, (xb1, xb1 + T),
             group="drawer", step=f"drawer_{tag}")
     return P
 
@@ -342,8 +338,6 @@ ASSEMBLY_STEPS = [
          text="Fit the front wall from the front."),
     dict(id="bottom", parts=["bottom"], direction="+Z",
          text="Turn the box over and press the bottom panel in from below."),
-    dict(id="button", parts=["button"], direction="+X",
-         text="Bolt the turn button to the front wall (M3 bolt, washers, nyloc nut inside the paper compartment)."),
     dict(id="lid", parts=["lid"], direction="+X",
          text="Slide the lid into its slots from the front."),
 ]
@@ -352,11 +346,10 @@ ASSEMBLY_STEPS = [
 # --- checks -----------------------------------------------------------------------------
 
 def _is_hardware_hole(bounds) -> bool:
-    """Magnet and pivot holes stay empty on purpose: not finger holes."""
+    """Magnet holes stay empty on purpose: not finger holes."""
     w, h = bounds[2] - bounds[0], bounds[3] - bounds[1]
     dia = max(w, h)
-    return abs(w - h) < 0.1 and (abs(dia - c.MAGNET_HOLE_DIA) < 0.3
-                                 or abs(dia - c.TURN_BUTTON["pivot_hole_dia"]) < 0.3)
+    return abs(w - h) < 0.1 and abs(dia - c.MAGNET_HOLE_DIA) < 0.3
 
 
 def unfilled_finger_holes(plates: dict[str, Plate], frac: float = 0.07):
@@ -421,7 +414,6 @@ INVENTORY = [
     ("G", "shelf", "Shelf", 1),
     ("H", "top", "Top panel", 1),
     ("I", "lid", "Sliding lid", 1),
-    ("J", "button", "Turn button", 1),
     ("K", "d_front", "Drawer front", 2),
     ("L", "d_back", "Drawer back", 2),
     ("M", "d_left", "Drawer left side", 2),
@@ -448,7 +440,7 @@ def _view_reference(pid: str):
     if pid == "shelf":
         return (L / 2, W / 2, 0.0)
     if pid[:2] in ("B_", "T_") and not pid.endswith("_face"):
-        z0 = c.FLOOR_TOP if pid[0] == "B" else c.SHELF_Z1
+        z0 = c.BOTTOM_DRAWER_Z0 if pid[0] == "B" else c.SHELF_Z1
         D = c.DRAWER_BODY
         return (c.BAY_X0 + D["length"] / 2, W / 2, z0 + D["height"] / 2)
     return None

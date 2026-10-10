@@ -16,7 +16,7 @@ layout), and generate_ponoko_layout already regenerates all of its own
 ponoko-flavored source SVGs internally).
 
 Output: output/ponoko/ (sheet_1.svg, sheet_2.svg, ..., final_layout.svg,
-plus the intermediate outer_shell.svg / drawer.svg / lids.svg / hardware.svg
+plus the intermediate outer_shell.svg / drawer.svg / lids.svg
 / calibration_coupon.svg). The default NYC Resistor path (output/*.svg,
 `python -m faxbox.layout` with no env var) is never touched by this module.
 """
