@@ -36,9 +36,13 @@ from faxbox.config import (
     FRONT_WALL_TOP,
     INTERIOR_LENGTH,
     INTERIOR_WIDTH,
+    DIVIDER_KEY_DROP,
+    DIVIDER_ROW_TOP_Z,
+    LID_RAIL_HEIGHT,
     LID_SLOT_BOTTOM,
     LID_SLOT_HEIGHT,
     LID_SLOT_X_END,
+    LID_SLOT_TOP,
     MAGNET_BOTTOM_DRAWER_Z,
     MAGNET_BOX_Y,
     MAGNET_HOLE_DIA,
@@ -74,6 +78,34 @@ DIVIDER_MID_LOCAL_X = (DIVIDER_X0 + DIVIDER_X1) / 2 - T
 SHELF_MID_Z = SHELF_Z0 + T / 2
 
 
+class SlotMouthEdge(edges.BaseEdge):
+    """Straight edge with the lid slot cut into it as an open notch.
+
+    The slot is part of the outline (not a closed hole whose front line
+    coincides with the blank's edge, which left a zero-width web and a
+    doubled cut line).  Drawn with the part's interior on the left of the
+    travel direction.  `rail_first` is True when the edge is travelled from
+    the top down (rail, then notch) and False when travelled bottom-up
+    (notch, then rail).
+    """
+
+    description = "Lid slot mouth"
+
+    def __init__(self, boxes, rail: float, slot_h: float, depth: float, rail_first: bool) -> None:
+        super().__init__(boxes, None)
+        self.rail, self.slot_h, self.depth, self.rail_first = rail, slot_h, depth, rail_first
+        self.length = rail + slot_h
+
+    def __call__(self, length, **kw):
+        if length and abs(length - self.length) > 1e-5:
+            raise ValueError("Wrong length for SlotMouthEdge")
+        notch = (90, self.depth, -90, self.slot_h, -90, self.depth, 90)
+        if self.rail_first:
+            self.boxes.polyline(self.rail, *notch)
+        else:
+            self.boxes.polyline(0, *notch, self.rail)
+
+
 class OuterShell(Boxes):
     """Outer shell: bottom, 4 walls, divider, shelf, fixed top panel."""
 
@@ -93,15 +125,17 @@ class OuterShell(Boxes):
     # -- pieces ---------------------------------------------------------
 
     def _build_bottom(self) -> None:
-        """Bottom panel: INTERIOR_LENGTH x INTERIOR_WIDTH, 'f' all around,
-        plus a fingerHolesAt line receiving the divider's bottom-edge
-        fingers (DESIGN.md #1)."""
+        """Bottom panel: INTERIOR_LENGTH x INTERIOR_WIDTH, fingers on the
+        front and both side edges, a PLAIN rear edge (the rear wall's
+        strip under the bottom drawer opening can carry no hole row), plus a
+        fingerHolesAt line receiving the divider's bottom-edge fingers
+        (DESIGN.md #1)."""
 
         def callback() -> None:
             self.fingerHolesAt(DIVIDER_MID_LOCAL_X, 0, INTERIOR_WIDTH, angle=90)
 
         self.rectangularWall(
-            INTERIOR_LENGTH, INTERIOR_WIDTH, "ffff",
+            INTERIOR_LENGTH, INTERIOR_WIDTH, "feff",
             callback=[callback, None, None, None],
             move="right", label="Bottom",
         )
@@ -123,15 +157,19 @@ class OuterShell(Boxes):
             return INTERIOR_LENGTH - x - length
 
         # Front-edge compound: finger joint (mates front wall) below
-        # FRONT_WALL_TOP, plain (lid-slot mouth + rail end) above it. The
-        # plain portion spans the whole rail zone above the front wall,
-        # WALL_HEIGHT - FRONT_WALL_TOP (this includes both the lid slot's
-        # own height and the LID_RAIL_HEIGHT of solid material above it).
+        # FRONT_WALL_TOP, then the lid slot as an OPEN NOTCH in the outline
+        # (rail above it).  The notch spans WALL_HEIGHT - FRONT_WALL_TOP
+        # (slot height + LID_RAIL_HEIGHT) and runs LID_SLOT_X_END - T deep.
         front_plain_z = WALL_HEIGHT - FRONT_WALL_TOP
+        slot_depth = LID_SLOT_X_END - T
         front_edge_top_to_bottom = edges.CompoundEdge(
-            self, ["e", "f"], [front_plain_z, FRONT_WALL_TOP])
+            self,
+            [SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, True), "f"],
+            [front_plain_z, FRONT_WALL_TOP])
         front_edge_bottom_to_top = edges.CompoundEdge(
-            self, ["f", "e"], [FRONT_WALL_TOP, front_plain_z])
+            self,
+            ["f", SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, False)],
+            [FRONT_WALL_TOP, front_plain_z])
         rear_edge = self.edges["f"]  # full height, mates rear wall
 
         # Top edge: plain at full height for its whole length. The fixed top
@@ -146,25 +184,21 @@ class OuterShell(Boxes):
             left_edge = rear_edge
             right_edge = front_edge_bottom_to_top
 
+        # The divider finger-hole row stops DIVIDER_ROW_TOP_Z (the lid slot
+        # floor) so no hole touches the lid slot.  The RIGHT wall's row is
+        # DIVIDER_KEY_DROP shorter than the left wall's: the divider's two
+        # side edges differ, so it only fits one way round (see DESIGN.md).
+        row_top = DIVIDER_ROW_TOP_Z - (0.0 if mirror else DIVIDER_KEY_DROP)
+
         def callback() -> None:
             # Bottom-panel finger-hole line (straight edge, hole line only).
             self.fingerHolesAt(0, T / 2, INTERIOR_LENGTH, angle=0)
 
-            # Lid through-slot: closed hole whose front boundary coincides
-            # with the blank's front edge -- both lines get cut, opening the
-            # mouth (DESIGN.md #2).
-            slot_length = LID_SLOT_X_END - T
-            slot_cx = slot_length / 2
-            slot_cz = LID_SLOT_BOTTOM + LID_SLOT_HEIGHT / 2
-            if mirror:
-                slot_cx = mirror_point(slot_cx)
-            self.rectangularHole(slot_cx, slot_cz, slot_length, LID_SLOT_HEIGHT, r=0)
-
-            # Divider finger-hole line (vertical).
+            # Divider finger-hole line (vertical), below the lid slot only.
             divider_x = DIVIDER_MID_LOCAL_X
             if mirror:
                 divider_x = mirror_point(divider_x)
-            self.fingerHolesAt(divider_x, FLOOR_TOP, DIVIDER_HEIGHT, angle=90)
+            self.fingerHolesAt(divider_x, FLOOR_TOP, row_top - FLOOR_TOP, angle=90)
 
             # Shelf finger-hole line (horizontal).
             shelf_x0 = BAY_X0 - T
@@ -216,7 +250,10 @@ class OuterShell(Boxes):
         (local Y = box Z), full height, two drawer openings (DESIGN.md #4)."""
 
         def callback() -> None:
-            self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
+            # No bottom-panel hole row on the rear wall: the strip under the
+            # bottom drawer opening is only T tall, so a hole row there cut
+            # it into 11 loose chips.  The bottom panel's rear edge is plain
+            # and glued to this wall's inner face.
             # Top-panel finger-hole line (rear edge of the panel).
             self.fingerHolesAt(0, TOP_PANEL_HOLE_Z, INTERIOR_WIDTH, angle=0)
 
@@ -252,8 +289,21 @@ class OuterShell(Boxes):
             self.hole(magnet_local_x, MAGNET_BOTTOM_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
             self.hole(magnet_local_x, MAGNET_TOP_DRAWER_Z - FLOOR_TOP, d=MAGNET_HOLE_DIA)
 
+        # Side edges carry fingers only up to the lid-slot floor (the wall
+        # hole rows stop there), plain above.  The two sides differ in
+        # length by DIVIDER_KEY_DROP (right wall's row is shorter), which
+        # keys the part: turned around or upside down its fingers land on
+        # wall material (DESIGN.md "Divider keying").
+        plain_left = DIVIDER_HEIGHT - (DIVIDER_ROW_TOP_Z - FLOOR_TOP)
+        plain_right = plain_left + DIVIDER_KEY_DROP
+        right_edge = edges.CompoundEdge(
+            self, ["f", "e"], [DIVIDER_HEIGHT - plain_right, plain_right])
+        left_edge = edges.CompoundEdge(
+            self, ["e", "f"], [plain_left, DIVIDER_HEIGHT - plain_left])
+
         self.rectangularWall(
-            INTERIOR_WIDTH, DIVIDER_HEIGHT, "ffff",
+            INTERIOR_WIDTH, DIVIDER_HEIGHT,
+            [self.edges["f"], right_edge, self.edges["f"], left_edge],
             callback=[callback, None, None, None],
             move="right", label="Vertical Divider",
         )
