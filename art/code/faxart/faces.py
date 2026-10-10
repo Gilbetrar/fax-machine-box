@@ -36,7 +36,8 @@ DRAWER_SIDES = {
                           inset=(20, 12), ink_t=0.42, tone_ths=(0.22, 0.32, 0.45),
                           colour_line_kw=dict(sat_t=0.5), seed=11,
                           # the sun (top right) stays an outline: hatching made it a striped half-disc
-                          tone_exclude=[[(188, 0), (212.25, 0), (212.25, 27), (188, 27)]]),
+                          tone_exclude=[[(188, 0), (212.25, 0), (212.25, 29), (188, 29)]],
+                          shift_down_mm=2.0),   # turkey heads and the sun clear the top edge
     "B_right": dict(src="IMG_4235", x=(0, 3225),
                           top=[-2.49e-06, 0.01411701, 3.37], bot=[3.62e-06, -0.03796397, 832.75],
                           inset=(14, 10), ink_t=0.5, tone_ths=(0.18, 0.30, 0.42),
@@ -61,6 +62,10 @@ def drawer_side(face_id: str) -> list[Variant]:
     c = DRAWER_SIDES[face_id]
     img = cv2.imread(str(TRIM / f"{c['src']}.jpeg"))
     can = R.warp_strip(img, c["x"], c["top"], c["bot"], size_mm(face_id), c["inset"])
+    if c.get("shift_down_mm"):
+        # lower the whole scene (bottom crop) so heads near the top edge clear it
+        M = np.float32([[1, 0, 0], [0, 1, c["shift_down_mm"] * R.PPM]])
+        can = cv2.warpAffine(can, M, (can.shape[1], can.shape[0]), borderValue=(255, 255, 255))
     W, H = size_mm(face_id)
     excl = None
     if c.get("tone_exclude"):

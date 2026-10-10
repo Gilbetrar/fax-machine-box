@@ -4,8 +4,8 @@ tests/test_code_art.py).
 Measured on the rendered SVG at 40 px/mm with exact Euclidean morphology
 (distance transforms, not pixel kernels):
 
-  thin  = ink not covered by any 0.25 mm disk that fits inside the ink
-  gap   = paper not covered by any 0.30 mm disk that fits inside the paper
+  thin  = ink not covered by any 0.275 mm disc that fits inside the ink
+  gap   = paper not covered by any 0.325 mm disc that fits inside the paper
           (a 3 px margin at the canvas edge is ignored: the edge is a cut)
 
 Every connected thin or gap feature of at least 0.02 mm2 is a violation.
@@ -17,13 +17,18 @@ import numpy as np
 from scipy import ndimage as ndi
 
 RULE_PPM = 40.0
-MIN_LINE_MM = 0.25
-MIN_GAP_MM = 0.30
+# The rules are line >= 0.25 mm and gap >= 0.30 mm. They are MEASURED with
+# discs of 0.275 / 0.325 mm: red-team pass 2 used cv2 11 px / 13 px ellipse
+# kernels at 40 px/mm and found 0.21-0.30 mm gaps that an exact 0.30 mm disc
+# (with a strict '>' on the distance) let through. Measuring with the
+# larger discs closes that hole; it is stricter than the rule, never looser.
+MIN_LINE_MM = 0.275
+MIN_GAP_MM = 0.325
 FEATURE_MM2 = 0.02
 
 
 def opening(m: np.ndarray, r: float) -> np.ndarray:
-    c = ndi.distance_transform_edt(m) > r
+    c = ndi.distance_transform_edt(m) >= r
     return ndi.distance_transform_edt(~c) <= r
 
 
