@@ -1,17 +1,6 @@
 // Build-guide content that does not need three.js: step wording, extra steps,
 // how-it-works cards, hardware icons and small hand-drawn diagrams.
 
-// Parts the design has dropped (the turn-button lock). parts.json may still list
-// them until the geometry branch merges; leave them, and steps that only add them, out.
-export const REMOVED = /button/i;
-export function withoutRemoved(data) {
-  const gone = new Set(data.parts.filter(p => REMOVED.test(p.id + ' ' + (p.name || ''))).map(p => p.id));
-  if (!gone.size) return data;
-  const parts = data.parts.filter(p => !gone.has(p.id));
-  const steps = (data.steps || []).map(s => ({ ...s, parts: (s.parts || []).filter(id => !gone.has(id)) }))
-    .filter(s => !((data.steps.find(x => x.id === s.id) || {}).parts || []).length || s.parts.length);
-  return { ...data, parts, steps };
-}
 export const stepNumber = (s, i) => s.number ?? s.n ?? s.step ?? s.index ?? (i + 1);
 export const stepParts = s => s.parts || s.part_ids || s.added || [];
 export const cleanName = n => String(n || '').replace(/\s*\((lower|upper)( drawer)?\)/i, '');
@@ -22,9 +11,9 @@ export const STEP_TEXT = {
   drawer_left_side: { title: 'Drawer left side', note: 'Engraved face out.', tools: ['wood glue'] },
   drawer_right_side: { title: 'Drawer right side', note: 'Engraved face out. The four corners close together.', tools: ['wood glue'] },
   drawer_bottom: { title: 'Drawer bottom', note: 'Its fingers mesh with the bottom edges of all four walls. This finishes one glue session: let the drawer set for 30 minutes before the faceplate.', tools: ['wood glue'] },
-  drawer_face: { title: 'Faceplate', note: 'Engraved face out: COLORS goes on the lower drawer, Lines on the upper one. Line up the two grip slots so a finger reaches through both, keep the top and bottom edges flush, and center it so it overhangs the drawer body by about 1 mm on each side. Clamp. Glue the drawer nowhere else.', tools: ['wood glue', 'clamps'] },
+  drawer_face: { title: 'Faceplate', note: 'Engraved face out: COLORS goes on the lower drawer, Lines on the upper one. Line up the two grip slots so a finger reaches through both, center it side to side, and set its bottom edge 0.75 mm above the bottom edge of the drawer body (a strip of thin card makes a good spacer), so it sits evenly in its opening. Clamp. Glue the drawer nowhere else.', tools: ['wood glue', 'clamps'] },
   box_frame: { title: 'Top panel, shelf and divider', note: 'Work on the right wall laid flat, inside face up, so the three parts have something to rest on: hold the top panel and shelf at their slots, slide the divider in, then lower the three onto the wall in the next step. The divider seats in the shelf and top panel any way round, so check it against the walls during the dry fit: its magnet holes face the rear, at drawer height. The top panel goes engraved side up, with the snake toward the front.', tools: ['wood glue'] },
-  box_right: { title: 'Right wall', note: 'Engraved face out, lid slot mouth to the front. The two side walls are mirror images: seen from the front, the parrot wall is on the left and the writers wall on the right, and both lid slot mouths open at the front. Glue session: frame and right wall together, then let them set for 30 minutes.', tools: ['wood glue', 'mallet'] },
+  box_right: { title: 'Right wall', note: 'Engraved face out, lid slot mouth to the front. The two side walls are mirror images: seen from the front, the parrot wall is on the left and the writers wall on the right, and both lid slot mouths open at the front. Count the column of divider holes behind the lid slot: the LEFT wall has one more (the cut-files section gives the count for your thickness). Glue session: frame and right wall together, then let them set for 30 minutes.', tools: ['wood glue', 'mallet'] },
   box_rear: { title: 'Rear wall', note: 'Hold it by its edges until it is glued; the strip under the lower opening is thin. Use glue sparingly on the joints inside the drawer bay, because you cannot reach in to wipe squeeze-out.', tools: ['wood glue', 'mallet'] },
   box_left: { title: 'Left wall', note: 'Engraved face out, lid slot mouth to the front. Rear and left walls are one glue session.', tools: ['wood glue', 'mallet'] },
   box_front: { title: 'Front wall', note: 'Engraved face out, with the fax screen at the top. Front wall and bottom are the last glue session.', tools: ['wood glue', 'mallet'] },
@@ -36,7 +25,7 @@ export const STEP_TEXT = {
 // Steps the geometry export does not model.
 export const EXTRA_STEPS = [
   { before: 'drawer_walls', id: 'prep', title: 'Sort the parts and dry-fit', focus: 'dryfit',
-    caption: 'Lay the parts out by letter. Dry-fit the whole box once without glue, following the steps below, then take it apart and glue it in the same order. Titebond III stays workable for about 10 minutes, so glue in short sessions as the steps say, letting each one set for 30 minutes: a thin line of glue on the fingers, tap the joint home with a mallet or a block of wood, and wipe off what squeezes out.',
+    caption: 'Lay the parts out by letter. Engraved faces always face out; a part with its gray labels showing is inside-out. Parts without art carry small gray joint numbers on their inside face: the two edges that meet have the same number. Dry-fit the whole box once without glue, following the steps below, then take it apart and glue it in the same order. Titebond III stays workable for about 10 minutes, so glue in short sessions as the steps say, letting each one set for 30 minutes: a thin line of glue on the fingers, tap the joint home with a mallet or a block of wood, and wipe off what squeezes out.',
     tools: ['wood glue', 'mallet or block of wood', 'damp cloth'] },
   { before: 'drawer_walls', id: 'magnets_drawer', title: 'Magnets: drawer backs', focus: 'magnets_drawer',
     caption: 'Magnets go in while the parts are loose. Snap two magnets together and, without separating them, put a marker dot on both outer faces. Pull them apart. Press one into the hole in a drawer back with its dot facing into the drawer, flush with the outside face; keep its partner for the divider. Do the same for the second drawer. A drop of CA glue holds them if the fit is loose.',

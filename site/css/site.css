@@ -428,3 +428,29 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   nav a { min-height: 44px; display: flex; align-items: center; }
 }
 @media (prefers-reduced-motion: reduce) { .btn, .chip { transition: none; } }
+
+/* schema-3 cut files, coupon guide, joint map */
+.pick-label { font: 600 14px var(--body); margin: 10px 0 6px; }
+.vtext { margin-top: 0; }
+.wall-id { margin-top: 10px; }
+.beds-tbl td.num { font: 800 17px var(--display); text-align: center; }
+.beds-tbl th:nth-child(3) { text-align: center; }
+.beds-tbl .bednote { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+.sheetdl { font: 700 13.5px var(--body); color: var(--ink); background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; padding: 4px 12px; text-decoration: none; white-space: nowrap; display: inline-block; }
+.cg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 26px; align-items: start; }
+.cg-svg svg { width: 100%; height: auto; display: block; }
+.cg-keys { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; font-size: 14px; }
+.cg-keys li { display: flex; gap: 8px; align-items: flex-start; }
+.cg-keys .letter, .cg-feat .letter, .jpart .letter { width: 26px; height: 26px; font-size: 13px; flex: none; }
+.cg-order { padding-left: 20px; font-size: 14.5px; color: var(--ink-2); }
+.cg-feat { border-top: 1.5px dashed var(--line); padding: 12px 0; }
+.cg-feat:first-child { border-top: 0; padding-top: 0; }
+.cg-feat h4 { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; font: 800 17px var(--display); }
+.cg-feat dl { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: 14px; }
+.cg-feat dt { font-weight: 700; color: var(--ink-2); }
+.cg-feat dd { margin: 0; color: var(--ink-2); }
+.jgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.jpart { margin: 0; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.jpart svg { width: 100%; height: auto; max-height: 180px; display: block; }
+.jpart figcaption { display: flex; gap: 8px; align-items: center; font: 700 14px var(--display); }
+@media (max-width: 720px) { .cg { grid-template-columns: 1fr; } .cg-feat dl { grid-template-columns: 1fr; } .cg-feat dt { margin-top: 4px; } .jgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sheetdl { min-height: 44px; display: inline-grid; place-items: center; } }

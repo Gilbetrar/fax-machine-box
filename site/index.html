@@ -27,24 +27,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css?v=d311608b72">
+<link rel="stylesheet" href="css/site.css?v=cf6e132a2a">
 <script type="importmap">
 {
  "imports": {
   "three": "./vendor/three/build/three.module.min.js",
   "three/addons/": "./vendor/three/examples/jsm/",
-  "./js/art2d.js": "./js/art2d.js?v=d311608b72",
-  "./js/box3d.js": "./js/box3d.js?v=d311608b72",
-  "./js/guide.js": "./js/guide.js?v=d311608b72",
-  "./js/laser.js": "./js/laser.js?v=d311608b72",
-  "./js/page.js": "./js/page.js?v=d311608b72",
-  "./js/render3d.js": "./js/render3d.js?v=d311608b72",
-  "./js/rules.js": "./js/rules.js?v=d311608b72",
-  "./js/version.js": "./js/version.js?v=d311608b72"
+  "./js/art2d.js": "./js/art2d.js?v=cf6e132a2a",
+  "./js/box3d.js": "./js/box3d.js?v=cf6e132a2a",
+  "./js/guide.js": "./js/guide.js?v=cf6e132a2a",
+  "./js/laser.js": "./js/laser.js?v=cf6e132a2a",
+  "./js/page.js": "./js/page.js?v=cf6e132a2a",
+  "./js/render3d.js": "./js/render3d.js?v=cf6e132a2a",
+  "./js/rules.js": "./js/rules.js?v=cf6e132a2a",
+  "./js/version.js": "./js/version.js?v=cf6e132a2a"
  }
 }
 </script>
-<script type="module" src="js/page.js?v=d311608b72"></script>
+<script type="module" src="js/page.js?v=cf6e132a2a"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -158,6 +158,12 @@
     <h3 class="sub">Tools and supplies</h3>
     <ul class="tools" id="tools"></ul>
 
+    <div class="joints-wrap">
+    <h3 class="sub">Match the numbers</h3>
+    <p class="intro">Every joint is numbered on the inside faces: the two edges with the same number go together. The numbers are optional to engrave, and the cut + labels files include them.</p>
+    <div id="joints"></div>
+    </div>
+
     <h3 class="sub">Steps</h3>
     <div class="stepnav" id="stepnav" aria-label="Jump to step"></div>
     <ol class="steps" id="steps"></ol>
@@ -210,11 +216,15 @@
         <p>Plywood sold as 1/8 inch or 3 mm is often anywhere from 2.8 to 3.5 mm. The finger joints only fit if the files match your sheet, so measure it with calipers in three or four spots away from the edges, average the readings, and pick the closest thickness below.</p>
         <div class="thick" id="thick" role="radiogroup" aria-label="Plywood thickness"></div>
         <p class="thick-read" id="thick-read"></p>
+        <p class="small wall-id" id="wall-id"></p>
       </div>
       <div class="card">
         <h3>2. Cut the test coupon first</h3>
         <p>The coupon is a small test piece cut from the same sheet as the box. It shows how tight the finger joints come out and how firmly the magnets press in, so you can pick the right files before cutting the whole box. It costs a few cents of wood and can save a sheet.</p>
-        <div id="coupon-dl" class="dl-row"></div>
+        <div id="coupon-dl"></div>
+      </div>
+      <div class="card wide">
+        <h3>Reading the coupon</h3>
         <div class="coupon-guide" id="coupon-guide"></div>
       </div>
       <div class="card wide">
@@ -231,11 +241,12 @@
       </div>
       <div class="card wide colors">
         <h3>Color code</h3>
-        <ul class="legend">
+        <ul class="legend" id="legend">
           <li><span class="sw" style="--c:#0000ff"></span><span><b>Blue is cut.</b> Hairline vector lines that go through the sheet.</span></li>
           <li><span class="sw" style="--c:#ff0000"></span><span><b>Red is engrave.</b> Raster or score the surface; never cut through.</span></li>
           <li id="legend-labels" hidden><span class="sw" style="--c:#808080"></span><span><b>Gray is labels.</b> Part letters for you; turn this layer off before cutting.</span></li>
         </ul>
+        <p class="small" id="dxf-note"></p>
         <p class="small">Order the cut so small inner holes go first and outer outlines last, which most laser software does by default. If your service does not engrave, the box still works plain.</p>
       </div>
     </div>

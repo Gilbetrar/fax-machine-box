@@ -4,7 +4,7 @@
 // upgrades the page; if it fails, nothing here is lost.
 import { V } from './version.js';
 import { RULES } from './rules.js';
-import { buildSteps, stepParts, cleanName, HOW_CARDS, TOOLS, HARDWARE_FALLBACK, hwIcon, SVG_PAPER, LASER, withoutRemoved } from './guide.js';
+import { buildSteps, stepParts, cleanName, HOW_CARDS, TOOLS, HARDWARE_FALLBACK, hwIcon, SVG_PAPER, LASER } from './guide.js';
 import { inkCanvas, birchCanvas, artUrl } from './art2d.js';
 
 export const $ = (s, el = document) => el.querySelector(s);
@@ -197,110 +197,180 @@ function initEngraving(ctx) {
 }
 
 // ---------- downloads ----------
+// downloads/manifest.json, schema 3 (see site/downloads/README.md). Every field is optional:
+// missing pieces show a short "coming soon" note instead of breaking the section.
+const DL = 'downloads/';
+export const dlState = { man: undefined, ready: null };
 const THICKS = Array.from({ length: 8 }, (_, i) => (2.8 + i * 0.1).toFixed(1));
-function normThicknesses(m) {
-  const out = {}; const src = m.thicknesses || m.by_thickness || {};
-  const add = (t, f) => { if (f && !isNaN(+t)) out[Number(t).toFixed(1)] = f; };
-  if (Array.isArray(src)) for (const e of src) add(e.thickness ?? e.mm ?? e.t, e);
-  else for (const [t, f] of Object.entries(src)) add(t, f);
-  return out;
-}
-const BED_NAMES = { ponoko: 'Ponoko', xtool_s1: 'xTool S1', xtool_p2: 'xTool P2', glowforge_pro: 'Glowforge Pro', generic_600x400: 'Any 600 × 400 mm bed', nycr: 'NYC Resistor (Epilog 32 × 20 in)', stock_12x24: '12 × 24 in sheets' };
-function normBeds(m, t, entry) {
-  const src = m.beds || m.layouts || {}; const out = [];
-  const list = Array.isArray(src) ? src.map(b => [b.id || b.name, b]) : Object.entries(src);
-  for (const [id, v] of list) {
-    const o = typeof v === 'object' ? v : { sheets: v };
-    const sheets = (entry && entry.sheets && entry.sheets[id]) ?? (o.sheets_by_thickness && o.sheets_by_thickness[t]) ?? o.sheets ?? o.sheet_count;
-    out.push({ id, name: o.name || o.label || BED_NAMES[id] || id.replace(/_/g, ' '), size: o.width_mm ? `${Math.round(o.width_mm)} × ${Math.round(o.height_mm)} mm` : (o.size || ''), stock: o.stock || o.stock_note, note: o.note, sheets });
-  }
-  return out;
-}
-const fileUrl = (base, folder, f) => /^(https?:|\/)/.test(f) ? f : base + (folder && !f.includes('/') ? folder + '/' : '') + f;
-const dlBtn = (href, label, cls = 'btn-line') => h('a', { class: 'btn ' + cls, href, download: '' }, label);
+const fileUrl = f => /^(https?:|\/)/.test(f) ? f : DL + f;
+const dlBtn = (href, label, cls = 'btn-line') => h('a', { class: 'btn ' + cls, href: fileUrl(href), download: '' }, label);
 const soonBox = (title, text) => h('div', { class: 'soon', html: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="4" width="28" height="36" rx="3" fill="#fff" stroke="#1d1b19" stroke-width="2.4"/><path d="M12 14h16M12 20h16M12 26h10" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="8" fill="#f6d33c" stroke="#1d1b19" stroke-width="2.4"/><path d="M33 29v4l3 2" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/></svg>' }, h('div', {}, h('b', {}, title), h('span', {}, text)));
-// kerf variants: entry.kerfs = { "0.12": { label, folder, zip, files } } (optional)
-function kerfOptions(e) {
-  const k = e && (e.kerfs || e.kerf_variants);
-  if (!k) return null;
-  const list = Array.isArray(k) ? k.map(x => [String(x.kerf ?? x.id), x]) : Object.entries(k);
-  return list.map(([id, x]) => ({ id, label: x.label || x.name || `${id} mm kerf`, entry: x, default: !!x.default }));
-}
-function sheetList(base, folder, files, bedId) {
-  const sheetFiles = files.filter(f => f.startsWith(bedId + '_sheet_'));
-  const nums = [...new Set(sheetFiles.map(f => +f.match(/_sheet_(\d+)/)[1]))].sort((x, y) => x - y);
-  return h('ul', { class: 'sheets' }, nums.map(k => h('li', {}, h('span', {}, 'Sheet ' + k),
-    sheetFiles.filter(f => +f.match(/_sheet_(\d+)/)[1] === k).sort().reverse().map(f => h('a', { href: fileUrl(base, folder, f), download: '', 'aria-label': `Sheet ${k}, ${f.split('.').pop().toUpperCase()}` }, f.split('.').pop().toUpperCase())))));
+const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2');
+const sheetsTxt = n => n == null ? '' : `${n} sheet${n == 1 ? '' : 's'}`;
+function seg(label, opts, cur, onPick) {
+  return h('div', { class: 'seg seg-inline', role: 'group', 'aria-label': label },
+    opts.map(o => h('button', { type: 'button', class: 'segbtn' + (o.id === cur ? ' on' : ''), 'aria-pressed': o.id === cur, onclick: () => onPick(o.id) }, o.label)));
 }
 async function initFiles() {
-  const base = 'downloads/'; let man = await getJSON(base + 'manifest.json');
-  const byT = man ? normThicknesses(man) : {};
-  if (man && (man.status === 'pending' || !Object.keys(byT).length)) man = null;
-  const thick = $('#thick'); let sel = (man && man.default_thickness) ? Number(man.default_thickness).toFixed(1) : '3.2'; let kerfSel = null;
-  const guide = man && (man.coupon_guide || man.coupon_reading);
-  renderCouponGuide(guide, base);
+  let man = await getJSON(DL + 'manifest.json');
+  if (man && (!man.thicknesses || !Object.keys(man.thicknesses).length)) man = null;
+  dlState.man = man; dlState.ready && dlState.ready(man);
+  const st = { t: man && man.default_thickness ? Number(man.default_thickness).toFixed(1) : '3.2', kerf: 'co2', ver: 'cut_engrave' };
+  const kerfs = man && man.kerfs ? Object.entries(man.kerfs).map(([id, k]) => ({ id, mm: k.kerf_mm, label: tidy(k.label) })) : [];
+  const versions = man && man.versions ? Object.entries(man.versions).map(([id, v]) => ({ id, label: v.label, text: v.text })) : [];
+  if (versions.length && !versions.some(v => v.id === st.ver)) st.ver = versions[0].id;
+  if (kerfs.length && !kerfs.some(k => k.id === st.kerf)) st.kerf = kerfs[0].id;
+  const thick = $('#thick');
   function render() {
-    for (const b of thick.children) { const on = b.dataset.t === sel; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }
-    $('#thick-read').textContent = `${sel} mm is about ${(sel / 25.4).toFixed(3)} in.`;
-    const box = $('#box-dl'), coupon = $('#coupon-dl'), bedsEl = $('#beds'), kerfEl = $('#kerf');
-    box.innerHTML = ''; coupon.innerHTML = ''; bedsEl.innerHTML = ''; kerfEl.innerHTML = '';
+    for (const b of thick.children) { const on = b.dataset.t === st.t; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }
+    $('#thick-read').textContent = `${st.t} mm is about ${(st.t / 25.4).toFixed(3)} in.`;
+    const box = $('#box-dl'), coupon = $('#coupon-dl'), bedsEl = $('#beds'), kerfEl = $('#kerf'), wall = $('#wall-id');
+    for (const el of [box, coupon, bedsEl, kerfEl, wall]) el.innerHTML = '';
     if (!man) {
-      box.append(soonBox('Files coming soon', 'The cut files for every thickness are being regenerated. This page will offer a zip, SVG and DXF for each one.'));
+      box.append(soonBox('Files coming soon', 'The cut files for every thickness are being regenerated.'));
       coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
       return;
     }
-    let e = byT[sel];
-    if (!e) { box.append(soonBox(`No files for ${sel} mm yet`, 'Pick another thickness, or generate your own from the source.')); return; }
-    const kopts = kerfOptions(e);
-    if (kopts && kopts.length) {
-      if (!kerfSel || !kopts.some(k => k.id === kerfSel)) kerfSel = (kopts.find(k => k.default) || kopts[0]).id;
-      kerfEl.append(h('p', { class: 'small' }, 'Laser kerf (the width the beam burns away):'),
-        h('div', { class: 'seg seg-inline', role: 'group', 'aria-label': 'Kerf' }, kopts.map(k => h('button', { type: 'button', class: 'segbtn' + (k.id === kerfSel ? ' on' : ''), 'aria-pressed': k.id === kerfSel, onclick: () => { kerfSel = k.id; render(); } }, k.label))));
-      e = { ...e, ...kopts.find(k => k.id === kerfSel).entry };
-    }
-    const files = Array.isArray(e.files) ? e.files : [], folder = e.folder || '';
-    $('#legend-labels').hidden = !files.some(f => /label/i.test(f));
-    const cps = files.filter(f => /coupon/i.test(f) && !/guide/i.test(f));
-    if (cps.length) coupon.append(h('div', { class: 'dl-row' }, cps.map(f => dlBtn(fileUrl(base, folder, f), (/\.dxf$/i.test(f) ? 'Coupon DXF' : /\.pdf$/i.test(f) ? 'Coupon PDF' : 'Coupon SVG') + ` · ${sel} mm`))));
+    const T = man.thicknesses[st.t];
+    if (!T) { box.append(soonBox(`No files for ${st.t} mm yet`, 'Pick another thickness.')); return; }
+    if (T.wall_id) wall.append(h('b', {}, 'Telling the side walls apart: '), `${T.wall_id.rule || 'the left wall has one more divider hole.'} At ${st.t} mm the left wall has ${T.wall_id.left_divider_holes} and the right wall ${T.wall_id.right_divider_holes}.`);
+    // coupon
+    const c = T.coupon;
+    if (c) coupon.append(h('div', { class: 'dl-row' },
+      c.svg_marked ? dlBtn(c.svg_marked, 'Coupon with tick marks, SVG', 'btn-ink') : null, c.dxf_marked ? dlBtn(c.dxf_marked, 'DXF') : null,
+      c.svg ? dlBtn(c.svg, 'Cut-only coupon, SVG') : null, c.dxf ? dlBtn(c.dxf, 'DXF') : null),
+      h('p', { class: 'small' }, `For ${st.t} mm plywood. The marked version engraves small ticks that make the tests easier to read; use the cut-only one if your service only cuts.`));
     else coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
-    box.append(h('p', {}, `Every part for ${sel} mm plywood, laid out on sheets for each laser bed below and color-coded for cutting. The zip holds all of them plus the coupon. Units are millimeters.`));
+    // kerf and version pickers
+    const K = (T.kerfs && Object.values(T.kerfs).find(k => k.id === st.kerf)) || null;
+    if (kerfs.length) kerfEl.append(h('p', { class: 'pick-label' }, 'Laser kerf: the width the beam burns away. Your coupon\'s kerf square tells you which.'), seg('Kerf', kerfs, st.kerf, id => { st.kerf = id; render(); }));
+    if (versions.length) kerfEl.append(h('p', { class: 'pick-label' }, 'What the files contain:'), seg('File version', versions, st.ver, id => { st.ver = id; render(); }),
+      h('p', { class: 'small vtext' }, tidy((versions.find(v => v.id === st.ver) || {}).text)));
+    if (!K) { box.append(soonBox('No files for this kerf yet', 'Pick another kerf.')); return; }
+    const V = K[st.ver];
     const row = h('div', { class: 'dl-row' });
-    if (e.zip) row.append(dlBtn(fileUrl(base, '', e.zip), `Download all (.zip, ${sel} mm)`, 'btn-ink'));
-    const parts = e.parts_zip || e.parts_folder;
-    if (parts) row.append(dlBtn(fileUrl(base, '', e.parts_zip || e.parts_folder), 'One file per part (zip)'));
-    const extras = files.filter(f => /cut[-_]?only|labels?/i.test(f));
-    for (const f of extras) row.append(dlBtn(fileUrl(base, folder, f), /label/i.test(f) ? 'Label layer' : 'Cut-only file'));
+    if (V && V.zip) row.append(dlBtn(V.zip, `Download all beds (.zip, ${st.t} mm, ${K.kerf_mm} mm kerf)`, 'btn-ink'));
+    if (T.parts && T.parts.zip) row.append(dlBtn(T.parts.zip, 'One file per part (.zip)'));
     box.append(row);
-    const beds = normBeds(man, sel, e);
-    if (beds.length) {
-      bedsEl.append(h('h4', { class: 'bedh' }, 'Sheet layouts by laser bed'));
-      const g = h('div', { class: 'beds' });
-      for (const b of beds) g.append(h('div', { class: 'bed' }, h('b', {}, b.name),
-        h('small', {}, [b.size, b.sheets != null ? `${b.sheets} sheet${b.sheets == 1 ? '' : 's'}` : null, b.stock].filter(Boolean).join(' · ')),
-        b.note ? h('small', { class: 'bednote' }, b.note) : null, sheetList(base, folder, files, b.id)));
-      bedsEl.append(g);
+    if (T.parts && T.parts.zip) box.append(h('p', { class: 'small' }, 'The one-file-per-part set has no kerf added, for services such as SendCutSend that apply their own; it also has the engraving for each art part on its own.'));
+    // beds
+    const beds = Object.entries(man.beds || {});
+    if (!beds.length) return;
+    const tbl = h('table', { class: 'tbl beds-tbl' },
+      h('thead', {}, h('tr', {}, h('th', {}, 'Laser bed'), h('th', {}, 'Stock you need'), h('th', {}, 'Sheets'), h('th', {}, ''))));
+    const tb = h('tbody', {});
+    for (const [id, b] of beds) {
+      let sheets = null, href = null, why = '';
+      const kerfOK = !b.kerfs || b.kerfs.includes(st.kerf);
+      if (!kerfOK) why = `Uses its own kerf: pick ${(kerfs.find(k => k.id === b.kerfs[0]) || { label: b.kerfs[0] }).label.split(' (')[0]}.`;
+      else if (st.ver === 'cut_engrave') {
+        const e = V && V.beds && V.beds[id];
+        if (e) { sheets = e.sheets; href = e.zip; } else why = 'Engraved files for this bed come with the CO2 kerf.';
+        if (!e && b.engrave_kerfs && b.engrave_kerfs.length) why = `Engraved files for this bed use the ${b.engrave_kerfs.map(k => (kerfs.find(x => x.id === k) || { label: k }).label.split(' (')[0]).join(' or ')} kerf.`;
+      } else { sheets = V && V.sheets ? V.sheets[id] : null; if (V && V.zip && sheets != null) href = V.zip; if (sheets == null) why = 'Not in this set.'; }
+      tb.append(h('tr', {},
+        h('td', {}, h('b', {}, tidy(b.label)), b.note ? h('small', { class: 'bednote' }, tidy(b.note)) : null),
+        h('td', {}, tidy(b.stock && b.stock.name)),
+        h('td', { class: 'num' }, sheets != null ? String(sheets) : '–'),
+        h('td', {}, href ? h('a', { class: 'sheetdl', href: fileUrl(href), download: '' }, st.ver === 'cut_engrave' ? 'Download' : 'In the zip') : h('small', {}, why))));
     }
+    tbl.append(tb);
+    bedsEl.append(h('h4', { class: 'bedh' }, `Sheet layouts for ${st.t} mm, ${K.kerf_mm} mm kerf`), h('div', { class: 'tbl-wrap' }, tbl));
   }
-  THICKS.forEach(t => thick.append(h('button', { type: 'button', role: 'radio', 'data-t': t, onclick: () => { sel = t; render(); } }, t)));
+  THICKS.forEach(t => thick.append(h('button', { type: 'button', role: 'radio', 'data-t': t, onclick: () => { st.t = t; render(); } }, t)));
   thick.addEventListener('keydown', ev => {
-    const i = THICKS.indexOf(sel); let j = i;
+    const i = THICKS.indexOf(st.t); let j = i;
     if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') j = Math.min(THICKS.length - 1, i + 1);
     else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') j = Math.max(0, i - 1);
     else return;
-    ev.preventDefault(); sel = THICKS[j]; render(); thick.children[j].focus();
+    ev.preventDefault(); st.t = THICKS[j]; render(); thick.children[j].focus();
   });
   render();
+  if (man) { renderCouponGuide(man, st); renderLegend(man); }
 }
-// coupon reading guide from the downloads manifest:
-// { diagram: "path.svg", intro, checks: [{ name, look, ok, fix }] }
-function renderCouponGuide(g, base) {
-  const el = $('#coupon-guide'); if (!el) return;
-  if (!g) { el.append(h('p', { class: 'small' }, 'A diagram showing how to read each part of the coupon will appear here with the next set of files.')); return; }
-  if (g.intro) el.append(h('p', {}, g.intro));
-  if (g.diagram) el.append(h('img', { class: 'coupon-diagram', src: vurl(fileUrl(base, '', g.diagram)), alt: 'Coupon layout with each test labelled' }));
-  const checks = g.checks || g.steps || [];
-  if (checks.length) el.append(h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Test'), h('th', {}, 'What you see'), h('th', {}, 'What to do'))),
-    h('tbody', {}, checks.map(c => h('tr', {}, h('td', {}, c.name || c.test || ''), h('td', {}, c.look || c.reading || ''), h('td', {}, c.fix || c.action || c.ok || ''))))));
+function renderLegend(man) {
+  const e = man.engrave; if (!e || !e.colors) return;
+  const L = $('#legend'); L.innerHTML = '';
+  const rows = [['cut', 'Blue is cut.', 'Hairline vector lines that go through the sheet.'],
+    ['engrave_fill', 'Black is engrave.', 'The art: filled shapes to raster engrave. Never cut through.'],
+    ['engrave_line', 'Red is a scored line.', 'Faceplate glue-up guides, in the cut + labels files only.'],
+    ['labels', 'Gray is labels.', 'Part letters and joint numbers on the inside faces; engraving them is optional.']];
+  for (const [k, a, b] of rows) if (e.colors[k]) L.append(h('li', {}, h('span', { class: 'sw', style: `--c:${e.colors[k]}` }), h('span', {}, h('b', {}, a), ' ' + b)));
+  if (e.dxf_note) $('#dxf-note').textContent = tidy(e.dxf_note);
+}
+// the coupon: layout drawn from the manifest, plus how to read each test
+const FEATURE_NAMES = { kerf_square: 'Kerf square', thickness_slots: 'Thickness slots', magnet_holes: 'Magnet holes', finger_joints: 'Finger joints', lid_slot: 'Lid slot' };
+function couponSVG(layout) {
+  const W = Math.max(...layout.map(r => r.x_mm + r.width_mm)) + 5, H = Math.max(...layout.map(r => r.y_mm + r.height_mm)) + 5;
+  const col = { Q: '#fdf5cf', R: '#e7f0fb', S: '#e6f3e6', K: '#fbe3df' };
+  let o = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coupon layout"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" fill="#fff" stroke="#c9bfae" stroke-width="0.6" stroke-dasharray="3 2"/>`;
+  for (const r of layout) {
+    const L = r.part[0]; const y = H - r.y_mm - r.height_mm;
+    o += `<rect x="${r.x_mm}" y="${y}" width="${r.width_mm}" height="${r.height_mm}" rx="1" fill="${col[L] || '#eee'}" stroke="#1d1b19" stroke-width="0.7"/>`;
+    o += `<text x="${r.x_mm + r.width_mm / 2}" y="${y + r.height_mm / 2 + 2.6}" font-family="Rubik, sans-serif" font-weight="800" font-size="7.5" text-anchor="middle" fill="#1d1b19">${L}</text>`;
+  }
+  return o + '</svg>';
+}
+function renderCouponGuide(man, st) {
+  const el = $('#coupon-guide'); el.innerHTML = '';
+  const g = man.coupon_guide; const T = man.thicknesses[st.t] || Object.values(man.thicknesses)[0];
+  if (!g) { el.append(h('p', { class: 'small' }, 'The reading guide comes with the next set of files.')); return; }
+  const layout = T && T.coupon && T.coupon.layout;
+  const left = h('div', { class: 'cg-left' });
+  if (layout && layout.length) {
+    left.append(h('div', { class: 'cg-svg', html: couponSVG(layout) }));
+    const pieces = {}; for (const r of layout) { const L = r.part[0]; (pieces[L] = pieces[L] || []).push(r.part.replace(/^\w\s+Coupon:\s*/, '')); }
+    left.append(h('ul', { class: 'cg-keys' }, Object.entries(pieces).map(([L, ps]) => h('li', {}, h('span', { class: 'letter' }, L), h('span', {}, tidy([...new Set(ps.map(p => p.replace(/, (finger|hole) piece$/, '').replace(/, kerf [\d.]+/, '')))].join('; ')))))));
+  }
+  if (g.order && g.order.length) left.append(h('ol', { class: 'cg-order' }, g.order.map(s => h('li', {}, tidy(s)))));
+  const right = h('div', { class: 'cg-right' });
+  for (const f of g.features || []) {
+    const lines = [];
+    if (f.measure) lines.push(['Measure', f.measure]);
+    if (f.reading) lines.push(['Look for', f.reading]);
+    if (f.identify) lines.push(['Which is which', f.identify]);
+    if (f.ticks) lines.push(['Tick marks', f.ticks]);
+    if (f.formula) lines.push(['Work it out', f.formula]);
+    if (f.choose) lines.push(['Pick', f.choose.map(c => `${c.kerf_mm} mm: ${(man.kerfs && man.kerfs[c.set] ? man.kerfs[c.set].label.split(' (')[0] : c.set)} files`).join(' · ')]);
+    if (f.drawn_widths_mm) lines.push(['Drawn widths', f.drawn_widths_mm.join(', ') + ' mm']);
+    if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.join(', ') + ' mm']);
+    if (f.right) lines.push(['Right', f.right]);
+    for (const k of ['tight_along_the_finger', 'loose_along_the_finger', 'tight_through_the_slot', 'loose_through_the_slot']) if (f[k]) lines.push([k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), f[k]]);
+    if (f.then) lines.push(['Then', f.then]);
+    right.append(h('div', { class: 'cg-feat' }, h('h4', {}, h('span', { class: 'letter' }, f.part || '?'), FEATURE_NAMES[f.id] || f.id.replace(/_/g, ' ')),
+      h('dl', {}, lines.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, tidy(v))]))));
+  }
+  el.append(h('div', { class: 'cg' }, left, right));
+}
+
+// joint map: the matching numbers on the inside faces, drawn on each part's outline
+function renderJoints(ctx) {
+  const el = $('#joints'); if (!el) return;
+  const go = man => {
+    el.innerHTML = '';
+    const T = man && (man.thicknesses[(man.default_thickness && Number(man.default_thickness).toFixed(1)) || '3.2'] || Object.values(man.thicknesses)[0]);
+    const jm = T && T.joint_map; if (!jm) { el.closest('.joints-wrap').hidden = true; return; }
+    const byLetter = {}; for (const p of ctx.data.parts) if (!byLetter[p.letter]) byLetter[p.letter] = p;
+    const marks = {}; for (const j of jm.joints) for (const q of j.parts) (marks[q.part] = marks[q.part] || []).push({ id: j.id, x: q.x_mm, y: q.y_mm });
+    const lab = jm.labelled_on_inside_face || {}; const unl = new Set(jm.art_parts_unlabelled || []);
+    const grid = h('div', { class: 'jgrid' });
+    for (const L of Object.keys(lab).sort()) {
+      const p = byLetter[L]; if (!p || unl.has(L) || !(lab[L] || []).length) continue;
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [x, y] of p.outline) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      const pad = 8, w = x1 - x0 + 2 * pad, hh = y1 - y0 + 2 * pad, fs = Math.max(9, Math.min(w, hh) / 9);
+      const pts = p.outline.map(([x, y]) => `${(x - x0 + pad).toFixed(1)},${(y1 - y + pad).toFixed(1)}`).join(' ');
+      const tags = (marks[L] || []).filter(m => lab[L].includes(m.id)).map(m => {
+        const cx = Math.min(Math.max(m.x - x0 + pad, fs), w - fs), cy = Math.min(Math.max(y1 - m.y + pad, fs), hh - fs);
+        return `<g><circle cx="${cx}" cy="${cy}" r="${fs * 0.95}" fill="#fff" stroke="#1d1b19" stroke-width="${fs / 7}"/><text x="${cx}" y="${cy + fs * 0.36}" font-family="Rubik, sans-serif" font-weight="800" font-size="${fs}" text-anchor="middle" fill="#1d1b19">${m.id}</text></g>`;
+      }).join('');
+      grid.append(h('figure', { class: 'jpart' }, h('div', { html: `<svg viewBox="0 0 ${w.toFixed(1)} ${hh.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${p.name} with its joint numbers"><polygon points="${pts}" fill="#f2d9a8" stroke="#1d1b19" stroke-width="${Math.max(0.8, fs / 10)}" stroke-linejoin="round"/>${tags}</svg>` }),
+        h('figcaption', {}, h('span', { class: 'letter' }, L), cleanName(p.name))));
+    }
+    el.append(grid);
+    const unlNames = [...unl].map(L => byLetter[L] && cleanName(byLetter[L].name)).filter(Boolean);
+    if (unlNames.length) el.append(h('p', { class: 'small' }, `Parts with art carry no numbers, so the outside stays clean: ${[...new Set(unlNames)].join(', ').toLowerCase()}. Their art tells you which way they face.`));
+  };
+  if (dlState.man !== undefined) go(dlState.man); else dlState.ready = go;
 }
 
 // ---------- materials, cost summary, drawing kit ----------
@@ -309,6 +379,11 @@ async function initMaterials() {
   const el = $('#materials-list');
   if (!d || !d.items) { el.append(soonBox('List coming soon', 'Exact product links are being checked.')); return; }
   if (d.checked) $('#mat-intro').textContent = `Everything besides the laser cutting. Links go to the listings we checked (${new Date(d.checked + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}); prices move, so treat them as a guide.`;
+  const man = await new Promise(r => { if (dlState.man !== undefined) r(dlState.man); else { const prev = dlState.ready; dlState.ready = m => { prev && prev(m); r(m); }; } });
+  const stock = man && man.beds && Object.entries(man.beds).find(([, b]) => /12 x 24/.test((b.stock && b.stock.name) || '') && b.stock.width_mm > 600);
+  const t32 = man && man.thicknesses && man.thicknesses['3.2'];
+  const n1224 = stock && t32 && t32.kerfs && Object.values(t32.kerfs).map(k => k.cut_only && k.cut_only.sheets && k.cut_only.sheets[stock[0]]).find(n => n != null);
+  for (const i of d.items) if (i.note) i.note = i.note.replace('{SHEETS_12x24}', n1224 || 'four');
   const items = d.items.filter(i => !(i.category === 'Game supplies' && /\b(pens?|pencils?)\b/i.test(i.name)));
   const cats = [...new Set(items.map(i => i.category))];
   for (const c of cats) {
@@ -411,10 +486,10 @@ async function boot() {
   const [text, art, renders] = await Promise.all([getText('data/parts.json'), getJSON('data/art-manifest.json'), getJSON('img/render/index.json')]);
   ctx.renders = renders;
   if (!text) { $('#hero-loading').textContent = 'The parts list could not load.'; return; }
-  ctx.data = withoutRemoved(JSON.parse(text)); ctx.dataHash = hash(text); ctx.art = art;
+  ctx.data = JSON.parse(text); ctx.dataHash = hash(text); ctx.art = art;
   artState.manifest = art;
   initParams(ctx.data);
-  renderHow(ctx); renderInventory(ctx); renderSteps(ctx); initEngraving(ctx);
+  renderHow(ctx); renderInventory(ctx); renderJoints(ctx); renderSteps(ctx); initEngraving(ctx);
   // hero still for browsers without WebGL (replaced by the live model when it loads)
   const heroSrc = renderSrc(ctx, 'hero');
   const noGL = () => {
