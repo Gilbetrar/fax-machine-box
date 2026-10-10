@@ -30,6 +30,10 @@ SRC_DIR = str(REPO_ROOT / "src")
 # pass its own `env=` (which is all of them, in this suite) inherits
 # os.environ by default, so THIS checkout's src/ takes precedence
 # everywhere, not just in the fixture below.
+if SRC_DIR not in sys.path:
+    # In-process imports (faxbox.config, faxbox.partgeom ...) must also come
+    # from THIS checkout, not the editable install of another checkout.
+    sys.path.insert(0, SRC_DIR)
 os.environ["PYTHONPATH"] = SRC_DIR + os.pathsep + os.environ.get("PYTHONPATH", "")
 
 # The three generator entry points (issue #16 verification procedure). Run in

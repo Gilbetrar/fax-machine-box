@@ -322,18 +322,47 @@ LID_SLOT_LENGTH = c.LID_SLOT_X_END - T                          # 76.2
 # via svg_utils.hole_line_spans. A row's dashes don't reach the very ends of
 # its nominal span, so we accept >= 75% coverage; the upper bound rules out
 # some unrelated full-width row being mistaken for the target.
-DIVIDER_LINE_NOMINAL = c.DIVIDER_HEIGHT                          # 120.65 (vertical)
+# v2: the walls' divider rows stop at the lid-slot floor, and the right
+# wall's row is DIVIDER_KEY_DROP shorter than the left's (divider keying).
+DIVIDER_ROW_LEN = {
+    "left wall": c.DIVIDER_ROW_TOP_Z - c.FLOOR_TOP,
+    "right wall": c.DIVIDER_ROW_TOP_Z - c.FLOOR_TOP - c.DIVIDER_KEY_DROP,
+}
 SHELF_LINE_NOMINAL = c.BAY_LENGTH                                # 219.075 (horizontal)
 
 
-@pytest.mark.parametrize("side", ["left wall", "right wall"])
-def test_side_wall_has_lid_slot(side):
-    piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1, (
-        f"expected 1 lid slot hole ~{LID_SLOT_LENGTH}x{c.LID_SLOT_HEIGHT}mm "
-        f"(front boundary flush with the blank's front edge) in {side}, found {len(matches)}"
-    )
+def _slot_profile(part_id):
+    """Material segments (Z0, Z1) of the zero-kerf side wall along a
+    vertical line 1 mm behind the front edge (local x=1, or mirrored)."""
+    from shapely.geometry import LineString
+    from faxbox.partgeom import load_part
+    p = load_part(part_id)
+    x = 1.0 if part_id == "right" else c.INTERIOR_LENGTH - 1.0
+    cut = p.solid.intersection(LineString([(x, -10), (x, 140)]))
+    segs = list(cut.geoms) if hasattr(cut, "geoms") else [cut]
+    return p, sorted((min(g.coords[0][1], g.coords[-1][1]), max(g.coords[0][1], g.coords[-1][1])) for g in segs)
+
+
+@pytest.mark.parametrize("part_id", ["left", "right"])
+def test_side_wall_lid_slot_is_open_notch(part_id):
+    """v2: the slot is an open notch in the outline (no closed hole whose
+    front line coincides with the blank's edge).  Open at the front, at the
+    right height, LID_SLOT_X_END - T deep, with a LID_RAIL_HEIGHT rail."""
+    from shapely.geometry import Point
+    p, segs = _slot_profile(part_id)
+    gaps = [(a[1], b[0]) for a, b in zip(segs, segs[1:]) if b[0] - a[1] > 0.5]
+    assert len(gaps) == 1, f"{part_id}: expected exactly one slot gap, got {gaps}"
+    z0, z1 = gaps[0]
+    assert z0 == pytest.approx(c.LID_SLOT_BOTTOM, abs=0.01)
+    assert z1 == pytest.approx(c.LID_SLOT_TOP, abs=0.01)
+    assert segs[-1][1] - z1 == pytest.approx(c.LID_RAIL_HEIGHT, abs=0.01), "rail above slot"
+    assert not [h for h in p.holes if h.bounds[2] - h.bounds[0] > 50], "slot must not be a closed hole"
+    zc = (z0 + z1) / 2
+    front_x = 0.0 if part_id == "right" else c.INTERIOR_LENGTH
+    step = 1.0 if part_id == "right" else -1.0
+    inside = [d for d in (i * 0.05 for i in range(0, 2000))
+              if p.solid.contains(Point(front_x + step * d, zc))]
+    assert inside[0] == pytest.approx(c.LID_SLOT_X_END - T, abs=0.1)
 
 
 def _blue_holes(piece):
@@ -343,10 +372,11 @@ def _blue_holes(piece):
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
 def test_side_wall_has_divider_hole_line(side):
     piece = _piece(SHELL_SVG, side)
+    nominal = DIVIDER_ROW_LEN[side]
     spans = su.hole_line_spans(_blue_holes(piece), T, axis="y")
-    hits = [s for s in spans if 0.75 * DIVIDER_LINE_NOMINAL <= s <= DIVIDER_LINE_NOMINAL + 1.0]
+    hits = [s for s in spans if 0.75 * nominal <= s <= nominal + 1.0]
     assert len(hits) == 1, (
-        f"expected 1 vertical divider finger-hole row spanning ~{DIVIDER_LINE_NOMINAL}mm "
+        f"expected 1 vertical divider finger-hole row spanning ~{nominal}mm "
         f"in {side}; vertical row spans found: {[round(s, 1) for s in spans]}"
     )
 
@@ -367,13 +397,13 @@ def test_side_wall_has_shelf_and_top_panel_hole_lines(side):
 
 
 def test_rear_wall_has_top_panel_hole_line():
-    """Rear wall carries two full-interior-width horizontal rows: bottom
-    panel (near bottom edge) and top panel (near top edge)."""
+    """Rear wall carries ONE full-interior-width horizontal row, the top
+    panel's.  The bottom-panel row was removed in v2."""
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     spans = su.hole_line_spans(_blue_holes(piece), T, axis="x")
     hits = [s for s in spans if 0.7 * c.INTERIOR_WIDTH <= s <= c.INTERIOR_WIDTH + 1.0]
-    assert len(hits) == 2, (
-        f"expected 2 horizontal interior-width finger-hole rows (bottom + top panel) "
+    assert len(hits) == 1, (
+        f"expected 1 horizontal interior-width finger-hole row (top panel; v2 dropped the bottom row) "
         f"in rear wall; spans found: {[round(s, 1) for s in spans]}"
     )
 
@@ -454,7 +484,8 @@ def _wall_divider_row(wall):
     """The wall's vertical divider finger-hole column, as a HoleRow (its
     `.center` is the anchor -- see module-level comment above)."""
     rows = su.hole_line_rows(_blue_holes(wall), T, axis="y")
-    hits = [r for r in rows if 0.75 * DIVIDER_LINE_NOMINAL <= r.span <= DIVIDER_LINE_NOMINAL + 1.0]
+    nominal = DIVIDER_ROW_LEN[wall.label.lower()]
+    hits = [r for r in rows if 0.75 * nominal <= r.span <= nominal + 1.0]
     assert len(hits) == 1, (
         f"expected exactly 1 divider finger-hole column on {wall.label!r}, found {len(hits)}"
     )
@@ -522,40 +553,6 @@ def _row_dash_positions(piece, cross_axis_thickness, row, row_axis, to_coord, to
 
 
 # --- 1. Lid slot: mouth at the front, correct vertical position --------------------
-
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_side_wall_lid_slot_mouth_reaches_front_edge(side, mirror):
-    """Red-team M1a: shifting the slot 3mm toward the interior (slot_cx +3
-    in shell_generator._build_side_wall) leaves the slot's SIZE untouched
-    (test_side_wall_has_lid_slot stays green) but the mouth no longer
-    reaches the wall's front edge -- the lid could never be inserted."""
-    piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1
-    slot = matches[0].bbox
-    gap = (slot.xmin - piece.bbox.xmin) if not mirror else (piece.bbox.xmax - slot.xmax)
-    assert gap <= T + 0.4, (
-        f"{side}: lid slot mouth sits {gap:.2f}mm inside the wall's front edge "
-        f"(must be <= T+0.4={T + 0.4:.2f} for the slot to actually open at the front); "
-        f"slot bbox {slot}, piece bbox {piece.bbox}"
-    )
-
-
-@pytest.mark.parametrize("side,mirror", WALL_SIDES)
-def test_side_wall_lid_slot_vertical_position(side, mirror):
-    """Red-team M1b: lowering the slot 10mm (slot_cz -10) keeps the mouth at
-    the front edge (test above stays green) but drops the lid below its
-    LID_RAIL_HEIGHT rail -- catch the vertical position directly."""
-    piece = _piece(SHELL_SVG, side)
-    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1
-    slot = matches[0].bbox
-    dy = slot.ymin - piece.bbox.ymin
-    assert abs(dy - c.LID_RAIL_HEIGHT) <= 0.4, (
-        f"{side}: lid slot top is {dy:.2f}mm below the wall's top edge, "
-        f"expected LID_RAIL_HEIGHT={c.LID_RAIL_HEIGHT} +/-0.4"
-    )
-
 
 # --- 2. Rear wall drawer openings: exact Z placement + X-centering -----------------
 
@@ -631,17 +628,9 @@ def test_side_wall_hole_row_planes(side, mirror):
         f"{side}: top-panel row at Z={top_z:.2f}, expected {c.TOP_PANEL_HOLE_Z:.2f}"
     )
 
-    # Divider column position, cross-checked (via the same anchor frame)
-    # against the lid slot's own closed end rather than against itself.
-    matches = _cut_holes_matching(piece, LID_SLOT_LENGTH, c.LID_SLOT_HEIGHT, tol=0.5)
-    assert len(matches) == 1
-    slot = matches[0].bbox
-    closed_end_x = slot.xmax if not mirror else slot.xmin
-    mapped = to_box_x(closed_end_x)
-    assert abs(mapped - c.LID_SLOT_X_END) <= 0.6, (
-        f"{side}: divider column vs. slot closed end maps to box X={mapped:.2f}, "
-        f"expected LID_SLOT_X_END={c.LID_SLOT_X_END}"
-    )
+    # (v2: the old cross-check against the slot's closed end moved to
+    # test_side_wall_slot_end_meets_divider_face; the slot is no longer a
+    # closed hole.)
 
 
 # --- 4. Rear wall hole-row Z-planes -------------------------------------------------
@@ -650,13 +639,11 @@ def test_rear_wall_hole_row_planes():
     piece = _piece(SHELL_SVG, "rear wall", "back wall")
     rows = su.hole_line_rows(_blue_holes(piece), T, axis="x")
     hits = [r for r in rows if 0.7 * c.INTERIOR_WIDTH <= r.span <= c.INTERIOR_WIDTH + 1.0]
-    assert len(hits) == 2, f"expected 2 interior-width rows (bottom + top panel), found {len(hits)}"
-    bottom_row = max(hits, key=lambda r: r.center)  # larger SVG y = nearer piece bottom
-    top_row = min(hits, key=lambda r: r.center)
-
-    bottom_from_edge = piece.bbox.ymax - bottom_row.center
+    # v2: the bottom-panel row was removed (it cut the strip under the lower
+    # drawer opening into 11 chips); only the top-panel row remains.
+    assert len(hits) == 1, f"expected 1 interior-width row (top panel), found {len(hits)}"
+    top_row = hits[0]
     top_from_edge = top_row.center - piece.bbox.ymin
-    assert abs(bottom_from_edge - T / 2) <= 0.6
     expected_top_from_edge = c.WALL_HEIGHT - c.TOP_PANEL_HOLE_Z
     assert abs(top_from_edge - expected_top_from_edge) <= 0.6, (
         f"rear wall top-panel row is {top_from_edge:.2f}mm from the top edge, "
@@ -851,8 +838,10 @@ def test_edge_polarity_literals_present():
     # above it) -- both direction variants.
     assert '["e", "f"]' in shell_src
     assert '["f", "e"]' in shell_src
-    # Bottom panel AND divider: fully captive on all 4 edges.
-    assert shell_src.count('"ffff"') == 2, "expected bottom panel + divider both using \"ffff\""
+    # Bottom panel: fingers front + both sides, PLAIN rear edge (v2).
+    assert '"feff"' in shell_src, "expected the bottom panel's \"feff\" edge string"
+    # Divider: compound (keyed) side edges.
+    assert "plain_right" in shell_src and "plain_left" in shell_src
     # Horizontal shelf: side edges finger, rear edge plain, front edge finger.
     assert '["f", "e", "f", "f"]' in shell_src
 
@@ -862,3 +851,27 @@ def test_edge_polarity_literals_present():
     assert '"ffef"' in drawer_src
     # Drawer Bottom AND Faceplate: plain all around.
     assert drawer_src.count('"eeee"') == 2, "expected drawer Bottom + Faceplate both using \"eeee\""
+
+
+# --- v2: slot end vs divider face, divider rows clear of the slot ---------------------
+
+@pytest.mark.parametrize("part_id,mirror", [("right", False), ("left", True)])
+def test_side_wall_slot_end_meets_divider_face(part_id, mirror):
+    """The wall's divider row is centred on the divider's midplane."""
+    from faxbox.partgeom import load_part
+    p = load_part(part_id)
+    cols = [h for h in p.holes if (h.bounds[2] - h.bounds[0]) < 4 and (h.bounds[3] - h.bounds[1]) > 5
+            and h.bounds[1] > 5]
+    assert cols
+    cx = sum((h.bounds[0] + h.bounds[2]) / 2 for h in cols) / len(cols)
+    box_x = (T + cx) if not mirror else (T + c.INTERIOR_LENGTH - cx)
+    assert box_x == pytest.approx(DIVIDER_MID_BOX_X, abs=0.01)
+
+
+def test_divider_rows_do_not_touch_lid_slot():
+    """No divider finger hole may come within 5 mm of the lid slot."""
+    from faxbox.partgeom import load_part
+    for part_id in ("left", "right"):
+        p = load_part(part_id)
+        tops = [h.bounds[3] for h in p.holes if h.bounds[3] - h.bounds[1] > 5 and (h.bounds[2] - h.bounds[0]) < 4]
+        assert max(tops) <= c.LID_SLOT_BOTTOM - 5.0, (part_id, max(tops))

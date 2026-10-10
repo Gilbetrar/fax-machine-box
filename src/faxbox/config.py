@@ -12,7 +12,14 @@ import os
 
 # --- Material & laser -------------------------------------------------------
 
-MATERIAL_THICKNESS = 3.175  # 1/8" plywood, uniform for ALL parts (SPEC)
+# Nominal 1/8" plywood.  FAXBOX_THICKNESS overrides it (mm) so the cut-file
+# generator can produce a full set per stock thickness (2.8-3.5 mm: real
+# "3.2 mm" birch ply runs anywhere in that band).  Every derived dimension
+# below follows T; the external envelope (SHELL_EXT) stays fixed, so a
+# thicker stock makes the interior smaller.  Tests and the default build use
+# 3.175.
+NOMINAL_THICKNESS = 3.175
+MATERIAL_THICKNESS = float(os.environ.get("FAXBOX_THICKNESS", NOMINAL_THICKNESS))
 T = MATERIAL_THICKNESS
 
 # Boxes.py burn = kerf compensation. Starting value for 1/8" ply on a CO2
@@ -31,7 +38,7 @@ FINGER_PLAY_RELATIVE = FINGER_PLAY / MATERIAL_THICKNESS
 # --- Fit policy (DESIGN.md "Clearance summary") -----------------------------
 
 SLIDE_CLEARANCE = 1.5        # SPEC: min 1/16" play on sliding interfaces
-LID_SLOT_VERTICAL_CLEARANCE = 0.8  # documented deviation, see DESIGN.md
+LID_SLOT_VERTICAL_CLEARANCE = 1.2  # was 0.8; Ponoko panels warp, see DESIGN.md
 FACEPLATE_REVEAL = 0.75      # flush faceplate gap per side in its opening
 MIN_WEB = 3.0                # thinnest allowed structural web in a wall
 
@@ -64,7 +71,7 @@ BAY_X1 = SHELL_EXT["length"] - T                 # 301.625
 BAY_LENGTH = BAY_X1 - BAY_X0                     # 219.075
 
 # Sliding lid slot (through both side walls, open at the front edge)
-LID_RAIL_HEIGHT = 5.0                            # material left above the slot
+LID_RAIL_HEIGHT = 7.5                            # material left above the slot (was 5.0)
 LID_SLOT_TOP = SHELL_EXT["height"] - LID_RAIL_HEIGHT      # 122.0
 LID_SLOT_HEIGHT = T + LID_SLOT_VERTICAL_CLEARANCE         # 3.975
 LID_SLOT_BOTTOM = LID_SLOT_TOP - LID_SLOT_HEIGHT          # 118.025
@@ -72,6 +79,12 @@ LID_SLOT_X_END = DIVIDER_X0    # slot runs X 3.175 -> 79.375, open at front edge
 
 FRONT_WALL_TOP = LID_SLOT_BOTTOM                 # lid slides over the front wall
 FRONT_WALL_HEIGHT = FRONT_WALL_TOP - WALL_Z0     # 118.025
+
+# Divider keying (DESIGN.md "Divider keying"): the walls' divider finger-hole
+# rows stop at the lid-slot floor, and the RIGHT wall's row is DIVIDER_KEY_DROP
+# shorter than the left wall's (one finger pitch = 4T).
+DIVIDER_ROW_TOP_Z = LID_SLOT_BOTTOM
+DIVIDER_KEY_DROP = 4 * T
 
 # Fixed top panel over the drawer bay
 TOP_PANEL_Z0 = SHELL_EXT["height"] - T           # 123.825
@@ -97,9 +110,12 @@ TOP_OPENING_Z1 = TOP_OPENING_Z0 + OPENING_HEIGHT          # 120.0875
 
 # --- Drawers (2x identical, 6 pieces each) ----------------------------------
 
+DRAWER_BAY_GAP = 0.475          # bay length minus drawer length (closed)
+DRAWER_WIDTH_CLEARANCE = 3.4    # opening width minus drawer width (total)
+
 DRAWER_BODY = {   # external
-    "width": 149.0,    # Y
-    "length": 218.6,   # X (pull direction); bay gap 0.475 -- the divider is
+    "width": OPENING_WIDTH - DRAWER_WIDTH_CLEARANCE,    # Y (149.0 at T=3.175)
+    "length": BAY_LENGTH - DRAWER_BAY_GAP,  # X (218.6 at T=3.175, pull direction); bay gap 0.475 -- the divider is
                        # the drawer's in-stop (the inset faceplate can't stop
                        # against the rear wall). Closed, the faceplate sits
                        # recessed by the 0.475 slide gap -- near-flush; true
@@ -212,7 +228,7 @@ TURN_BUTTON = {
 # either jointed edge, far past the 3mm minimum; the wall's own plain top
 # edge (Z=FRONT_WALL_TOP=118.025) is 8.025mm above the pivot.
 TURN_BUTTON_PIVOT_BOX_Y = SHELL_EXT["width"] / 2   # 82.55, front wall center
-TURN_BUTTON_PIVOT_BOX_Z = 110.0
+TURN_BUTTON_PIVOT_BOX_Z = FRONT_WALL_TOP - 8.0   # 107.125 (was 110.0 before the lid slot dropped)
 
 # The lid's own physical Z-band where it crosses the front wall's plane on
 # exit: the lid rests on the slot floor under gravity, so it occupies the
@@ -241,10 +257,41 @@ LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
 # clears the lid's travel path so the lid slides freely when the button is
 # disengaged.
 
+# Hardware stack through the front wall (v2: M3x14, was M3x12).  Bearing
+# stack under the bolt head: washer + button (T) + front wall (T) + washer +
+# nyloc nut.  At T = 3.5 that is 0.5 + 3.5 + 3.5 + 0.5 + 4.0 = 12.0 mm, which
+# leaves an M3x12 flush with the nut face (no thread through the nylon
+# insert); M3x14 leaves 2.0 mm (3.4 mm at T = 2.8).
+HARDWARE = {
+    "bolt": "M3x14 button-head (ISO 7380), A2 stainless",
+    "bolt_length": 14.0,
+    "washer": "M3 flat washer (ISO 7089: 3.2 ID x 7 OD x 0.5)",
+    "washer_thickness": 0.5,
+    "washers": 2,
+    "nut": "M3 nyloc (DIN 985: 5.5 mm across flats, 4.0 mm tall)",
+    "nut_height": 4.0,
+    "magnet": "6 x 2 mm N35 neodymium disc",
+    "magnet_thickness": 2.0,
+    "magnets_needed": 4,
+    "magnets_to_buy": 6,
+}
+BOLT_PROTRUSION_PAST_NUT = (HARDWARE["bolt_length"]
+                            - (2 * HARDWARE["washer_thickness"] + 2 * T + HARDWARE["nut_height"]))
+# How far bolt + nut stick into the paper compartment, measured from the
+# front wall's inner face.
+BOLT_INTRUSION_INTO_PAPER_BAY = HARDWARE["bolt_length"] - (HARDWARE["washer_thickness"] + 2 * T)
+
+# Paper: quarter letter (4.25 x 5.5 in), standing on edge in the compartment
+# with the 5.5 in side along Y and the 4.25 in side vertical.
+PAPER = {"height": 107.95, "width": 139.7}
+PAPER_BAY_HEIGHT = LID_SLOT_BOTTOM - FLOOR_TOP    # floor top -> underside of the lid
+PAPER_HEADROOM = PAPER_BAY_HEIGHT - PAPER["height"]
+PAPER_SIDE_ROOM = INTERIOR_WIDTH - PAPER["width"]
+
 # --- Sliding lid -------------------------------------------------------------
 
 SLIDING_LID = {
-    "length": 79.0,                                   # X
+    "length": DIVIDER_X0 - 0.375,                     # X (79.0 at T=3.175)
     "width": SHELL_EXT["width"] - SLIDE_CLEARANCE,    # 163.6 (rides in through-slots)
 }
 LID_GRIP_SLOT = {"width": 30.0, "height": 10.0, "radius": 5.0,

@@ -26,7 +26,9 @@ def test_uniform_material_thickness():
     """SPEC: uniform thickness for all parts — exactly one thickness constant."""
     assert c.MATERIAL_THICKNESS == pytest.approx(3.175, **APPROX)
     thickness_names = [n for n in dir(c) if "THICKNESS" in n]
-    assert thickness_names == ["MATERIAL_THICKNESS"], thickness_names
+    # NOMINAL_THICKNESS (v2) is only the default for the FAXBOX_THICKNESS
+    # override; every dimension derives from MATERIAL_THICKNESS.
+    assert thickness_names == ["MATERIAL_THICKNESS", "NOMINAL_THICKNESS"], thickness_names
 
 
 def test_external_envelope_matches_spec():
@@ -158,7 +160,11 @@ def test_shelf_spans_bay_exactly():
 # --- Sliding lid -------------------------------------------------------------------
 
 def test_lid_slot_geometry():
-    assert c.LID_SLOT_HEIGHT == pytest.approx(c.T + 0.8, **APPROX)
+    # v2 decision (2026-10-10): clearance raised 0.8 -> 1.2 (Ponoko panels
+    # warp), rail raised 5.0 -> 7.5 (the 5 mm cantilever was fragile).
+    assert c.LID_SLOT_VERTICAL_CLEARANCE == pytest.approx(1.2, **APPROX)
+    assert c.LID_RAIL_HEIGHT == pytest.approx(7.5, **APPROX)
+    assert c.LID_SLOT_HEIGHT == pytest.approx(c.T + 1.2, **APPROX)
     assert c.LID_SLOT_TOP - c.LID_SLOT_BOTTOM == pytest.approx(c.LID_SLOT_HEIGHT, **APPROX)
     assert c.LID_RAIL_HEIGHT >= 3.0, "rail above slot must be sturdy enough"
     assert c.LID_SLOT_X_END == pytest.approx(c.DIVIDER_X0, **APPROX), (

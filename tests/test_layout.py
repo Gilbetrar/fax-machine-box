@@ -369,10 +369,13 @@ def _assert_no_overlaps_and_margins_held(sheets: list[list[fl.Placement]], margi
 
 def test_largest_part_measures_304_96_by_165_26mm(regenerate_svgs):
     pieces = _all_source_pieces()
-    largest = max(pieces, key=lambda p: p.width * p.height)
-    assert largest.source == "Shell" and largest.label == "Bottom"
-    assert largest.width == pytest.approx(304.96, abs=0.01)
-    assert largest.height == pytest.approx(165.26, abs=0.01)
+    # v2 (2026-10-10): the bottom panel lost its rear-edge fingers, so it is
+    # now 301.785 long.  The 304.96 extent belongs to the side walls; the
+    # 165.26 extent to the bottom/top/shelf panels.  Bed minimum is unchanged.
+    assert max(p.width for p in pieces) == pytest.approx(304.96, abs=0.01)
+    assert max(p.height for p in pieces) == pytest.approx(165.26, abs=0.01)
+    widest = max(pieces, key=lambda p: p.width)
+    assert widest.source == "Shell" and widest.label.endswith("Wall")
 
 
 def test_pack_pieces_at_reduced_bed_places_all_21_no_overlap(regenerate_svgs):
@@ -391,7 +394,7 @@ def test_pack_pieces_at_exact_minimum_viable_bed_places_all_21_no_overlap(regene
 
 def test_pack_pieces_one_epsilon_below_minimum_bed_raises_naming_part(regenerate_svgs):
     pieces = _all_source_pieces()
-    with pytest.raises(ValueError, match="Bottom"):
+    with pytest.raises(ValueError, match="Wall"):
         fl._pack_pieces(pieces, sheet_width=MIN_VIABLE_BED_WIDTH - 0.1, sheet_height=MIN_VIABLE_BED_HEIGHT)
 
 
