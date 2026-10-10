@@ -10,7 +10,7 @@ import numpy as np
 
 from . import raster as R
 from . import vector as V
-from .geometry import FACES, material_mask
+from .geometry import FACES, material_mask, size_mm
 
 OUT = Path(__file__).resolve().parents[1] / "out"
 
@@ -48,7 +48,7 @@ def emit(face_id: str, v: Variant) -> dict:
     stem = f"{face_id}__{v.id}"
     svg, png = OUT / f"{stem}.svg", OUT / f"{stem}.png"
     ds = V.trace(v.mask)
-    V.write_svg(svg, ds, f.size_mm, f"{f.title} - {v.label}",
+    V.write_svg(svg, ds, size_mm(face_id), f"{f.title} - {v.label}",
                 f"Fax Machine box engrave art, face {face_id}, variant {v.id}. "
                 f"Engrave-only: black fills = area engrave. Physical mm, part-local frame. "
                 f"Source: {v.source}")

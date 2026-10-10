@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
-from faxart.geometry import FACES, cut_polylines, material_mask, regenerate_svgs  # noqa: E402
+from faxart.geometry import FACES, cut_polylines, material_mask, size_mm  # noqa: E402
 from faxart.vector import rasterize_svg  # noqa: E402
 
 REPO = HERE.parents[1]
@@ -29,22 +29,22 @@ SMALL = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
 PAD = 8.0  # mm around the art canvas (finger tabs stick out)
 
 ORIGINAL = {
-    "left_wall": "IMG_4228", "right_wall": "IMG_4230", "front_wall": "IMG_4229",
-    "top_panel": "IMG_4231", "sliding_lid": "IMG_4231", "faceplate_colors": "IMG_4236",
-    "faceplate_lines": "IMG_4238", "drawer_side_1": "IMG_4233", "drawer_side_2": "IMG_4235",
-    "drawer_side_3": "IMG_4237", "drawer_side_4": "IMG_4239",
+    "left": "IMG_4228", "right": "IMG_4230", "front": "IMG_4229",
+    "top": "IMG_4231", "lid": "IMG_4231", "B_face": "IMG_4236",
+    "T_face": "IMG_4238", "B_left": "IMG_4233", "B_right": "IMG_4235",
+    "T_left": "IMG_4237", "T_right": "IMG_4239",
 }
 JULY = {
-    "left_wall": "left_wall.png", "right_wall": "right_wall.png", "front_wall": "front_wall.png",
-    "top_panel": "top_panel.png", "sliding_lid": "sliding_lid.png",
-    "faceplate_colors": "faceplate_colors.png", "faceplate_lines": "faceplate_lines.png",
-    "drawer_side_1": "drawer_side_1.png", "drawer_side_2": "drawer_side_2.png",
-    "drawer_side_3": "drawer_side_3.png", "drawer_side_4": "drawer_side_4.png",
+    "left": "left_wall.png", "right": "right_wall.png", "front": "front_wall.png",
+    "top": "top_panel.png", "lid": "sliding_lid.png",
+    "B_face": "faceplate_colors.png", "T_face": "faceplate_lines.png",
+    "B_left": "drawer_side_1.png", "B_right": "drawer_side_2.png",
+    "T_left": "drawer_side_3.png", "T_right": "drawer_side_4.png",
 }
 
 
 def on_geometry(face_id: str, svg: Path, title: str) -> Image.Image:
-    W, H = FACES[face_id].size_mm
+    W, H = size_mm(face_id)
     ink = rasterize_svg(svg, PPM)
     pw, ph = int((W + 2 * PAD) * PPM), int((H + 2 * PAD) * PPM)
     o = int(PAD * PPM)
@@ -77,7 +77,6 @@ def fit_w(im: Image.Image, w: int) -> Image.Image:
 
 
 def main():
-    regenerate_svgs()
     man = json.loads((HERE / "manifest.json").read_text())
     sheets = []
     for fid, f in man["faces"].items():
@@ -93,12 +92,12 @@ def main():
         july = Image.open(REPO / "art" / "engrave" / JULY[fid])
         dv = next(v for v in f["variants"] if v["default"])
         new = Image.fromarray(np.where(rasterize_svg(HERE / dv["svg"], 10), 0, 255).astype(np.uint8))
-        if fid == "sliding_lid":   # July file is landscape; show both in the part frame
+        if fid == "lid":   # July file is landscape; show both in the part frame
             july = july.transpose(Image.ROTATE_90)
         rows = [label(fit_w(orig, Wcol), f"Ben's original photo ({ORIGINAL[fid]})"),
                 label(fit_w(july, Wcol), f"July AI placement (art/engrave/{JULY[fid]})"),
                 label(fit_w(new, Wcol), f"New code art ({dv['id']})")]
-        if fid == "sliding_lid":
+        if fid == "lid":
             rows = [label(fit_w(r, 420), t) for r, t in [
                 (orig, "original"), (july, "July"), (new, "new")]]
             sheet = Image.new("RGB", (sum(r.width for r in rows) + 40, max(r.height for r in rows)), "white")
@@ -116,8 +115,8 @@ def main():
 
     # assembled top surface: lid (front) + top panel, as seen from above
     for vid in ("a", "c"):
-        lid = rasterize_svg(HERE / f"out/sliding_lid__{vid}.svg", PPM)
-        top = rasterize_svg(HERE / f"out/top_panel__{vid}.svg", PPM)
+        lid = rasterize_svg(HERE / f"out/lid__{vid}.svg", PPM)
+        top = rasterize_svg(HERE / f"out/top__{vid}.svg", PPM)
         pad = int(round((163.6 - 158.75) / 2 * PPM))
         lid = lid[pad:pad + top.shape[0], :]
         gap = int(2 * PPM)

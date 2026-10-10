@@ -38,7 +38,7 @@ REPO = Path(__file__).resolve().parent.parent
 ART = REPO / "art" / "code"
 sys.path.insert(0, str(ART))
 
-from faxart.geometry import FACES, material_mask, piece_for, regenerate_svgs  # noqa: E402
+from faxart.geometry import FACES, material_mask, part, size_mm  # noqa: E402
 from faxart.vector import rasterize_svg  # noqa: E402
 
 PPM = 20.0
@@ -49,12 +49,7 @@ IDS = [f"{fid}__{v['id']}" for fid, v in VARIANTS]
 
 # faces whose display lettering is solid black on purpose (Ben's style);
 # their dense-area cap is higher
-SOLID_LETTERING = {"left_wall__solid", "right_wall__funfor", "right_wall__nofunfor", "front_wall__traced"}
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _svgs():
-    regenerate_svgs()
+SOLID_LETTERING = {"left__solid", "right__funfor", "right__nofunfor", "front__traced"}
 
 
 @lru_cache(maxsize=None)
@@ -87,27 +82,23 @@ def test_manifest_covers_every_face():
 
 def test_required_variants_present():
     ids = {fid: {v["id"] for v in f["variants"]} for fid, f in MANIFEST["faces"].items()}
-    assert {"solid", "outline"} <= ids["left_wall"]
-    assert {"funfor", "nofunfor"} <= ids["right_wall"]
-    assert {"a", "c"} <= ids["sliding_lid"]
-    assert {"a", "c"} <= ids["top_panel"]
+    assert {"solid", "outline"} <= ids["left"]
+    assert {"funfor", "nofunfor"} <= ids["right"]
+    assert {"a", "c"} <= ids["lid"]
+    assert {"a", "c"} <= ids["top"]
 
 
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
 def test_svg_size_matches_part(fid, v):
     txt = (ART / v["svg"]).read_text()
     w, h = (float(x) for x in re.search(r'width="([\d.]+)mm" height="([\d.]+)mm"', txt).groups())
-    W, H = FACES[fid].size_mm
+    W, H = size_mm(fid)
     assert abs(w - W) < 1e-3 and abs(h - H) < 1e-3
     assert f'viewBox="0 0 {W:.3f} {H:.3f}"' in txt
-    # nominal blank inside the drawn piece (which also carries finger tabs)
-    bb = piece_for(fid).bbox
-    assert W <= bb.width + 0.01 and H <= bb.height + 0.01
-    # proof renderer uses the same nominal sizes
-    sys.path.insert(0, str(REPO / "scripts"))
-    import art_proofs  # noqa: E402
-    spec = {s.key: s for s in art_proofs.PART_SPECS}[fid]
-    assert spec.nominal_mm == FACES[fid].size_mm
+    # the canvas is the part's NOMINAL rectangle in faxbox.partgeom
+    g = part(fid)
+    assert abs(g.width - W) < 1e-3 and abs(g.height - H) < 1e-3
+    assert MANIFEST["faces"][fid]["size_mm"] == [W, H]
 
 
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
@@ -161,3 +152,26 @@ def test_clear_of_cuts(fid, v):
     mat = material_mask(fid, PPM, 0.35)
     bad = int((ink & ~mat).sum())
     assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.35 mm of a cut"
+
+
+PARTS = {p["id"]: p for p in json.loads((REPO / "site" / "data" / "parts.json").read_text())["parts"]}
+
+
+def test_face_ids_are_site_part_ids():
+    for fid, f in MANIFEST["faces"].items():
+        assert fid in PARTS, fid
+        assert f["exterior_face"] == PARTS[fid]["exterior_face"], fid
+        assert f["engrave_part_flipped"] == PARTS[fid]["outline_mirrored_when_viewed_from_exterior"]
+
+
+def test_art_frame_vectors():
+    """art_up / art_right are unit box vectors at right angles, and for every
+    vertical face the art is upright (up = +Z)."""
+    for fid, f in MANIFEST["faces"].items():
+        up, right = np.array(f["art_up"]), np.array(f["art_right"])
+        assert abs(np.linalg.norm(up) - 1) < 1e-6 and abs(np.linalg.norm(right) - 1) < 1e-6
+        assert abs(up @ right) < 1e-6
+        if fid not in ("lid", "top"):
+            assert list(up) == [0, 0, 1], fid
+    assert MANIFEST["faces"]["lid"]["art_right"] == [1, 0, 0]     # front -> rear
+    assert MANIFEST["faces"]["top"]["art_up"] == MANIFEST["faces"]["lid"]["art_up"]

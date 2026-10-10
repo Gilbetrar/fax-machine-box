@@ -20,7 +20,7 @@ def finish(face_id, ink, **kw):
     # 0.30 mm (rule 0.25) so the shading doesn't darken more than it must
     kw.setdefault("thicken_mm", 0.30)
     return _finish(face_id, ink, **kw)
-from .geometry import FACES
+from .geometry import size_mm
 
 REPO = Path(__file__).resolve().parents[3]
 FINAL = REPO / "art" / "ai-versions" / "final"
@@ -51,7 +51,7 @@ def fit_contain(src_box, area_mm) -> tuple:
 
 
 def ai_ink(face_id, name, src_box, dst_box_mm=None, t=128):
-    size = FACES[face_id].size_mm
+    size = size_mm(face_id)
     dst = dst_box_mm or (0, 0, size[0], size[1])
     g = R.warp_affine(load_gray(name), box_to_rect(src_box, dst), size)
     ink = R.threshold_gray(g, t)
@@ -157,13 +157,13 @@ def front_wall(face_id):
     # contain-fit ABOVE the bottom finger-hole row (y >= 114.9 mm) so the
     # buttons and the 10/20/30/44 digits are no longer bitten by the teeth
     box = (350, 422, 4384, 3421)
-    dst = fit_contain(box, (2.5, 1.0, 156.25, 113.4))
+    dst = fit_contain(box, (2.5, 1.0, 156.25, 110.5))
     ink = ai_ink(face_id, "IMG_4229_ai_vH1.png", box, dst)
     lettering = grow(solid_regions(ink), 1.0) & ink
     return [Variant("traced", "Traced", finish(face_id, ink, protect=lettering), default=True,
                     source="art/ai-versions/final/IMG_4229_ai_vH1.png (approved)",
-                    notes="Fit above the bottom finger-joint row (art bottom at 113.4 mm). "
+                    notes="Fit above the bottom finger-joint row (art bottom 4.6 mm above the bottom edge). "
                           "'44' kept as drawn in the source.")]
 
 
-RECIPES = {"left_wall": left_wall, "right_wall": right_wall, "front_wall": front_wall}
+RECIPES = {"left": left_wall, "right": right_wall, "front": front_wall}

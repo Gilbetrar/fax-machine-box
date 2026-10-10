@@ -1,22 +1,27 @@
-"""Part geometry for the code-drawn engraving art.
+"""Part geometry for the code-drawn engraving art (geometry v2).
 
-Every face is drawn in its PART-LOCAL SVG frame: the same x/y axes the
-generator uses for that piece in output/*.svg (no flip, no rotation), with
-the art canvas = the DESIGN.md nominal blank, centred on the drawn piece
-bbox (the same convention scripts/art_proofs.py uses). So an art SVG can be
-dropped onto its piece by a pure translation:
+Authoritative part data: `faxbox.partgeom` (zero-kerf outlines in each
+part's local frame: origin at the bottom-left of the NOMINAL rectangle, x
+right, y up, finger tabs sticking out) and `faxbox.assembly3d` (transforms
+into box coordinates, which face is the exterior). Face ids are the part ids
+of site/data/parts.json.
 
-    art origin (0,0) == (piece_bbox_centre - nominal/2) in the piece SVG.
+ART FRAME. Every art SVG is drawn as the face is SEEN FROM OUTSIDE the
+finished box: canvas = the part's nominal rectangle, u to the right, v down,
+in mm. How that maps onto the part-local frame (x, y):
 
-Orientation facts this relies on (see scripts/art_proofs.py PROOFS.md):
-- walls are drawn exterior-face-up; Right Wall front = local x 0 (left),
-  Left Wall front = local x max (right; the generator mirrors it);
-- Top Panel: local x 0 = front (divider side, plain edge), y = box Y;
-- Sliding Lid: portrait, local x 0..79 = depth from the FRONT, y = width;
-  its 158.75 mm art field is centred in the 163.6 mm blank (the 2.4 mm side
-  strips ride hidden in the wall slots);
-- drawer sides: local y max = finger-jointed bottom edge;
-- faceplate: grip slot near local y min (top).
+    exterior '+' (local z+ faces out):        x = u,      y = H - v
+    exterior '-', vertical part:              x = W - u,  y = H - v
+    exterior '-', horizontal (lid, top):      x = u,      y = v
+
+('-' means the outline as drawn in the cut file shows the INTERIOR face. For
+vertical parts the mirror is taken across the vertical axis so the art stays
+upright; for the lid and top panel it is taken across the front-rear axis so
+the front stays the front.) For a '-' part the cut file has to be engraved
+with the part turned over, i.e. with its outline mirrored the same way, so
+the art lands on the outside face. `art_to_local` in the manifest is this
+mapping as a 2x3 affine; `art_up` / `art_right` are the box directions of
+-v / +u.
 """
 
 from __future__ import annotations
@@ -28,42 +33,37 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import svgpathtools
 
 REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO / "tests"))
 sys.path.insert(0, str(REPO / "src"))
 
-from svg_utils import design_pieces, find_piece_by_label, normalize_color  # noqa: E402
-
-OUTPUT_SVG_DIR = REPO / "output"
+from faxbox import assembly3d as A  # noqa: E402
+from faxbox import partgeom as PG  # noqa: E402
 
 
 @dataclass(frozen=True)
 class Face:
-    face_id: str          # matches scripts/art_proofs.py PartSpec.key
-    svg_file: str
-    label: str            # generator piece label
-    size_mm: tuple[float, float]
+    face_id: str      # = part id in site/data/parts.json
     title: str
 
 
 FACES: dict[str, Face] = {f.face_id: f for f in [
-    Face("left_wall", "outer_shell.svg", "Left Wall", (298.45, 127.0), "Left wall (parrot, FAX MACHINE)"),
-    Face("right_wall", "outer_shell.svg", "Right Wall", (298.45, 127.0), "Right wall (Terrible Writers & Artists)"),
-    Face("front_wall", "outer_shell.svg", "Front Wall", (158.75, 118.025), "Front wall (fax machine panel)"),
-    Face("top_panel", "outer_shell.svg", "Top Panel", (222.25, 158.75), "Top panel (fixed, behind the lid)"),
-    Face("sliding_lid", "lids.svg", "Sliding Lid", (79.0, 163.6), "Sliding lid"),
-    Face("faceplate_colors", "drawer.svg", "Faceplate", (150.9, 53.5), "Drawer faceplate: COLORS"),
-    Face("faceplate_lines", "drawer.svg", "Faceplate", (150.9, 53.5), "Drawer faceplate: Lines"),
-    Face("drawer_side_1", "drawer.svg", "Left Side", (212.25, 50.325), "Drawer side 1 (turkeys)"),
-    Face("drawer_side_2", "drawer.svg", "Right Side", (212.25, 50.325), "Drawer side 2 (alligator and seagull)"),
-    Face("drawer_side_3", "drawer.svg", "Left Side", (212.25, 50.325), "Drawer side 3 (gallery)"),
-    Face("drawer_side_4", "drawer.svg", "Right Side", (212.25, 50.325), "Drawer side 4 (bookshelf)"),
+    Face("left", "Left wall (parrot, FAX MACHINE)"),
+    Face("right", "Right wall (Terrible Writers & Artists)"),
+    Face("front", "Front wall (fax machine panel)"),
+    Face("top", "Top panel (fixed, behind the lid)"),
+    Face("lid", "Sliding lid"),
+    Face("B_face", "Lower drawer faceplate: COLORS"),
+    Face("T_face", "Upper drawer faceplate: Lines"),
+    Face("B_left", "Lower drawer, left side (turkeys)"),
+    Face("B_right", "Lower drawer, right side (alligator and seagull)"),
+    Face("T_left", "Upper drawer, left side (gallery)"),
+    Face("T_right", "Upper drawer, right side (bookshelf)"),
 ]}
 
 
 def regenerate_svgs() -> None:
+    """Kept for callers that also want output/*.svg fresh (proofs)."""
     from faxbox.generate_drawers import generate_drawer
     from faxbox.generate_lids import generate_lids
     from faxbox.shell_generator import generate_shell
@@ -73,65 +73,76 @@ def regenerate_svgs() -> None:
     generate_lids()
 
 
-def _poly(d: str, step_mm: float = 0.05) -> np.ndarray:
-    path = svgpathtools.parse_path(d)
-    pts = []
-    for seg in path:
-        n = max(2, int(seg.length() / step_mm) + 1)
-        for i in range(n):
-            p = seg.point(i / (n - 1))
-            pts.append((p.real, p.imag))
-    return np.array(pts, dtype=np.float64)
+@lru_cache(maxsize=None)
+def part(face_id: str):
+    return PG.load_part(A.source_part(face_id))
 
 
 @lru_cache(maxsize=None)
-def piece_for(face_id: str):
-    f = FACES[face_id]
-    pieces = design_pieces(OUTPUT_SVG_DIR / f.svg_file)
-    piece = find_piece_by_label(pieces, f.label)
-    if piece is None:
-        raise RuntimeError(f"piece {f.label!r} not in {f.svg_file}")
-    return piece
+def plate(face_id: str):
+    return A.all_plates()[face_id]
 
 
-def art_origin(face_id: str) -> tuple[float, float]:
-    """Piece-SVG coordinate of the art canvas's (0,0)."""
-    f = FACES[face_id]
-    bb = piece_for(face_id).bbox
-    cx, cy = (bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2
-    return cx - f.size_mm[0] / 2, cy - f.size_mm[1] / 2
+def size_mm(face_id: str) -> tuple[float, float]:
+    g = part(face_id)
+    return (round(g.width, 3), round(g.height, 3))
+
+
+@lru_cache(maxsize=None)
+def frame(face_id: str) -> dict:
+    """exterior sign, art->local affine, art up/right in box coords."""
+    P = plate(face_id)
+    sign = P.outward_sign(A._view_reference(face_id))
+    R = np.asarray(P.matrix())[:3, :3]
+    W, H = size_mm(face_id)
+    horizontal = abs(R[:, 2][2]) > 0.9            # thickness axis along box Z
+    if sign > 0:
+        M = [[1, 0, 0], [0, -1, H]]
+    elif not horizontal:
+        M = [[-1, 0, W], [0, -1, H]]
+    else:
+        M = [[1, 0, 0], [0, 1, 0]]
+    M = np.array(M, float)
+    right = R[:, :2] @ M[:, 0]                    # box direction of +u
+    up = -(R[:, :2] @ M[:, 1])                    # box direction of -v
+    return {"exterior_face": "+" if sign > 0 else "-", "horizontal": bool(horizontal),
+            "art_to_local": M.tolist(),
+            "art_right": [round(float(v), 6) + 0.0 for v in right],
+            "art_up": [round(float(v), 6) + 0.0 for v in up]}
+
+
+def local_to_art(face_id: str, pts: np.ndarray) -> np.ndarray:
+    M = np.array(frame(face_id)["art_to_local"])
+    # M is its own inverse for these three mappings (pure flips + offsets)
+    return pts @ M[:, :2].T + M[:, 2]
 
 
 def cut_polylines(face_id: str) -> list[tuple[str, np.ndarray]]:
-    """[(kind, Nx2 points in ART mm)] for the outline ('outer') and every
-    blue cut hole ('hole'). Red engraves (legacy labels) are ignored."""
-    piece = piece_for(face_id)
-    ox, oy = art_origin(face_id)
-    out = [("outer", _poly(piece.outer.d) - (ox, oy))]
-    for h in piece.holes:
-        if normalize_color(h.stroke) == "blue":
-            out.append(("hole", _poly(h.d) - (ox, oy)))
+    """[(kind, Nx2 art-mm points)]: the outline and every through-cut hole."""
+    g = part(face_id)
+    out = [("outer", local_to_art(face_id, np.asarray(g.outer.exterior.coords)))]
+    for h in g.holes:
+        out.append(("hole", local_to_art(face_id, np.asarray(h.exterior.coords))))
     return out
 
 
 def material_mask(face_id: str, ppm: float, keepout_mm: float = 0.0) -> np.ndarray:
     """bool HxW over the art canvas: True where wood remains after cutting,
-    shrunk by `keepout_mm` from every cut edge (outline notches + holes)."""
-    f = FACES[face_id]
-    W, H = int(round(f.size_mm[0] * ppm)), int(round(f.size_mm[1] * ppm))
-    m = np.zeros((H, W), np.uint8)
-    SH = 4  # cv2 fixed-point sub-pixel bits
+    shrunk by `keepout_mm` from every cut edge (outline, notches, holes)."""
+    W, H = size_mm(face_id)
+    Wp, Hp = int(round(W * ppm)), int(round(H * ppm))
+    m = np.zeros((Hp, Wp), np.uint8)
+    SH = 4
 
     def pts(a):
         return np.round((a * ppm - 0.5) * (1 << SH)).astype(np.int32).reshape(-1, 1, 2)
 
     polys = cut_polylines(face_id)
     cv2.fillPoly(m, [pts(polys[0][1])], 1, lineType=cv2.LINE_8, shift=SH)
-    for kind, p in polys[1:]:
+    for _, p in polys[1:]:
         cv2.fillPoly(m, [pts(p)], 0, lineType=cv2.LINE_8, shift=SH)
     if keepout_mm > 0:
         r = max(1, int(round(keepout_mm * ppm)))
         k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
-        # erode with a border of 0 so the canvas edge also counts as a cut edge
         m = cv2.erode(m, k, borderType=cv2.BORDER_CONSTANT, borderValue=0)
     return m.astype(bool)

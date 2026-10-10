@@ -23,9 +23,9 @@ from .finish import Variant, finish
 BAND = (3.0, 25.0, 147.9, 49.5)
 
 WORDS = {
-    "faceplate_colors": dict(src="IMG_4236_ai_vH3.png", box=(283, 725, 6053, 2134),
+    "B_face": dict(src="IMG_4236_ai_vH3.png", box=(283, 725, 6053, 2134),
                              patterns=["diag", "cross", "vert", "horiz", "diag_r", "cross_dense"], ring_mm=1.05, rim_mm=0.4),
-    "faceplate_lines": dict(src="IMG_4238_ai_vH2.png", box=(755, 520, 5749, 2165),
+    "T_face": dict(src="IMG_4238_ai_vH2.png", box=(755, 520, 5749, 2165),
                             patterns=["grid", "cross", "cross", "diag_r", "wave", "circles"], ring_mm=0.75, rim_mm=0.65),
 }
 # 'Lines' has 6 fill regions: L, the i dot, the i stem, n, e, s.
@@ -140,4 +140,4 @@ def faceplate(face_id):
                           "Word below the grip slot, 25-49.5 mm from the top, no bleed.")]
 
 
-RECIPES = {"faceplate_colors": faceplate, "faceplate_lines": faceplate}
+RECIPES = {"B_face": faceplate, "T_face": faceplate}

@@ -23,7 +23,7 @@ from faxart import ai_faces, faceplate_faces, lid_faces  # noqa: E402
 from faxart.faces import RECIPES  # noqa: E402
 
 RECIPES = {**RECIPES, **ai_faces.RECIPES, **lid_faces.RECIPES, **faceplate_faces.RECIPES}
-from faxart.geometry import FACES, regenerate_svgs  # noqa: E402
+from faxart.geometry import FACES, frame, size_mm  # noqa: E402
 
 MANIFEST = HERE / "manifest.json"
 
@@ -40,7 +40,6 @@ STYLE = {
 
 
 def main(argv: list[str]) -> None:
-    regenerate_svgs()
     wanted = argv or list(FACES)
     manifest = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {"faces": {}}
     for face_id in wanted:
@@ -49,9 +48,10 @@ def main(argv: list[str]) -> None:
         f = FACES[face_id]
         entries = [emit(face_id, v) for v in variants]
         manifest["faces"][face_id] = {
-            "part_id": face_id, "piece_label": f.label, "piece_svg": f"output/{f.svg_file}",
-            "title": f.title, "size_mm": list(f.size_mm),
-            "frame": "part-local piece SVG frame; art (0,0) = piece bbox centre - size/2",
+            "part_id": face_id, "title": f.title, "size_mm": list(size_mm(face_id)),
+            "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+            **{k: v for k, v in frame(face_id).items() if k != "horizontal"},
+            "engrave_part_flipped": frame(face_id)["exterior_face"] == "-",
             "variants": entries,
         }
         print(f"{face_id}: " + ", ".join(f"{e['id']} {e['ink_pct']}%" for e in entries)

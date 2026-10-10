@@ -103,7 +103,7 @@ def _variants(part: str):
          "the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper."),
     ]:
         lid, top = split(field_ink(v))
-        face = "sliding_lid" if part == "lid" else "top_panel"
+        face = "lid" if part == "lid" else "top"
         m = lid if part == "lid" else top
         out.append(Variant(v.lower(), label, finish(face, m), default=default, source=SRC, notes=note))
     return out
@@ -117,4 +117,4 @@ def top_panel(face_id):
     return _variants("top")
 
 
-RECIPES = {"sliding_lid": sliding_lid, "top_panel": top_panel}
+RECIPES = {"lid": sliding_lid, "top": top_panel}
