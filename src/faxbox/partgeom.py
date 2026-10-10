@@ -61,7 +61,7 @@ def _lid(o) -> None:
 
 
 PART_SPECS: dict[str, PartSpec] = {p.id: p for p in [
-    PartSpec("bottom", "Bottom", OuterShell, lambda o: o._build_bottom(), (1, 1, 1, 1)),
+    PartSpec("bottom", "Bottom", OuterShell, lambda o: o._build_bottom(), (1, 0, 1, 1)),
     PartSpec("right", "Right Wall", OuterShell, lambda o: o._build_side_wall(False, "Right Wall"), (1, 1, 0, 0)),
     PartSpec("left", "Left Wall", OuterShell, lambda o: o._build_side_wall(True, "Left Wall"), (1, 1, 0, 0)),
     PartSpec("front", "Front Wall", OuterShell, lambda o: o._build_front_wall(), (1, 1, 0, 0)),
