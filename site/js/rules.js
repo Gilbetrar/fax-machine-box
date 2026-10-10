@@ -21,18 +21,18 @@ export const RULES = [
   { title: 'Write something', text: 'Write a phrase in the top band of page 1.',
     svg: wrap(page(58, 12, 124, 150) + `<path d="M58 56 H182" ${S}/>` + T(66, 32, 15, 'A duck with') + T(66, 49, 15, 'a cool hat.') + circ(164, 28, 1) +
       `<path d="M150 98 l18 -22 6 6 -18 22 -8 2z" fill="#f6d33c" ${S} stroke-width="2.4"/>`) },
-  { title: 'Pass your whole stack', text: 'Everyone hands their full stack to the next player.',
+  { title: 'Pass the whole stack', text: 'Everyone hands their whole stack, all four pages, to the next player.',
     svg: wrap(stack(24, 82, 56, 70) + arrow(120, 82, 204, 96)) },
   { title: 'Draw', text: 'Draw the phrase in the space under the words.',
     svg: wrap(page(58, 8, 124, 156) + `<path d="M58 44 H182" ${S}/>` + squig(66, 22, 66) + squig(66, 34, 54) + circ(166, 24, 1) + duck(84, 50, 82)) },
   { title: 'Fold and hide words', text: 'Fold the words backward, behind the page, so only your drawing shows.',
     svg: wrap(`<path d="M74 40 L166 40 L160 22 L80 22 Z" fill="#efe9dc" stroke="#9a9186" stroke-width="2.4" stroke-dasharray="5 5" stroke-linejoin="round"/>` +
       page(66, 40, 108, 120) + duck(80, 52, 78) + arrow(136, 38, 196, 54)) },
-  { title: 'Pass stack', text: 'Pass the whole stack on.',
+  { title: 'Pass the whole stack', text: 'Pass the whole stack to the next player.',
     svg: wrap(stack(26, 76, 64, 80, 4, duck(34, 80, 50)) + arrow(132, 70, 210, 86)) },
   { title: 'Write it', text: 'Look at the drawing and write what you think it is in the top band of page 2.',
     svg: wrap(page(16, 32, 86, 108) + duck(24, 42, 70) + T(110, 96, 30, '=') +
       page(138, 32, 92, 108) + `<path d="M138 66 H230" ${S}/>` + T(144, 50, 12.5, 'A goose in') + T(144, 62, 12.5, 'a cap') + circ(216, 46, 2, 9)) },
-  { title: 'Hide drawing, pass full stack', text: 'Fold the drawing out of sight so the new words are on top, then pass.',
+  { title: 'Hide the drawing, pass the whole stack', text: 'Move page 1, folded so only its drawing shows, to the back of the stack. Page 2 is now on top with the new words showing. Pass the whole stack.',
     svg: wrap(stack(26, 76, 64, 80, 4, `<path d="M26 104 H90" ${S}/>` + squig(32, 88, 36) + circ(78, 90, 2, 8)) + arrow(132, 70, 210, 86)) },
 ];

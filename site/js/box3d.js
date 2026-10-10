@@ -8,6 +8,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { birchCanvas, loadImage, artUrl, PAD, inkCanvas } from './art2d.js';
+export { birchCanvas, loadImage, artUrl, PAD, inkCanvas };
 
 export const INK = '#1d1b19';
 
@@ -76,36 +78,6 @@ function sideSign(p) {
 export function stepNumber(s, i) { return s.number ?? s.n ?? s.step ?? s.index ?? (i + 1); }
 export function stepParts(s) { return s.parts || s.part_ids || s.added || []; }
 
-// ---------- procedural birch ----------
-function rand(seed) { let x = seed >>> 0 || 1; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
-let _faceCanvas = null;
-export function birchCanvas(w = 1024, h = 1024, seed = 7) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d'); const r = rand(seed);
-  const grd = g.createLinearGradient(0, 0, w, h);
-  grd.addColorStop(0, '#efdcb8'); grd.addColorStop(0.5, '#e9d3aa'); grd.addColorStop(1, '#eed9b3');
-  g.fillStyle = grd; g.fillRect(0, 0, w, h);
-  // soft figure
-  for (let i = 0; i < 18; i++) {
-    const x = r() * w, y = r() * h, rad = 60 + r() * 220;
-    const rg = g.createRadialGradient(x, y, 0, x, y, rad);
-    const a = 0.05 + r() * 0.06;
-    rg.addColorStop(0, `rgba(196,150,96,${a})`); rg.addColorStop(1, 'rgba(196,150,96,0)');
-    g.fillStyle = rg; g.fillRect(0, 0, w, h);
-  }
-  // grain lines run along x
-  for (let i = 0; i < 260; i++) {
-    let y = r() * h; const amp = 2 + r() * 10, f = 0.002 + r() * 0.006, ph = r() * 6.28;
-    g.beginPath();
-    for (let x = -10; x <= w + 10; x += 8) {
-      const yy = y + Math.sin(x * f + ph) * amp + Math.sin(x * f * 3.1 + ph) * amp * 0.25;
-      x < 0 ? g.moveTo(x, yy) : g.lineTo(x, yy);
-    }
-    g.strokeStyle = `rgba(150,105,60,${0.04 + r() * 0.09})`;
-    g.lineWidth = 0.6 + r() * 1.8; g.stroke();
-  }
-  return c;
-}
 function plyEdgeCanvas() {
   const c = document.createElement('canvas'); c.width = 8; c.height = 96;
   const g = c.getContext('2d');
@@ -128,45 +100,9 @@ export function woodMaterials(thickness) {
     t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / 50, 1 / thickness); t.offset.set(0, -1 / thickness);
   });
   return [
-    new THREE.MeshStandardMaterial({ map: face, roughness: 0.78, metalness: 0, envMapIntensity: 0.6 }),
-    new THREE.MeshStandardMaterial({ map: edge, roughness: 0.9, metalness: 0, envMapIntensity: 0.5 }),
+    new THREE.MeshStandardMaterial({ map: face, roughness: 0.78, metalness: 0, envMapIntensity: 0.6, side: THREE.DoubleSide }),
+    new THREE.MeshStandardMaterial({ map: edge, roughness: 0.9, metalness: 0, envMapIntensity: 0.5, side: THREE.DoubleSide }),
   ];
-}
-
-// ---------- art (ink) textures ----------
-const imgCache = new Map();
-export function loadImage(url) {
-  if (imgCache.has(url)) return imgCache.get(url);
-  const p = new Promise((res, rej) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => rej(new Error('image ' + url)); im.src = url; });
-  imgCache.set(url, p); return p;
-}
-export function artUrl(v) {
-  const p = v.png || v.svg || v.url;
-  if (!p) return null;
-  if (/^(https?:|\/|data:)/.test(p)) return p;
-  if (p.startsWith('art/')) return p;
-  return 'art/' + p.split('/').pop();
-}
-// Ink canvas: luminance -> alpha in a single colour. pad keeps the edges transparent.
-export const PAD = 4;
-const inkCache = new Map();
-export async function inkCanvas(url, rgb = [62, 36, 18], maxA = 0.92, maxW = 2048) {
-  const key = url + rgb.join(',') + maxA;
-  if (inkCache.has(key)) return inkCache.get(key);
-  const im = await loadImage(url);
-  let w = im.naturalWidth || 2000, h = im.naturalHeight || 1000;
-  const s = Math.min(1, maxW / Math.max(w, h)); w = Math.round(w * s); h = Math.round(h * s);
-  const c = document.createElement('canvas'); c.width = w + 2 * PAD; c.height = h + 2 * PAD;
-  const g = c.getContext('2d', { willReadFrequently: true });
-  g.drawImage(im, PAD, PAD, w, h);
-  const d = g.getImageData(0, 0, c.width, c.height); const a = d.data;
-  for (let i = 0; i < a.length; i += 4) {
-    const lum = (a[i] * 0.3 + a[i + 1] * 0.59 + a[i + 2] * 0.11) / 255;
-    const ink = (1 - lum) * (a[i + 3] / 255);
-    a[i] = rgb[0]; a[i + 1] = rgb[1]; a[i + 2] = rgb[2]; a[i + 3] = Math.round(255 * maxA * Math.min(1, ink * 1.15));
-  }
-  g.putImageData(d, 0, 0);
-  inkCache.set(key, c); return c;
 }
 
 // ---------- geometry ----------
@@ -330,13 +266,30 @@ export class BoxModel {
       const d = this.target[key] - this.state[key];
       if (Math.abs(d) > 1e-4) { this.state[key] += d * k; moving = true; } else this.state[key] = this.target[key];
     }
-    const s = this.state, e = s.explode;
+    this.layout(this.state);
+    return moving;
+  }
+  layout(s) {
+    const e = s.explode;
     for (const u of Object.values(this.units)) u.pivot.position.copy(u.explodeDir).multiplyScalar(e);
     this.groups.drawer_lower.position.set(150 * s.drawer_lower + 250 * e, 0, 0);
     this.groups.drawer_upper.position.set(150 * s.drawer_upper + 250 * e, 0, 40 * e);
     this.groups.lid.position.set(-62 * s.lid, 0, 0);
     if (this.button) this.button.spin.setRotationFromAxisAngle(this.button.axis, Math.PI * s.button);
-    return moving;
+  }
+  // world bounding box of the whole model at a given state (default: where it is heading)
+  boxAt(st = this.target) {
+    this.layout(st); this.root.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(this.root);
+    this.layout(this.state); this.root.updateMatrixWorld(true);
+    return b;
+  }
+  groupOffset(g, st = this.target) {
+    const e = st.explode;
+    if (g === 'drawer_lower') return new THREE.Vector3(150 * st.drawer_lower + 250 * e, 0, 0);
+    if (g === 'drawer_upper') return new THREE.Vector3(150 * st.drawer_upper + 250 * e, 0, 40 * e);
+    if (g === 'lid') return new THREE.Vector3(-62 * st.lid, 0, 0);
+    return new THREE.Vector3();
   }
   toggleDrawer(g) { this.target[g] = this.target[g] > 0.5 ? 0 : 1; }
   toggleLid() {
@@ -370,9 +323,12 @@ export class Viewer {
     c.target.copy(model.center); c.enableDamping = true; c.dampingFactor = 0.08; c.minDistance = 220; c.maxDistance = 1800;
     c.maxPolarAngle = Math.PI * 0.62; c.enablePan = false;
     c.autoRotate = !!opts.autoRotate; c.autoRotateSpeed = 0.6;
+    // OrbitControls sets touch-action:none, which traps phone users on the canvas; let vertical swipes scroll the page
+    canvas.style.touchAction = 'pan-y';
     c.addEventListener('start', () => { c.autoRotate = false; this._fly = null; });
     c.addEventListener('change', () => this.kick());
     this.raycaster = new THREE.Raycaster(); this.selected = null; this.onSelect = opts.onSelect || (() => {});
+    this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._bindPick(); this._resize(); new ResizeObserver(() => { this._resize(); this.kick(); }).observe(canvas);
     this.visible = true;
     new IntersectionObserver(es => { this.visible = es[0].isIntersecting; if (this.visible) this.kick(); }).observe(canvas);
@@ -382,10 +338,25 @@ export class Viewer {
     const dir = new THREE.Vector3(...v.dir).normalize();
     const target = v.target ? new THREE.Vector3(...v.target) : this.model.center.clone();
     const pos = target.clone().add(dir.multiplyScalar(v.dist || 820));
-    if (!animate || !this.controls) { this.camera.position.copy(pos); this.camera.lookAt(target); if (this.controls) this.controls.target.copy(target); return; }
+    if (!animate || !this.controls || this.reduced) { this.camera.position.copy(pos); this.camera.lookAt(target); if (this.controls) this.controls.target.copy(target); return; }
     this._fly = { from: this.camera.position.clone(), to: pos, tFrom: this.controls.target.clone(), tTo: target, t: 0 };
     this.controls.autoRotate = false; this.kick();
   }
+  // distance at which a box fits the view from direction dir
+  fitDistance(box, margin = 1.08) {
+    const r = box.getSize(new THREE.Vector3()).length() / 2;
+    const fv = THREE.MathUtils.degToRad(this.camera.fov);
+    const fh = 2 * Math.atan(Math.tan(fv / 2) * this.camera.aspect);
+    return Math.min(4000, Math.max(160, r / Math.sin(Math.min(fv, fh) / 2) * margin));
+  }
+  // keep the current viewing direction, re-aim at the box and back off until it fits
+  fitTo(box, opts = {}) {
+    const c = box.getCenter(new THREE.Vector3());
+    const dir = opts.dir ? new THREE.Vector3(...opts.dir).normalize() : this.camera.position.clone().sub(this.controls.target).normalize();
+    this.setView({ dir: dir.toArray(), target: c.toArray(), dist: this.fitDistance(box, opts.margin || 1.0) }, opts.animate !== false);
+  }
+  fitModel(opts = {}) { this.fitTo(this.model.boxAt(), opts); }
+  snapshot() { this.model.update(10); this.controls.update(); this.renderer.render(this.scene, this.camera); return this.renderer.domElement.toDataURL('image/png'); }
   _resize() {
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight; if (!w || !h) return;
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h;
@@ -400,7 +371,9 @@ export class Viewer {
       const r = this.canvas.getBoundingClientRect();
       const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       this.raycaster.setFromCamera(ndc, this.camera);
-      const hits = this.raycaster.intersectObjects(this.model.root.children, true).filter(h => h.object.userData.partId);
+      // nearest visible hit; art overlays carry their part's id, magnets carry none
+      const hits = this.raycaster.intersectObjects(this.model.root.children, true)
+        .filter(h => h.object.userData.partId && h.object.visible).sort((a, b) => a.distance - b.distance);
       this.select(hits.length ? hits[0].object.userData.partId : null, true);
     });
   }
@@ -420,7 +393,7 @@ export class Viewer {
   kick() { if (!this._running) { this._running = true; this._last = performance.now(); requestAnimationFrame(t => this._tick(t)); } }
   _tick(t) {
     const dt = Math.min(0.05, (t - this._last) / 1000); this._last = t;
-    let busy = this.model.update(dt);
+    let busy = this.model.update(this.reduced ? 10 : dt);
     if (this._fly) {
       const f = this._fly; f.t = Math.min(1, f.t + dt / 0.9); const k = 1 - Math.pow(1 - f.t, 3);
       this.camera.position.lerpVectors(f.from, f.to, k); this.controls.target.lerpVectors(f.tFrom, f.tTo, k);

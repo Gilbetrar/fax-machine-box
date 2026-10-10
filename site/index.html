@@ -15,23 +15,36 @@
 <meta property="og:image" content="https://bjblabs.com/fax-machine/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Fax Machine box in engraved birch plywood, next to its rainbow title">
+<meta name="twitter:image:alt" content="The Fax Machine box in engraved birch plywood">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fax Machine">
 <meta name="twitter:description" content="A laser-cut plywood box for a drawing-and-guessing party game.">
 <meta name="twitter:image" content="https://bjblabs.com/fax-machine/img/og.jpg">
+<link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=f17c44d26a">
 <script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-} }
+{
+ "imports": {
+  "three": "./vendor/three/build/three.module.min.js",
+  "three/addons/": "./vendor/three/examples/jsm/",
+  "./js/art2d.js": "./js/art2d.js?v=f17c44d26a",
+  "./js/box3d.js": "./js/box3d.js?v=f17c44d26a",
+  "./js/guide.js": "./js/guide.js?v=f17c44d26a",
+  "./js/laser.js": "./js/laser.js?v=f17c44d26a",
+  "./js/page.js": "./js/page.js?v=f17c44d26a",
+  "./js/render3d.js": "./js/render3d.js?v=f17c44d26a",
+  "./js/rules.js": "./js/rules.js?v=f17c44d26a",
+  "./js/version.js": "./js/version.js?v=f17c44d26a"
+ }
+}
 </script>
-<script type="module" src="js/main.js"></script>
+<script type="module" src="js/page.js?v=f17c44d26a"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -43,6 +56,7 @@
   </defs>
 </svg>
 
+<a class="skip" href="#main">Skip to content</a>
 <header class="topbar" id="topbar">
   <a class="brand" href="./" aria-label="Fax Machine home">
     <img src="img/favicon.svg" alt="" width="28" height="28"><span>Fax Machine</span>
@@ -60,7 +74,7 @@
   </nav>
 </header>
 
-<main>
+<main id="main">
 <!-- 1. HERO -->
 <section class="hero" id="top">
   <div class="hero-copy">
@@ -98,17 +112,17 @@
 </section>
 
 <!-- 2. PLAY -->
-<!-- draft: rules wording pending Ben's final confirmation -->
 <section class="band band-paper" id="play">
   <div class="wrap">
     <p class="kicker">How to play</p>
     <h2>Telephone, with pictures</h2>
     <p class="intro">Fax Machine is the telephone game played on paper. A phrase becomes a drawing, the drawing becomes a new phrase, and the reveal at the end shows how far each one drifted. You need at least three players, and there is no upper limit.</p>
+    <!-- NEEDS-BEN: pass direction (left or right). Copy says "the next player" until Ben picks. -->
     <ol class="rules" id="rules"></ol>
     <div class="rules-after">
       <div class="reveal">
         <h3>Repeat until every page is full, then reveal</h3>
-        <p>Each stack holds four pages, and each page gets one phrase and one drawing, so a stack makes eight hops. When all the pages are full, unfold each stack and read it from page 1, one step at a time. With a big group, keep it to four pages per person (it works with twenty).</p>
+        <p>After step 8, go back to step 4 with the stack you are handed: draw the words on top, fold them back, pass, and so on. Each page gets one phrase and one drawing, so a stack of four pages makes eight hops. When all the pages are full, unfold each stack and read it from page 1, one step at a time. With a big group, keep it to four pages per person (it works with twenty).</p>
       </div>
       <figure class="sample">
         <div class="sheet" aria-hidden="true">
@@ -156,7 +170,7 @@
     <p class="kicker">Engraving preview</p>
     <h2>The art, burned in</h2>
     <p class="intro">The artwork comes from the original cardboard box, redrawn as line art a laser can engrave. Pick a face, compare the versions, and see each one on the box. The burn view shows roughly how it will look as darkened wood on birch.</p>
-    <div class="originals" aria-label="Photos of the original cardboard box">
+    <div class="originals-wrap"><div class="originals" aria-label="Photos of the original cardboard box" tabindex="0">
       <figure style="--r:-2.5deg"><img src="img/original/img_4229.jpg" alt="Front of the original cardboard box: FAX MACHINE in rainbow letters over a drawn control panel" loading="lazy"><figcaption>front</figcaption></figure>
       <figure style="--r:1.5deg"><img src="img/original/img_4228.jpg" alt="Left side of the original box: a parrot spray-painting FAX MACHINE" loading="lazy"><figcaption>left side</figcaption></figure>
       <figure style="--r:-1deg"><img src="img/original/img_4230.jpg" alt="Right side of the original box: Fun for Terrible Writers and Artists of All Ages" loading="lazy"><figcaption>right side</figcaption></figure>
@@ -164,17 +178,21 @@
       <figure style="--r:-2deg"><img src="img/original/img_4236.jpg" alt="Drawer label reading COLORS in rainbow letters" loading="lazy"><figcaption>drawer</figcaption></figure>
       <figure style="--r:1deg"><img src="img/original/img_4238.jpg" alt="Drawer label reading Lines in rainbow letters" loading="lazy"><figcaption>drawer</figcaption></figure>
     </div>
+    </div>
     <p class="orig-note">The original: cardboard, marker and colored pencil.</p>
     <div class="engrave">
       <div class="engrave-stage">
         <canvas id="art-canvas" aria-label="3D box showing the selected engraving"></canvas>
+        <div class="art-still" id="art-still" aria-hidden="true"></div>
+        <p class="art-stage-note" id="art-stage-note" hidden>3D preview needs WebGL; showing the burned-wood preview of the selected art.</p>
         <div class="seg" role="group" aria-label="Preview style">
-          <button class="segbtn on" data-mode="burn">Burned wood</button>
-          <button class="segbtn" data-mode="ink">Ink on paper</button>
+          <button type="button" class="segbtn on" data-mode="burn" aria-pressed="true">Burned wood</button>
+          <button type="button" class="segbtn" data-mode="ink" aria-pressed="false">Ink on paper</button>
         </div>
       </div>
       <div class="engrave-side">
-        <div class="facetabs" id="facetabs" role="tablist"></div>
+        <!-- NEEDS-BEN: whether the right wall keeps "Fun For" (the art manifest default decides what shows first). -->
+        <div class="facetabs" id="facetabs" role="group" aria-label="Choose a face of the box"></div>
         <div class="variants" id="variants"></div>
       </div>
     </div>
@@ -195,20 +213,28 @@
       </div>
       <div class="card">
         <h3>2. Cut the test coupon first</h3>
-        <p>The coupon is a small strip with a few finger joints and a magnet hole. Cut it, push the joint together, and press in a magnet. If the joint is loose or will not close, go one step thinner or thicker and try again. It costs a few cents of wood and saves a whole box.</p>
+        <p>The coupon is a small test piece cut from the same sheet as the box. It shows how tight the finger joints come out and how firmly the magnets press in, so you can pick the right files before cutting the whole box. It costs a few cents of wood and can save a sheet.</p>
         <div id="coupon-dl" class="dl-row"></div>
+        <div class="coupon-guide" id="coupon-guide"></div>
       </div>
       <div class="card wide">
         <h3>3. Download the box</h3>
+        <div id="kerf"></div>
         <div id="box-dl"></div>
         <div id="beds"></div>
+      </div>
+      <div class="card wide laser">
+        <h3>Laser starting points</h3>
+        <p>Published settings for about 3 mm plywood. They are only starting points: every machine, lens and batch of plywood differs, so test on your coupon first and adjust. Each machine uses its own speed and power scale, so do not compare rows.</p>
+        <div class="tbl-wrap" id="laser"></div>
+        <p class="small">Sources checked Oct 2026.</p>
       </div>
       <div class="card wide colors">
         <h3>Color code</h3>
         <ul class="legend">
           <li><span class="sw" style="--c:#0000ff"></span><span><b>Blue is cut.</b> Hairline vector lines that go through the sheet.</span></li>
           <li><span class="sw" style="--c:#ff0000"></span><span><b>Red is engrave.</b> Raster or score the surface; never cut through.</span></li>
-          <li><span class="sw" style="--c:#999"></span><span><b>Gray is labels.</b> Part letters for you; turn this layer off before cutting.</span></li>
+          <li id="legend-labels" hidden><span class="sw" style="--c:#808080"></span><span><b>Gray is labels.</b> Part letters for you; turn this layer off before cutting.</span></li>
         </ul>
         <p class="small">Order the cut so small inner holes go first and outer outlines last, which most laser software does by default. If your service does not engrave, the box still works plain.</p>
       </div>
@@ -222,6 +248,7 @@
     <p class="kicker">Materials and parts</p>
     <h2>What to buy</h2>
     <p class="intro" id="mat-intro">Everything besides the laser cutting. Links go to the exact listings we checked.</p>
+    <div class="cost" id="cost"></div>
     <div id="materials-list"></div>
     <h3 class="sub" id="kit">Drawing kit: pens and pencils</h3>
     <p class="intro" id="kit-intro">Mix and match: everything here fits the COLORS and Lines drawers.</p>
@@ -234,7 +261,7 @@
   <div class="wrap">
     <p class="kicker">Where to get it cut</p>
     <h2>Four ways to get the parts</h2>
-    <p class="intro">The job is about 23 m of cutting on roughly four 12 × 24 in sheets, plus engraving on eleven faces. Prices checked Oct 2026.</p>
+    <p class="intro">The job is about 23 m of cutting and about 0.43 m² of parts, plus engraving on eleven faces. The cut files list how many sheets each laser bed needs. Prices checked Oct 2026.</p>
     <div class="options" id="options"></div>
     <p class="tip"><b>Whichever route you take,</b> cut the test coupon on the same sheet first. Plywood thickness varies from batch to batch, and the coupon tells you which file to use.</p>
   </div>
@@ -249,7 +276,7 @@
       <p>Every part is generated by a parametric Python program built on <a href="https://www.festi.info/boxes.py/">boxes.py</a>. You change a few numbers and it redraws all the parts, joints and holes to match.</p>
       <p>The two numbers that matter most are the plywood <b>thickness</b>, which sets the depth of every finger and slot, and the <b>kerf</b> (the width of material the laser burns away), which the generator adds back so joints come out snug. Finger play, slide clearance and the magnet press fit are separate settings, each with a coupon to check it.</p>
       <p>Everything is open: the generator, tests, art and these files.</p>
-      <a class="btn btn-yellow" href="https://github.com/Gilbetrar/fax-machine-box">View on GitHub</a>
+      <div class="cta"><a class="btn btn-yellow" href="https://github.com/Gilbetrar/fax-machine-box/tree/faxbox-v2">View on GitHub</a><a class="btn btn-line" href="https://github.com/Gilbetrar/fax-machine-box/issues">Report a problem</a></div>
     </div>
     <dl class="params" id="params"></dl>
   </div>
@@ -257,7 +284,8 @@
 </main>
 
 <footer class="foot">
-  <p>Fax Machine · made in Brooklyn · <a href="https://github.com/Gilbetrar/fax-machine-box">source</a></p>
+  <p>Fax Machine · design v2, October 2026 · made in Brooklyn</p>
+  <p><a href="https://github.com/Gilbetrar/fax-machine-box/tree/faxbox-v2">Source</a> · <a href="https://github.com/Gilbetrar/fax-machine-box/issues">Questions and problems</a> · <!-- NEEDS-BEN: license for the files and art --><span id="license">License: to be announced</span> · three.js is MIT licensed</p>
 </footer>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
