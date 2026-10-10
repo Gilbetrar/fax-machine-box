@@ -47,7 +47,7 @@ def waves(region, pitch=1.25, amp=0.35, lam=2.6, width=0.34, seed=0):
     return (can > 110) & region
 
 
-def circles(region, spacing=1.5, d=1.2, width=0.32, seed=0):
+def circles(region, spacing=1.25, d=1.1, width=0.32, seed=0):
     """Little hand-drawn rings scattered with a minimum spacing (dart throwing)."""
     rng = np.random.default_rng(seed)
     H, W = region.shape
@@ -110,15 +110,21 @@ def faceplate(face_id):
     # counters (O, R, e holes...): areas enclosed by the bold outline that the
     # drawing leaves BLANK (sparse fills such as dots or waves are not blank)
     thick = cv2.morphologyEx(R.u8(ink), cv2.MORPH_OPEN, R.disk(R.px(0.4))).astype(bool)
-    nh, labh, sth, _ = cv2.connectedComponentsWithStats(R.u8(~thick & sil), connectivity=4)
-    counters = np.zeros(ink.shape, bool)
-    for i in range(1, nh):
-        if sth[i, cv2.CC_STAT_AREA] < 3 * R.PPM ** 2:
-            continue
-        reg = labh == i
-        core = cv2.erode(R.u8(reg), R.disk(2 * R.px(0.5) + 1)).astype(bool)
-        if core.any() and ink[core].mean() < 0.02:
-            counters |= reg
+    # A counter is a hole INSIDE an inner outline loop: in the contour tree of
+    # the bold outline that is depth 3 (outer loop -> its hole -> inner loop ->
+    # its hole). Blank patches of a letter's own fill are only depth 1, so a
+    # lightly hatched L or S is never mistaken for a counter.
+    cs, hier = cv2.findContours(R.u8(thick), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    counters = np.zeros(ink.shape, np.uint8)
+    if hier is not None:
+        hier = hier[0]
+        for i, cnt in enumerate(cs):
+            d, j = 0, hier[i][3]
+            while j >= 0:
+                d, j = d + 1, hier[j][3]
+            if d == 3 and cv2.contourArea(cnt) > 3 * R.PPM ** 2:
+                cv2.drawContours(counters, cs, i, 1, -1)
+    counters = counters.astype(bool) & ~thick
     body = sil & ~counters
     body = cv2.morphologyEx(R.u8(body), cv2.MORPH_OPEN, R.disk(R.px(0.5))).astype(bool)
     ring_mm = c["ring_mm"]  # measured outline weight of each drawing
@@ -134,10 +140,10 @@ def faceplate(face_id):
     for k, (_, i) in enumerate(letters):
         fill |= pattern(pats[k], inner & (labl == i), seed=100 + k)
     art = outline | fill
-    return [Variant("traced", "Traced outline + coded fills", finish(face_id, art, knock=False),
-                    default=True, source=f"art/ai-versions/final/{c['src']} (approved)",
-                    notes="Letter outlines traced; each letter's fill pattern redrawn in code. "
-                          "Word below the grip slot, 25-49.5 mm from the top, no bleed.")]
+    return [Variant("traced", "Patterned letters", finish(face_id, art, knock=False),
+                    default=True, source=f"art/ai-versions/final/{c['src']}",
+                    notes="The hand-drawn letters, each filled with its own pattern, set below the "
+                          "finger slot.")]
 
 
 RECIPES = {"B_face": faceplate, "T_face": faceplate}

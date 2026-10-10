@@ -35,27 +35,31 @@
       "variants": [
         {
           "id": "solid",
-          "label": "FAX MACHINE solid",
+          "label": "Solid letters",
           "svg": "out/left__solid.svg",
           "png": "out/left__solid.png",
           "default": true,
-          "notes": "Display lettering kept solid black (Ben's style); other large solids get gap channels.",
-          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
-          "ink_pct": 25.4,
-          "paths": 54,
-          "svg_kb": 156
+          "notes": "Solid black drip lettering, as on the original cardboard box.",
+          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
+          "ink_pct": 24.5,
+          "paths": 50,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 144
         },
         {
           "id": "outline",
-          "label": "FAX MACHINE outline + light fill",
+          "label": "Outlined letters",
           "svg": "out/left__outline.svg",
           "png": "out/left__outline.png",
           "default": false,
-          "notes": "Lettering redrawn as a 0.9 mm outline with light coded hatching inside: much less burn time and charring than solid.",
-          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
-          "ink_pct": 14.5,
-          "paths": 458,
-          "svg_kb": 255
+          "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
+          "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
+          "ink_pct": 14.2,
+          "paths": 417,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 227
         }
       ]
     },
@@ -98,11 +102,13 @@
           "svg": "out/right__funfor.svg",
           "png": "out/right__funfor.png",
           "default": false,
-          "notes": "Full title. The lid through-slot (y 5.1-8.9 mm, front 76 mm) cuts through 'Fun For'.",
-          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 24.4,
-          "paths": 449,
-          "svg_kb": 281
+          "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
+          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+          "ink_pct": 24.6,
+          "paths": 437,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 261
         },
         {
           "id": "nofunfor",
@@ -110,11 +116,13 @@
           "svg": "out/right__nofunfor.svg",
           "png": "out/right__nofunfor.png",
           "default": true,
-          "notes": "'Fun For' removed so the lid slot crosses blank wood; the title reads 'Terrible Writers & Artists of All Ages'.",
-          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 24.3,
-          "paths": 437,
-          "svg_kb": 279
+          "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
+          "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+          "ink_pct": 24.4,
+          "paths": 434,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 259
         }
       ]
     },
@@ -153,15 +161,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced",
+          "label": "Fax machine",
           "svg": "out/front__traced.svg",
           "png": "out/front__traced.png",
           "default": true,
-          "notes": "Fit above the bottom finger-joint row (art bottom 4.6 mm above the bottom edge). '44' kept as drawn in the source.",
-          "source": "art/ai-versions/final/IMG_4229_ai_vH1.png (approved)",
-          "ink_pct": 25.2,
+          "notes": "The fax machine from the front of the original box, with its WRITE and DRAW buttons.",
+          "source": "art/ai-versions/final/IMG_4229_ai_vH1.png ",
+          "ink_pct": 25.4,
           "paths": 88,
-          "svg_kb": 135
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 127
         }
       ]
     },
@@ -200,27 +210,31 @@
       "variants": [
         {
           "id": "a",
-          "label": "Snake head (A)",
+          "label": "Snake head",
           "svg": "out/top__a.svg",
           "png": "out/top__a.png",
           "default": true,
-          "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+          "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 21.5,
-          "paths": 188,
-          "svg_kb": 240
+          "ink_pct": 21.7,
+          "paths": 181,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 231
         },
         {
           "id": "c",
-          "label": "Full cat (C)",
+          "label": "Whole cat",
           "svg": "out/top__c.svg",
           "png": "out/top__c.png",
           "default": false,
-          "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+          "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 19.7,
-          "paths": 242,
-          "svg_kb": 230
+          "ink_pct": 19.8,
+          "paths": 231,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 223
         }
       ]
     },
@@ -259,27 +273,31 @@
       "variants": [
         {
           "id": "a",
-          "label": "Snake head (A)",
+          "label": "Snake head",
           "svg": "out/lid__a.svg",
           "png": "out/lid__a.png",
           "default": true,
-          "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
+          "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 15.8,
-          "paths": 64,
-          "svg_kb": 64
+          "ink_pct": 16.3,
+          "paths": 61,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 57
         },
         {
           "id": "c",
-          "label": "Full cat (C)",
+          "label": "Whole cat",
           "svg": "out/lid__c.svg",
           "png": "out/lid__c.png",
           "default": false,
-          "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
+          "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
           "ink_pct": 20.2,
-          "paths": 52,
-          "svg_kb": 77
+          "paths": 51,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 76
         }
       ]
     },
@@ -318,15 +336,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced outline + coded fills",
+          "label": "Patterned letters",
           "svg": "out/B_face__traced.svg",
           "png": "out/B_face__traced.png",
           "default": true,
-          "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
-          "source": "art/ai-versions/final/IMG_4236_ai_vH3.png (approved)",
+          "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
+          "source": "art/ai-versions/final/IMG_4236_ai_vH3.png",
           "ink_pct": 8.7,
-          "paths": 88,
-          "svg_kb": 42
+          "paths": 87,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 39
         }
       ]
     },
@@ -365,15 +385,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced outline + coded fills",
+          "label": "Patterned letters",
           "svg": "out/T_face__traced.svg",
           "png": "out/T_face__traced.png",
           "default": true,
-          "notes": "Letter outlines traced; each letter's fill pattern redrawn in code. Word below the grip slot, 25-49.5 mm from the top, no bleed.",
-          "source": "art/ai-versions/final/IMG_4238_ai_vH2.png (approved)",
-          "ink_pct": 5.6,
-          "paths": 35,
-          "svg_kb": 34
+          "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
+          "source": "art/ai-versions/final/IMG_4238_ai_vH2.png",
+          "ink_pct": 5.9,
+          "paths": 30,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 33
         }
       ]
     },
@@ -412,15 +434,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced line + coded hatch",
+          "label": "Hand-drawn scene",
           "svg": "out/B_left__traced.svg",
           "png": "out/B_left__traced.png",
           "default": true,
-          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
-          "source": "art/trimmed/IMG_4233.jpeg (Ben's original, one continuous panel)",
-          "ink_pct": 14.1,
-          "paths": 122,
-          "svg_kb": 107
+          "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+          "source": "art/trimmed/IMG_4233.jpeg",
+          "ink_pct": 16.3,
+          "paths": 88,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 91
         }
       ]
     },
@@ -459,15 +483,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced line + coded hatch",
+          "label": "Hand-drawn scene",
           "svg": "out/B_right__traced.svg",
           "png": "out/B_right__traced.png",
           "default": true,
-          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
-          "source": "art/trimmed/IMG_4235.jpeg (Ben's original, one continuous panel)",
-          "ink_pct": 12.4,
-          "paths": 136,
-          "svg_kb": 87
+          "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+          "source": "art/trimmed/IMG_4235.jpeg",
+          "ink_pct": 15.1,
+          "paths": 131,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 81
         }
       ]
     },
@@ -506,15 +532,17 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced line + coded hatch",
+          "label": "Hand-drawn scene",
           "svg": "out/T_left__traced.svg",
           "png": "out/T_left__traced.png",
           "default": true,
-          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
-          "source": "art/trimmed/IMG_4237.jpeg (Ben's original, one continuous panel)",
-          "ink_pct": 22.6,
-          "paths": 266,
-          "svg_kb": 186
+          "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+          "source": "art/trimmed/IMG_4237.jpeg",
+          "ink_pct": 26.5,
+          "paths": 253,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 175
         }
       ]
     },
@@ -553,21 +581,23 @@
       "variants": [
         {
           "id": "traced",
-          "label": "Traced line + coded hatch",
+          "label": "Hand-drawn scene",
           "svg": "out/T_right__traced.svg",
           "png": "out/T_right__traced.png",
           "default": true,
-          "notes": "Black marker traced from the photo; coloured pencil redrawn as code-generated hatching (3 tone levels).",
-          "source": "art/trimmed/IMG_4239.jpeg (Ben's original, one continuous panel)",
+          "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+          "source": "art/trimmed/IMG_4239.jpeg",
           "ink_pct": 28.1,
-          "paths": 254,
-          "svg_kb": 197
+          "paths": 224,
+          "thin": 0,
+          "gap": 0,
+          "svg_kb": 183
         }
       ]
     }
   },
   "style": {
     "name": "traced-line + coded hatch",
-    "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: line >= 0.25 mm, gap >= 0.30 mm, no islands < 0.09 mm2, 0.5 mm clear of every cut."
+    "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.4 mm clear of every cut."
   }
 }

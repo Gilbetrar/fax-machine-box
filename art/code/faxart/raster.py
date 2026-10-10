@@ -175,7 +175,7 @@ def line_angles(ink: np.ndarray, sigma_mm: float = 1.5) -> np.ndarray:
 
 
 def knock_out_solids(mask: np.ndarray, protect: np.ndarray | None = None, solid_mm: float = 2.4,
-                     border_mm: float = 0.6, pitch_mm: float = 1.0, gap_mm: float = 0.42,
+                     border_mm: float = 0.6, pitch_mm: float = 1.05, gap_mm: float = 0.48,
                      orient_from: np.ndarray | None = None, seed: int = 3,
                      min_area_mm2: float = 45.0
                      ) -> tuple[np.ndarray, np.ndarray]:
@@ -217,27 +217,31 @@ def knock_out_solids(mask: np.ndarray, protect: np.ndarray | None = None, solid_
     return mask & ~cut, core
 
 
+def _eopen(m: np.ndarray, r_px: float) -> np.ndarray:
+    """Exact Euclidean opening by a disk of radius r_px."""
+    from scipy import ndimage as ndi
+    c = ndi.distance_transform_edt(m) > r_px
+    return ndi.distance_transform_edt(~c) <= r_px
+
+
 def enforce_laser_rules(mask: np.ndarray, material: np.ndarray | None = None,
-                        rounds: int = 2) -> np.ndarray:
-    """Morphological guarantee of the min line / min gap / speck rules,
-    clipped to the cut keep-out."""
-    # odd kernels only (an even cv2 kernel is off-centre and shifts edges)
-    open_k = disk(5)    # 0.25 mm at 20 px/mm: anything thinner goes
-    close_k = disk(7)   # 0.35 mm: any gap under that fills (rule is 0.30)
+                        rounds: int = 3) -> np.ndarray:
+    """Guarantee min line / min gap / speck rules with exact Euclidean
+    morphology and a margin over the rules (line 0.28 mm, gap 0.36 mm), so
+    the traced curves still pass at 40 px/mm. Ends on the gap pass: an
+    opening last would cut thin necks and leave new narrow gaps."""
+    r_line = 0.14 * PPM
+    r_gap = 0.18 * PPM
     m = mask
-    # open THEN close, ending on a close: opening last would cut thin necks
-    # and leave new sub-minimum gaps (measured: ~1 % extra burn on the walls)
     for _ in range(rounds):
         if material is not None:
             m = m & material
-        m = cv2.morphologyEx(u8(m), cv2.MORPH_OPEN, open_k).astype(bool)
+        m = _eopen(m, r_line)
         m = remove_small(m)
-        m = cv2.morphologyEx(u8(m), cv2.MORPH_CLOSE, close_k).astype(bool)
+        m = ~_eopen(~m, r_gap)          # closing = opening of the paper
         if material is not None:
             m = m & material
         m = fill_pinholes(m)
-    # final pass with a margin over the 0.09 mm2 rule: curve fitting can
-    # shave a near-limit island under it
     return fill_pinholes(remove_small(m, 1.4 * SPECK_MM2), 1.4 * SPECK_MM2)
 
 

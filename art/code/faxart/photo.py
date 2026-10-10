@@ -46,9 +46,14 @@ def colour_lines(bgr: np.ndarray, tone: np.ndarray, sat_t: float = 0.42, tone_t:
 def build_photo_face(bgr: np.ndarray, *, ink_t: float = 0.5, tone_ths=(0.22, 0.32, 0.45),
                      hatch_levels=HATCH_LEVELS, colour_line_kw: dict | None = None,
                      seed: int = 1, angle_by_region: bool = True,
-                     tone_exclude: np.ndarray | None = None) -> dict[str, np.ndarray]:
+                     tone_exclude: np.ndarray | None = None, hatch_kw: dict | None = None,
+                     line_grow_mm: float = 0.1) -> dict[str, np.ndarray]:
     ink, tone = R.photo_layers(bgr, ink_t=ink_t)
     ink = R.remove_small(ink, 0.12)
+    # Ben's fine-liner traces thinner than the AI-redrawn walls; thicken every
+    # marker line by 2 x line_grow_mm so all eleven faces read as one hand
+    if line_grow_mm > 0:
+        ink = cv2.dilate(R.u8(ink), R.disk(2 * R.px(line_grow_mm) + 1)).astype(bool)
     lines = ink.copy()
     if colour_line_kw is not None:
         lines |= colour_lines(bgr, tone, **colour_line_kw)
@@ -73,7 +78,8 @@ def build_photo_face(bgr: np.ndarray, *, ink_t: float = 0.5, tone_ths=(0.22, 0.3
             spec = []
             for s in hatch_levels:
                 passes = s.get("passes", [s])
-                rot = [dict(p, angle_deg=p["angle_deg"] - 45 + angles[i]) for p in passes]
+                rot = [dict(p, angle_deg=p["angle_deg"] - 45 + angles[i], **(hatch_kw or {}))
+                       for p in passes]
                 spec.append({"passes": rot})
             tone_ink[y0:y1, x0:x1] |= R.tone_hatch(sub_lev, clear[y0:y1, x0:x1], spec, seed=seed + i)
     else:

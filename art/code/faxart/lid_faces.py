@@ -96,16 +96,19 @@ SRC = "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)"
 def _variants(part: str):
     out = []
     for v, label, default, note in [
-        ("A", "Snake head (A)", True,
-         "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off."),
-        ("C", "Full cat (C)", False,
-         "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; "
-         "the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper."),
+        ("A", "Snake head", True,
+         "The mosaic snake's head sits on the sliding lid and its scaled body runs back across "
+         "the top. The cat is left off."),
+        ("C", "Whole cat", False,
+         "The whole cat and the flowered wallpaper fill the top panel; the lid "
+         "shows the snake's scales. The snake's head is left off."),
     ]:
         lid, top = split(field_ink(v))
         face = "lid" if part == "lid" else "top"
         m = lid if part == "lid" else top
-        out.append(Variant(v.lower(), label, finish(face, m), default=default, source=SRC, notes=note))
+        # the snake's eye pupils are ~150 mm2 solids: keep them solid
+        out.append(Variant(v.lower(), label, finish(face, m, knock_min_area=300.0),
+                           default=default, source=SRC, notes=note))
     return out
 
 
