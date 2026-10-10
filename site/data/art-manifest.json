@@ -1,0 +1,233 @@
+{
+ "interim": true,
+ "note": "Interim: AI-traced raster art from art/engrave, downscaled for the web.",
+ "faces": {
+  "left_wall": {
+   "part_id": "left",
+   "size_mm": [
+    298.45,
+    127.0
+   ],
+   "variants": [
+    {
+     "id": "left_wall",
+     "label": "Parrot and spray-paint title",
+     "svg": null,
+     "png": "art/left_wall.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "right_wall": {
+   "part_id": "right",
+   "size_mm": [
+    298.45,
+    127.0
+   ],
+   "variants": [
+    {
+     "id": "right_wall",
+     "label": "Writers and artists, full title",
+     "svg": null,
+     "png": "art/right_wall.png",
+     "default": true,
+     "notes": ""
+    },
+    {
+     "id": "right_wall_variant_nofunfor",
+     "label": "Without \"Fun For\"",
+     "svg": null,
+     "png": "art/right_wall_variant_nofunfor.png",
+     "default": false,
+     "notes": ""
+    }
+   ]
+  },
+  "front_wall": {
+   "part_id": "front",
+   "size_mm": [
+    158.75,
+    118.03
+   ],
+   "variants": [
+    {
+     "id": "front_wall",
+     "label": "Fax machine control panel",
+     "svg": null,
+     "png": "art/front_wall.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "top_panel": {
+   "part_id": "top",
+   "size_mm": [
+    222.25,
+    158.75
+   ],
+   "variants": [
+    {
+     "id": "top_panel",
+     "label": "A: snake head on the lid",
+     "svg": null,
+     "png": "art/top_panel.png",
+     "default": true,
+     "notes": ""
+    },
+    {
+     "id": "top_panel_variant_b",
+     "label": "B: centred window",
+     "svg": null,
+     "png": "art/top_panel_variant_b.png",
+     "default": false,
+     "notes": ""
+    },
+    {
+     "id": "top_panel_variant_c",
+     "label": "C: cat kept, head trimmed",
+     "svg": null,
+     "png": "art/top_panel_variant_c.png",
+     "default": false,
+     "notes": ""
+    }
+   ]
+  },
+  "sliding_lid": {
+   "part_id": "lid",
+   "size_mm": [
+    163.58,
+    78.99
+   ],
+   "variants": [
+    {
+     "id": "sliding_lid",
+     "label": "A: snake head",
+     "svg": null,
+     "png": "art/sliding_lid.png",
+     "default": true,
+     "notes": ""
+    },
+    {
+     "id": "sliding_lid_variant_b",
+     "label": "B: centred window",
+     "svg": null,
+     "png": "art/sliding_lid_variant_b.png",
+     "default": false,
+     "notes": ""
+    },
+    {
+     "id": "sliding_lid_variant_c",
+     "label": "C: cat-end window",
+     "svg": null,
+     "png": "art/sliding_lid_variant_c.png",
+     "default": false,
+     "notes": ""
+    }
+   ]
+  },
+  "faceplate_colors": {
+   "part_id": "B_face",
+   "size_mm": [
+    150.88,
+    53.51
+   ],
+   "variants": [
+    {
+     "id": "faceplate_colors",
+     "label": "COLORS",
+     "svg": null,
+     "png": "art/faceplate_colors.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "faceplate_lines": {
+   "part_id": "T_face",
+   "size_mm": [
+    150.88,
+    53.51
+   ],
+   "variants": [
+    {
+     "id": "faceplate_lines",
+     "label": "Lines",
+     "svg": null,
+     "png": "art/faceplate_lines.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "drawer_side_1": {
+   "part_id": "B_left",
+   "size_mm": [
+    212.26,
+    50.29
+   ],
+   "variants": [
+    {
+     "id": "drawer_side_1",
+     "label": "Desert birds",
+     "svg": null,
+     "png": "art/drawer_side_1.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "drawer_side_2": {
+   "part_id": "B_right",
+   "size_mm": [
+    212.26,
+    50.29
+   ],
+   "variants": [
+    {
+     "id": "drawer_side_2",
+     "label": "Alligator and gull",
+     "svg": null,
+     "png": "art/drawer_side_2.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "drawer_side_3": {
+   "part_id": "T_left",
+   "size_mm": [
+    212.26,
+    50.29
+   ],
+   "variants": [
+    {
+     "id": "drawer_side_3",
+     "label": "Gallery",
+     "svg": null,
+     "png": "art/drawer_side_3.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  },
+  "drawer_side_4": {
+   "part_id": "T_right",
+   "size_mm": [
+    212.26,
+    50.29
+   ],
+   "variants": [
+    {
+     "id": "drawer_side_4",
+     "label": "Bookshelf",
+     "svg": null,
+     "png": "art/drawer_side_4.png",
+     "default": true,
+     "notes": ""
+    }
+   ]
+  }
+ }
+}

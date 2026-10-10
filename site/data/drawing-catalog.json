@@ -1,0 +1,406 @@
+{
+ "checked": "2026-10-10",
+ "categories": [
+  {
+   "id": "color",
+   "name": "Colored pencils",
+   "blurb": "From erasable school-grade to artist oil-based. Pick whatever feels right.",
+   "items": [
+    {
+     "asin": "B000PCWKBA",
+     "name": "Crayola Erasable Colored Pencils for Kids, 24ct Drawing Coloring Pencils",
+     "pack": "24 pencils",
+     "price_usd": 5.88,
+     "url": "https://www.amazon.com/dp/B000PCWKBA",
+     "image_url": "https://m.media-amazon.com/images/I/71qgTaz4lIL._AC_SL500_.jpg",
+     "image_file": "img/B000PCWKBA.jpg",
+     "rating": 4.7,
+     "good_for": "Cheapest 24 colors, and they erase",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": 178
+    },
+    {
+     "asin": "B00006IEEU",
+     "name": "Prismacolor Premier Colored Pencils, Soft Core, Assorted Colors, 24 Count",
+     "pack": "24 pencils",
+     "price_usd": 24.99,
+     "url": "https://www.amazon.com/dp/B00006IEEU",
+     "image_url": "https://m.media-amazon.com/images/I/81WLMyh3OuL._AC_SL500_.jpg",
+     "image_file": "img/B00006IEEU.jpg",
+     "rating": 4.8,
+     "good_for": "Rich, saturated color; soft core blends well but breaks if dropped",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 178
+    },
+    {
+     "asin": "B0007OECKI",
+     "name": "Faber-Castell Polychromos Artists' Color Pencils - Tin of 36 Colors",
+     "pack": "36 pencils",
+     "price_usd": 63.85,
+     "url": "https://www.amazon.com/dp/B0007OECKI",
+     "image_url": "https://m.media-amazon.com/images/I/81OP+b7RVlL._AC_SL500_.jpg",
+     "image_file": "img/B0007OECKI.jpg",
+     "rating": 4.8,
+     "good_for": "Oil-based, hard core holds a point and rarely smears",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 175
+    },
+    {
+     "asin": "B0007OECK8",
+     "name": "Faber-Castell Polychromos Artists' Color Pencils - Tin of 24 Colors",
+     "pack": "24 pencils",
+     "price_usd": 44.29,
+     "url": "https://www.amazon.com/dp/B0007OECK8",
+     "image_url": "https://m.media-amazon.com/images/I/91bAd+DqzrL._AC_SL500_.jpg",
+     "image_file": "img/B0007OECK8.jpg",
+     "rating": 4.7,
+     "good_for": "Smaller tin of the same smudge-resistant artist pencils",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 175
+    },
+    {
+     "asin": "B0G7L9S3YZ",
+     "name": "Prismacolor Scholar Colored Pencils, Assorted Colors, 24 Count",
+     "pack": "24 pencils",
+     "price_usd": 15.97,
+     "url": "https://www.amazon.com/dp/B0G7L9S3YZ",
+     "image_url": "https://m.media-amazon.com/images/I/81-p99qRipL._AC_SL500_.jpg",
+     "image_file": "img/B0G7L9S3YZ.jpg",
+     "rating": 4.7,
+     "good_for": "Smooth color with sturdy cores; a break-resistant step up from school pencils",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 178
+    },
+    {
+     "asin": "B001CTXYEM",
+     "name": "Faber-Castell Grip Colored EcoPencils - 24 Pack Colored Pencils, Pre-Sharpened",
+     "pack": "24 pencils",
+     "price_usd": 15.0,
+     "url": "https://www.amazon.com/dp/B001CTXYEM",
+     "image_url": "https://m.media-amazon.com/images/I/81s0OItu70L._AC_SL500_.jpg",
+     "image_file": "img/B001CTXYEM.jpg",
+     "rating": 4.7,
+     "good_for": "Triangular grip is easy to hold; comes pre-sharpened",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 180
+    },
+    {
+     "asin": "B076DHN68W",
+     "name": "ARTEZA Colored Pencils, 72 Colors, Soft Wax Cores for Coloring and Drawing",
+     "pack": "72 pencils",
+     "price_usd": 38.89,
+     "url": "https://www.amazon.com/dp/B076DHN68W",
+     "image_url": "https://m.media-amazon.com/images/I/81nOp4ocPtL._AC_SL500_.jpg",
+     "image_file": "img/B076DHN68W.jpg",
+     "rating": 4.7,
+     "good_for": "Huge color range with thick soft cores for the price",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": null
+    },
+    {
+     "asin": "B06ZZNF7GS",
+     "name": "Castle Art Supplies 72 Colored Pencils for Adults - Soft Core Leads",
+     "pack": "72 pencils",
+     "price_usd": 39.99,
+     "url": "https://www.amazon.com/dp/B06ZZNF7GS",
+     "image_url": "https://m.media-amazon.com/images/I/71lPV1epHKL._AC_SL500_.jpg",
+     "image_file": "img/B06ZZNF7GS.jpg",
+     "rating": 4.8,
+     "good_for": "72 colors arranged in color families, soft creamy laydown",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": null
+    }
+   ]
+  },
+  {
+   "id": "line",
+   "name": "Line pens (fineliners & gel)",
+   "blurb": "Fast-drying black pens for outlines and detail. Water or pigment based, safe on printer paper.",
+   "items": [
+    {
+     "asin": "B00006IE87",
+     "name": "uniball Onyx Rollerball Pens, Micro Point (0.5mm), Black",
+     "pack": "12 pens",
+     "price_usd": 8.39,
+     "url": "https://www.amazon.com/dp/B00006IE87",
+     "image_url": "https://m.media-amazon.com/images/I/71G5AnFLWhL._AC_SL500_.jpg",
+     "image_file": "img/B00006IE87.jpg",
+     "rating": 4.6,
+     "good_for": "Fast-drying fine black line, reliable on printer paper",
+     "favorite": true,
+     "ben_uses": true,
+     "length_mm": 145
+    },
+    {
+     "asin": "B00K3KRJK6",
+     "name": "Sakura Pigma Micron Fineliner Pens, Black, 01 Point, 0.25 mm, 6 Pack",
+     "pack": "6 pens",
+     "price_usd": 13.49,
+     "url": "https://www.amazon.com/dp/B00K3KRJK6",
+     "image_url": "https://m.media-amazon.com/images/I/81j4TfD8OoL._AC_SL500_.jpg",
+     "image_file": "img/B00K3KRJK6.jpg",
+     "rating": 4.8,
+     "good_for": "Archival ink, very fine line for detail",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": 135
+    },
+    {
+     "asin": "B0C922C7WT",
+     "name": "STAEDTLER Pigment Liner Fineliner Pens Set, Black, 8pc Assorted Tip Sizes",
+     "pack": "8 pens",
+     "price_usd": 18.49,
+     "url": "https://www.amazon.com/dp/B0C922C7WT",
+     "image_url": "https://m.media-amazon.com/images/I/81eSkloWWDL._AC_SL500_.jpg",
+     "image_file": "img/B0C922C7WT.jpg",
+     "rating": 4.6,
+     "good_for": "Eight tip widths from fine detail to bold outline; waterproof pigment ink",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": null
+    },
+    {
+     "asin": "B08WJ5NJ72",
+     "name": "Kuretake ZIG CARTOONIST MANGAKA Black 5 set (incl. MANGAKA FLEXIBLE)",
+     "pack": "5 pens",
+     "price_usd": 19.4,
+     "url": "https://www.amazon.com/dp/B08WJ5NJ72",
+     "image_url": "https://m.media-amazon.com/images/I/61l4vm4Ax-L._AC_SL500_.jpg",
+     "image_file": "img/B08WJ5NJ72.jpg",
+     "rating": 4.6,
+     "good_for": "Black fineliners in several widths plus the Flexible brush-like nib; the set version of Ben's favorite",
+     "favorite": true,
+     "ben_uses": true,
+     "length_mm": null
+    }
+   ]
+  },
+  {
+   "id": "brush",
+   "name": "Brush pens & markers",
+   "blurb": "Brush-tip pens for thick-thin lines and shading. Water-based or India ink, so they stay on top of printer paper.",
+   "items": [
+    {
+     "asin": "B07RQDP9SD",
+     "name": "Tombow ABT Dual Brush Pen Set of 10, Primary",
+     "pack": "10 pens",
+     "price_usd": 19.99,
+     "url": "https://www.amazon.com/dp/B07RQDP9SD",
+     "image_url": "https://m.media-amazon.com/images/I/71Mjv7EczZL._AC_SL500_.jpg",
+     "image_file": "img/B07RQDP9SD.jpg",
+     "rating": 4.7,
+     "good_for": "Ten saturated colors incl. blues, greens, red, yellow; brush plus fine tip, water-based",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": null
+    },
+    {
+     "asin": "B07J1NJ6SN",
+     "name": "Tombow Dual Brush Pen ABT Twin Type Graphic Marker, Assorted (23 colors + blender)",
+     "pack": "24 pens",
+     "price_usd": 37.9,
+     "url": "https://www.amazon.com/dp/B07J1NJ6SN",
+     "image_url": "https://m.media-amazon.com/images/I/51SwEI-e3jL._AC_SL500_.jpg",
+     "image_file": "img/B07J1NJ6SN.jpg",
+     "rating": 4.8,
+     "good_for": "Bigger option: 23 mostly light/pastel colors plus a colorless blender; includes blues and turquoise",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": null
+    },
+    {
+     "asin": "B003IGID52",
+     "name": "Faber-Castell Pitt Artist Pen 167115 India Ink Pens, Black, XS/S/F/M",
+     "pack": "4 pens",
+     "price_usd": 8.5,
+     "url": "https://www.amazon.com/dp/B003IGID52",
+     "image_url": "https://m.media-amazon.com/images/I/61sEDYNZt5L._AC_SL500_.jpg",
+     "image_file": "img/B003IGID52.jpg",
+     "rating": 4.7,
+     "good_for": "Four black India-ink fineliner tip sizes (fine, not brush); same PITT line as Ben's pen",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": null
+    },
+    {
+     "asin": "B003IGGKY8",
+     "name": "Faber-Castell Pitt Artist Pen Brush Set, Landscape",
+     "pack": "6 pens",
+     "price_usd": 9.99,
+     "url": "https://www.amazon.com/dp/B003IGGKY8",
+     "image_url": "https://m.media-amazon.com/images/I/81hjz+Jk0mL._AC_SL500_.jpg",
+     "image_file": "img/B003IGGKY8.jpg",
+     "rating": 4.9,
+     "good_for": "Six muted earthy/blue colors in the brush-tip PITT pen Ben uses",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": null
+    }
+   ]
+  },
+  {
+   "id": "graphite",
+   "name": "Graphite pencils",
+   "blurb": "For first drafts and shading. Pick a hard, soft or clutch.",
+   "items": [
+    {
+     "asin": "B002EEYT34",
+     "name": "Ticonderoga Wood-Cased Pencils, #2 HB Soft, Yellow, 12 Count",
+     "pack": "12 pencils",
+     "price_usd": 2.99,
+     "url": "https://www.amazon.com/dp/B002EEYT34",
+     "image_url": "https://m.media-amazon.com/images/I/71ZBiCWIo-L._AC_SL500_.jpg",
+     "image_file": "img/B002EEYT34.jpg",
+     "rating": 4.8,
+     "good_for": "Everyday HB pencil for first drafts that erase cleanly",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 190
+    },
+    {
+     "asin": "B00OQJYNW2",
+     "name": "Faber-Castell Graphite Sketch Pencil Set - 6 Graphite Pencils (2H, HB, B, 2B, 4B, 6B)",
+     "pack": "6 pencils",
+     "price_usd": 8.45,
+     "url": "https://www.amazon.com/dp/B00OQJYNW2",
+     "image_url": "https://m.media-amazon.com/images/I/81yOYt658kL._AC_SL500_.jpg",
+     "image_file": "img/B00OQJYNW2.jpg",
+     "rating": 4.8,
+     "good_for": "Graded set from light to dark; same 6-pencil set Ben owns",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": 175
+    },
+    {
+     "asin": "B003VVZQ0Y",
+     "name": "Faber-Castell Goldfaber Graphite Sketch Set",
+     "pack": "8 pencils",
+     "price_usd": 9.51,
+     "url": "https://www.amazon.com/dp/B003VVZQ0Y",
+     "image_url": "https://m.media-amazon.com/images/I/51Y+k-XW1YL._AC_SL500_.jpg",
+     "image_file": "img/B003VVZQ0Y.jpg",
+     "rating": 4.8,
+     "good_for": "Goldfaber graphite grades for sketching (8-piece; Ben's is the 6-piece above)",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": null
+    },
+    {
+     "asin": "B007HNFVPW",
+     "name": "Kaweco CLASSIC SPORT Clutch Pencil Black 3.2 mm 5B",
+     "pack": "1 pencil",
+     "price_usd": 18.38,
+     "url": "https://www.amazon.com/dp/B007HNFVPW",
+     "image_url": "https://m.media-amazon.com/images/I/31Dzj8UpXzL._AC_SL500_.jpg",
+     "image_file": "img/B007HNFVPW.jpg",
+     "rating": 4.3,
+     "good_for": "Pocket-size refillable clutch pencil with soft 5B lead; no sharpening",
+     "favorite": false,
+     "ben_uses": true,
+     "length_mm": 105
+    },
+    {
+     "asin": "B0054KFPR4",
+     "name": "Koh-i-noor Refill Leads for 3.2 mm Pencils, assorted colors (4042)",
+     "pack": "~12 colored leads",
+     "price_usd": 7.99,
+     "url": "https://www.amazon.com/dp/B0054KFPR4",
+     "image_url": "https://m.media-amazon.com/images/I/71jgNsR7aWL._AC_SL500_.jpg",
+     "image_file": "img/B0054KFPR4.jpg",
+     "rating": 4.3,
+     "good_for": "Optional colored 3.2mm refills that fit the Kaweco Sport clutch pencil (not graphite; Kaweco's own 3.2mm packs are only colored 6-packs, $12.75)",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": null
+    }
+   ]
+  },
+  {
+   "id": "sharpener",
+   "name": "Sharpeners",
+   "blurb": "Catch the shavings and fit colored pencils.",
+   "items": [
+    {
+     "asin": "B005D5ZOH6",
+     "name": "STAEDTLER Double-Hole Tub Pencil Sharpener",
+     "pack": "1 sharpener",
+     "price_usd": 5.27,
+     "url": "https://www.amazon.com/dp/B005D5ZOH6",
+     "image_url": "https://m.media-amazon.com/images/I/81Dp4auU9dL._AC_SL500_.jpg",
+     "image_file": "img/B005D5ZOH6.jpg",
+     "rating": 4.6,
+     "good_for": "Catches shavings; second hole fits thick colored pencils",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 50
+    },
+    {
+     "asin": "B002TDXYC2",
+     "name": "Kum 103.28.31 Magnesium Alloy 2-Hole Steel Blade Barrel Pencil Sharpener with Waste Container",
+     "pack": "1 sharpener",
+     "price_usd": 7.45,
+     "url": "https://www.amazon.com/dp/B002TDXYC2",
+     "image_url": "https://m.media-amazon.com/images/I/71kpedHzPXL._AC_SL500_.jpg",
+     "image_file": "img/B002TDXYC2.jpg",
+     "rating": 4.4,
+     "good_for": "Metal body, sharp steel blades, screw-on shavings container; colors vary",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 50
+    }
+   ]
+  },
+  {
+   "id": "eraser",
+   "name": "Erasers",
+   "blurb": "For cleaning up graphite and erasable color.",
+   "items": [
+    {
+     "asin": "B074PH2FY2",
+     "name": "Tombow 57324 MONO Eraser, White, Medium, 3-Pack",
+     "pack": "3 erasers",
+     "price_usd": 4.95,
+     "url": "https://www.amazon.com/dp/B074PH2FY2",
+     "image_url": "https://m.media-amazon.com/images/I/71aF0g2LmSL._AC_SL500_.jpg",
+     "image_file": "img/B074PH2FY2.jpg",
+     "rating": 4.8,
+     "good_for": "Cleans graphite and erasable color without smearing",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 42
+    },
+    {
+     "asin": "B00006IFAN",
+     "name": "STAEDTLER Mars Plastic Vinyl Erasers (4-Pack)",
+     "pack": "4 erasers",
+     "price_usd": 6.49,
+     "url": "https://www.amazon.com/dp/B00006IFAN",
+     "image_url": "https://m.media-amazon.com/images/I/81sZsNNwNDL._AC_SL500_.jpg",
+     "image_file": "img/B00006IFAN.jpg",
+     "rating": 4.8,
+     "good_for": "Minimal crumbling and residue on printer paper",
+     "favorite": false,
+     "ben_uses": false,
+     "length_mm": 65
+    }
+   ]
+  }
+ ],
+ "notes": [
+  "Prices and ratings read from Amazon pages 2026-10-10; prices change.",
+  "Excluded: permanent alcohol markers (bleed through printer paper), fountain pens, Pentel Sign Pen (Ben's 'Fine' pen unconfirmed).",
+  "Goldfaber B003VVZQ0Y is an 8-piece set; Ben owns the 6-piece (B00OQJYNW2 is the matching listing).",
+  "length_mm only known for items from the earlier research; null otherwise.",
+  "Ben's single pens were examples from sets he bought; catalog lists sets. PITT brush set is Landscape colors (6); the 4-pack is black fineliner tips, not brush.",
+  "Tombow 24-set is mostly pastel basics; the 10 Primary set is the bolder choice.",
+  "Kaweco 3.2mm graphite refills not found on Amazon; Koh-i-noor colored leads listed as optional."
+ ]
+}
