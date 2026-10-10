@@ -80,7 +80,7 @@ def _placements() -> dict[str, Placement]:
     add("shelf", X, (c.BAY_X0, c.BAY_X1), Y, (T, w_in), Z, (c.SHELF_Z0, c.SHELF_Z1), step="frame")
     add("top", X, (c.DIVIDER_X0, c.BAY_X1), Y, (T, w_in), Z, (c.TOP_PANEL_Z0, H), step="frame")
     lid_len, lid_w = c.SLIDING_LID["length"], c.SLIDING_LID["width"]
-    add("lid", X, (c.DIVIDER_X0 - lid_len, c.DIVIDER_X0), Y, ((W - lid_w) / 2, (W + lid_w) / 2),
+    add("lid", X, (c.LID_REAR_X - lid_len, c.LID_REAR_X), Y, ((W - lid_w) / 2, (W + lid_w) / 2),
         Z, (c.LID_SLOT_BOTTOM, c.LID_SLOT_BOTTOM + T), step="lid")
     D = c.DRAWER_BODY
     yc = W / 2
@@ -98,10 +98,15 @@ def _placements() -> dict[str, Placement]:
         zf = z0 + c.FACEPLATE_Z_OFFSET
         add(f"{tag}_face", Y, (yc - fw / 2, yc + fw / 2), Z, (zf, zf + fh), X, (xb1, xb1 + T),
             group="drawer", step=f"drawer_{tag}")
+    # drawer guides: strips on the bay walls at the divider end, standing on the floor / the shelf
+    gl, gh = c.DRAWER_GUIDE["length"], c.DRAWER_GUIDE["height"]
+    for tag, zg in (("B", c.FLOOR_TOP), ("T", c.SHELF_Z1)):
+        add(f"{tag}_guideL", X, (xb0, xb0 + gl), Z, (zg, zg + gh), Y, (T, 2 * T), step="left")
+        add(f"{tag}_guideR", X, (xb0, xb0 + gl), Z, (zg, zg + gh), Y, (W - 2 * T, W - T), step="right")
     return P
 
 
-_PART_OF = {"B_back": "d_back", "B_front": "d_front", "B_left": "d_left", "B_right": "d_right",
+_PART_OF = {"B_guideL": "guide", "B_guideR": "guide", "B_back": "d_back", "B_front": "d_front", "B_left": "d_left", "B_right": "d_right",
             "B_bottom": "d_bottom", "B_face": "d_face"}
 
 
@@ -328,12 +333,12 @@ DIRVEC = {"+X": (1, 0, 0), "-X": (-1, 0, 0), "+Y": (0, 1, 0), "-Y": (0, -1, 0), 
 ASSEMBLY_STEPS = [
     dict(id="frame", parts=["divider", "shelf", "top"], direction="+X",
          text="Join the top panel and the shelf to the divider: slide the divider toward the rear until its tabs seat in the top panel and shelf slots."),
-    dict(id="right", parts=["right"], direction="-Y",
-         text="Fit the right wall onto the frame from the right."),
+    dict(id="right", parts=["right", "B_guideR", "T_guideR"], direction="-Y",
+         text="Fit the right wall onto the frame from the right, with its two drawer guides already glued on."),
     dict(id="rear", parts=["rear"], direction="-X",
          text="Fit the rear wall from the rear."),
-    dict(id="left", parts=["left"], direction="+Y",
-         text="Fit the left wall from the left."),
+    dict(id="left", parts=["left", "B_guideL", "T_guideL"], direction="+Y",
+         text="Fit the left wall from the left, with its two drawer guides already glued on."),
     dict(id="front", parts=["front"], direction="+X",
          text="Fit the front wall from the front."),
     dict(id="bottom", parts=["bottom"], direction="+Z",
@@ -414,6 +419,7 @@ INVENTORY = [
     ("G", "shelf", "Shelf", 1),
     ("H", "top", "Top panel", 1),
     ("I", "lid", "Sliding lid", 1),
+    ("J", "guide", "Drawer guide", 4),
     ("K", "d_front", "Drawer front", 2),
     ("L", "d_back", "Drawer back", 2),
     ("M", "d_left", "Drawer left side", 2),
@@ -464,7 +470,7 @@ def site_data() -> dict:
         add("drawer", st, [f"{t}_{p}" for t in "BT" for p in st["parts"]])
     for st in box_steps:
         add("box", st, list(st["parts"]))
-    steps.append(dict(n=len(steps) + 1, id="drawers_in", phase="box", parts=[p for p in plates if p[:2] in ("B_", "T_")],
+    steps.append(dict(n=len(steps) + 1, id="drawers_in", phase="box", parts=[p for p in plates if p[:2] in ("B_", "T_") and "guide" not in p],
                       direction="-X", insert_direction=[-1, 0, 0],
                       text="Slide both drawers in through the rear openings until the magnets catch."))
     parts = []
@@ -481,7 +487,9 @@ def site_data() -> dict:
         m = p.matrix()
         sign = p.outward_sign(_view_reference(pid))
         parts.append(dict(
-            id=pid, name=nm if qty == 1 else f"{nm} ({'lower' if pid[0] == 'B' else 'upper'})",
+            id=pid, name=(nm if qty == 1 else
+                          f"{nm} ({'lower' if pid[0] == 'B' else 'upper'}, {'left' if pid.endswith('L') else 'right'} wall)"
+                          if "guide" in pid else f"{nm} ({'lower' if pid[0] == 'B' else 'upper'})"),
             letter=ltr, quantity_per_box=qty,
             outline=outline, holes=holes, thickness=T,
             transform=[[round(float(v), 6) for v in row] for row in m],

@@ -30,7 +30,9 @@ Y_REF = 1536.0
 COL1, ROW1 = 5417.0, 2430.0          # one past the content bbox max col / row
 S = 158.75 / 1786.0                  # mm per desheared source px
 FIELD = (301.25, 158.75)
-SPLIT = 79.0
+SPLIT = 79.0                         # top panel starts at field u = 79 (box X = divider's front face)
+LID_LEN = 78.0                       # lid length since the slot-end corners were rounded (red-team H2); the
+                                     # 1 mm between its rear end and the divider has no part
 LID_PAD = (163.6 - 158.75) / 2
 WINDOWS = {"A": 7.96, "C": 153.67}
 
@@ -81,10 +83,11 @@ def fill_capsule(ink: np.ndarray) -> np.ndarray:
 
 def split(ink_field: np.ndarray):
     sp = int(round(SPLIT * R.PPM))
-    lid_part = ink_field[:, :sp]
+    lp = int(round(LID_LEN * R.PPM))
+    lid_part = ink_field[:, :lp]
     top = ink_field[:, sp:]
     H = int(round(163.6 * R.PPM))
-    lid = np.zeros((H, sp), bool)
+    lid = np.zeros((H, lp), bool)
     off = int(round(LID_PAD * R.PPM))
     lid[off:off + lid_part.shape[0], :] = lid_part
     return lid, top

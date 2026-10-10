@@ -45,7 +45,8 @@ This section is authoritative where it disagrees with the older text below
 3.175). The 12 × 6.5 × 5 in envelope stays fixed, so a thicker sheet makes
 the interior smaller. Derived changes: drawer body length = `BAY_LENGTH` −
 0.475 (bay gap, constant), drawer width = `OPENING_WIDTH` − 3.4, lid length =
-divider face − 0.375. At
+divider face − 1.375 (78.0 at 3.175; see "Sliding lid"), rear-wall posts at least 3.0 mm wide
+(`OPENING_WIDTH = INTERIOR_WIDTH − 2 * max(T, 3.0)`: 152.4 at 3.175, 153.5 at 2.8, so the drawer and faceplate are 0.4 mm narrower at 2.8). At
 3.175 every number equals the v1 value. `FINGER_PLAY` is an absolute 0.1 mm
 (`FINGER_PLAY_RELATIVE = FINGER_PLAY / T` is what Boxes.py receives), so
 finger holes are T + 0.1 wide at every thickness; `BURN` (kerf per side) is
@@ -66,11 +67,15 @@ Unglued assembly therefore cannot go together wrong.
 Drawers first: back and front stand up, left side slides in (+Y), right side
 (−Y), bottom from below (+Z), faceplate glued on. Box: top panel + shelf +
 divider as one unit (the divider moves +X into the top panel and shelf);
-right wall (moves −Y); rear wall (−X); left wall (+Y); front wall (+X);
+right wall with its two drawer guides already glued on (moves −Y); rear wall (−X);
+left wall with its two guides already glued on (+Y); front wall (+X);
 bottom panel from below (+Z); lid from the front (+X); drawers
 in from the rear (−X). Bottom-panel-first and "all captive parts into one
 wall" orders are not possible. The order depends on the 0.05 mm
-finger-hole breakouts at the part edges, which stay open.
+finger-hole breakouts at the part edges, which stay open. In the cut files each
+breakout through an edge is merged into the outline, so each such slot is one notch
+contour (before, a 0.07 to 0.15 mm hairline strip remained between the slot's cut and
+the outline's cut).
 
 **Minimum web.** Every part is checked in `tests/test_geometry_v2.py`: one
 piece after a 0.16 / 0.2 / 0.3 mm kerf, no material web under 1.5 mm, and
@@ -92,9 +97,9 @@ sheet figure used.
 
 **Decision: lid lock removed.** Ben removed the turn-button lid lock on 2026-10-10.
 The sliding lid is held by friction in its slots only. There is no button part
-(letter J no longer exists), no pivot hole in the front wall, and no M3 bolt, washers
+(its letter J now belongs to the drawer guides), no pivot hole in the front wall, and no M3 bolt, washers
 or nyloc nut; the paper compartment no longer has a bolt intruding into it. The box
-is 21 laser-cut pieces (8 shell, 12 drawer, 1 lid). The only hardware to buy is magnets:
+is 25 laser-cut pieces (8 shell, 12 drawer, 1 lid, 4 drawer guides). The only hardware to buy is magnets:
 6 x 2 mm N52 neodymium discs, 4 needed, buy 6.
 
 Geometry changes in this round:
@@ -117,7 +122,20 @@ Geometry changes in this round:
   0.75 mm below the top); there is no bottom line because the body's bottom edge sits
   0.75 mm below the plate. All lines stay at least 0.5 mm from every cut.
 - **Corner loops.** Boxes.py writes a zero-length self-looping curve at inner corners when the
-  kerf offset is non-zero; the cut files now drop them (`_clean_piece` in `cutset.py`).
+  kerf offset is non-zero; the cut files drop them (`_clean_piece` in `cutset.py`). Every cut
+  contour is a valid simple closed shape.
+- **Rear-wall posts.** The posts either side of a drawer opening are at least 3.0 mm wide
+  (`MIN_WEB`) at every thickness: `OPENING_WIDTH = INTERIOR_WIDTH − 2 * max(T, 3.0)` (152.4 at
+  T = 3.175, 153.5 at 2.8). Drawer width and faceplate width follow from the opening, so they
+  are 0.4 mm narrower at T = 2.8.
+- **Drawer guides (part J, 4 pieces).** See part #10.
+- **Lid.** The lid is 78.0 mm long (was 79.0) and the two rear corners of its slot are
+  rounded; see part #8.
+- **Colours.** In every file cut = blue stroke `#0000FF`, the art = gray fill `#808080`
+  (it was black `#000000`), and every single-line mark (part letters, joint numbers,
+  faceplate glue-up lines, coupon ticks) = red stroke `#FF0000` (the labels were gray
+  strokes). DXF layers: CUT, ENGRAVE (the art; set it to fill / raster), LABELS (all the
+  red marks).
 - **Finishing order.** Assemble first and finish after: wipe-on finish goes on the
   assembled box. Finger joints and glue faces stay free of finish until the glue has
   cured. Wax or paraffin on the lid slots and the drawer runners goes on last.
@@ -142,7 +160,11 @@ box with all the engraved faces inside.
 - **Fixed top panel** over the drawer bay (not a removable lid).
 - Sliding lid rides in **through-slots** cut through both side walls, open at
   the front edge; lid inserts from the front. Slot ends visible outside = accepted.
-- Target service: NYC Resistor; blue `#0000FF` = cut, red `#FF0000` = engrave.
+- Target service: NYC Resistor. Colours follow Ponoko's recommendation
+  (https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions ,
+  checked 2026-10-10): blue stroke `#0000FF` = cut, red stroke `#FF0000` = line
+  engrave, gray fill `#808080` = area engrave. Ponoko assigns a laser function to each
+  line and fill colour at upload, so check the assignment there.
 
 ## Coordinate convention
 
@@ -245,7 +267,8 @@ are the right wall's mirrored in X.
 - **Lid through-slot** (v2): X = 3.175 → 79.375 within the wall, Z =
   115.125 → 119.5, **open at the wall's front edge**. It is an open notch in
   the outline (`SlotMouthEdge` in `shell_generator.py`), not a closed hole, so
-  no cut line coincides with another. Leaves a 7.5 mm rail above
+  no cut line coincides with another. The two inside corners at the rail's root (X = 79.375) are rounded with a 1.0 mm radius
+  (`LID_SLOT_CORNER_R`). Leaves a 7.5 mm rail above
   (Z 119.5 → 127) cantilevered from X = 79.375 — handle gently until
   assembled.
 - **Divider finger-hole line** (v2): vertical, X = 79.375 → 82.55, from
@@ -276,7 +299,7 @@ are the right wall's mirrored in X.
 - Top edge plain, with a top-panel finger-hole line at midplane Z = 125.4125;
   sides → side walls. **v2: no bottom-panel hole row** (it cut the strip under
   the lower opening into 11 chips).
-- **Two drawer openings**, each **152.4 wide (= W_INT − 2T) × 55.0 tall**,
+- **Two drawer openings**, each **152.4 wide (= W_INT − 2·max(T, 3.0); 153.5 at T = 2.8) × 55.0 tall**,
   centered in Y (0.875mm inside each interior corner joint; visible frame from
   outside ≈ 6.35mm per side):
   - Bottom opening: Z = max(T, 3.0) → +55.0 (3.175 → 58.175 at T = 3.175;
@@ -332,12 +355,16 @@ are the right wall's mirrored in X.
 
 ### 8. Sliding lid — 1×
 
-- Blank: **79.0 (X) × 163.6 (Y)**, plain edges, plus a grip slot.
+- Blank: **78.0 (X) × 163.6 (Y)** (was 79.0), plain edges, plus a grip slot.
 - Width 163.6 = 165.1 − 1.5 sliding clearance; edges engage 2.425mm into each
   side-wall through-slot (slots are through-cuts, so the slot floor is the
   full exterior width).
-- Length 79.0 stops against the divider with the front edge ~0.4mm shy of the
-  front face. Travel: slides in from the front, over the front wall top edge.
+- The two rear inside corners of the lid slot (at the rail's root, X = 79.375) are
+  rounded with a 1.0 mm radius (`LID_SLOT_CORNER_R`) to remove the stress
+  concentration. The lid stops 1.0 mm short of the end of the slot: its rear end is at
+  X = 78.375 (`LID_REAR_X`) and its front edge is 0.375 mm behind the front wall plane
+  (`LID_FRONT_RECESS`), so it never touches the arcs, even if it is lifted against the
+  rail. Travel: slides in from the front, over the front wall top edge.
 - Grip: rounded through-slot **30 × 10, r = 5**, centered in Y, slot center
   25mm from the front edge (10mm ligament to the edge; at 15mm the ligament
   was ~0.2mm and would have broken into a notch — red-team finding).
@@ -360,8 +387,9 @@ Body = open-top finger-jointed box, captive bottom:
   gap — near-flush, since true flush and slide clearance are mutually
   exclusive. A magnet pair per drawer holds it closed (see "Retention" §A);
   without the magnets a drawer slides free if the box is tipped rear-down.
-- Lateral play in the bay is ~4.9mm/side by design — the drawer is guided by
-  its opening, not the bay walls; max skew ≈ 1.3°, acceptable for a first cut.
+- Lateral play in the bay is limited by the drawer guides (part #10) to
+  1.7 mm each way at the far end. Without the guides it was 4.9 mm/side; the drawer
+  was guided by its opening alone.
 
 Faceplate (6th piece), glued to the body front:
 
@@ -380,6 +408,25 @@ Faceplate (6th piece), glued to the body front:
   alignment: the body's left edge, right edge and top edge (0.95 mm in from
   the sides, 0.75 mm below the top; no bottom line, because the body's bottom
   edge sits 0.75 mm below the plate). They stay at least 0.5 mm from every cut.
+
+### 10. Drawer guides — 4× (part J)
+
+- Four plywood strips, **40 mm long × 10 mm high × T thick** (`DRAWER_GUIDE`), plain
+  edges, glued flat against the inside faces of the left and right walls at the divider
+  end, two per drawer slot: the lower pair stand on the bay floor, the upper pair on the
+  shelf.
+- Each guide's rear end is flush with the divider's rear face (X = 82.55, the rear edge
+  of the divider-hole column in the wall). Its bottom edge sits on the top edge of the
+  bottom-panel hole row (lower pair) or of the shelf hole row (upper pair).
+- Glue them to the wall while the wall lies flat, before the wall goes on (assembly step:
+  right wall and left wall, each with its two guides already glued on).
+- They narrow the channel to `INTERIOR_WIDTH − 2T` (152.4 mm at T = 3.175, the same as
+  the rear-wall opening), so a drawer (149.0 mm wide) floats at most 1.7 mm each way at
+  its far end. Without the guides it floated 4.9 mm each way ((158.75 − 149.0) / 2), and
+  the magnet pull is zero or negative beyond 4.5 mm. With N52 6 × 2 mm discs the pull at
+  1.7 to 2.0 mm lateral offset is above 3 N.
+- Widening the drawer is not an option: the drawer must pass the rear-wall opening,
+  whose posts must stay at least 3.0 mm wide (`MIN_WEB`).
 
 ## Retention (magnets; the lid lock was removed)
 
@@ -429,66 +476,36 @@ the drawer closed.
   this fully-captive, 4-edge load-bearing panel (part #5). The drawer
   Back-wall hole sits ≥20mm (20.75 measured) from every one of its own edges (well over the
   general 3mm minimum).
-- Install AFTER assembly test-fit: pair the two magnets stuck together, mark
-  the outward faces with a sharpie before separating, press-fit each into
-  its hole, then CA glue. Use **6×2mm N52 discs** (4 needed, buy 6). **Install
-  the magnets FLUSH with the two MATING faces** (the drawer-Back's rear face and
-  the divider's REAR face, X = 82.55 — the faces that actually close the gap),
-  recessing only on the far (non-mating) side where the glue backfills; a 2mm
-  disc recessed on its *mating* side, mirrored on both parts, would leave a
-  pole-to-pole air gap across the joint that collapses the pull. The pull
-  figures quoted for N35 discs in earlier revisions (0.5–0.7 kg flush, roughly
-  0.1–0.17 kg recessed) do not apply to N52 and have not been re-measured.
-- **Leading-end float, honestly stated (adversarial-review finding #4):**
-  the magnet sits on the drawer's Back (leading) wall, where lateral play in
-  the bay is **±4.9mm/side** (part #9 above — the drawer is guided by its
-  rear-wall opening, not the bay walls). At the moment the magnets first
-  come into proximity, nothing has yet centered the drawer to better than
-  that ±4.9mm bay float — the divider hole and the Back-wall hole are NOT
-  guaranteed coaxial at first approach.
-  - **Capture sequence**: true Y-centering only happens in the drawer's
-    **final ~2.4mm of travel** (`FACEPLATE_thickness − FACEPLATE_REVEAL` =
-    `T − 0.75 = 2.425mm`, i.e. the last stretch where the faceplate itself is
-    entering its snug rear-wall opening, ≥1.5mm total clearance
-    width-wise) — the faceplate's own fit against its opening is what
-    narrows the drawer's lateral position, but the magnet hole sits at the
-    OPPOSITE (Back/leading) end of the drawer, 218.6mm away from that
-    faceplate datum: over that lever arm, the ≈±0.75mm the faceplate itself
-    resolves at its own end translates to a residual yaw of up to 0.57°
-    with the faceplate seated, which reopens to **≈±2.9mm** of lateral
-    play at the magnet end — not the faceplate's own ±0.75mm. Before that
-    final stretch, the drawer body alone (loose in the ±4.9mm bay float) is
-    doing the guiding, not the faceplate.
-  - **Residual worst case**: at the moment the faceplate starts entering its
-    opening (magnet gap closing to contact), the drawer could still be
-    off-center by close to the bay's own float before the faceplate's fit
-    takes over and narrows it — i.e. the magnets are relying on the
-    faceplate/opening fit, not the magnet holes' own placement tolerance, to
-    do the fine centering. The magnet pair's pull (a few mm of magnetic
-    reach at contact) is what closes the last bit of any residual
-    misalignment once the faceplate has already done the coarse centering.
-  - **Mitigation — self-registering install, not a geometry fix:** install
-    the magnets AFTER a full dry test-fit (already required — see "Install
-    order" below), and **mark the drawer-side magnet's actual contact point
-    through the divider hole while the drawer is closed**, rather than
-    trusting the two holes' nominal coaxiality on paper. Concretely: with
-    the drawer fully closed (faceplate seated in its opening) and the
-    divider-side magnet already glued in place, hold the drawer-side magnet
-    (or a scribe) through the Back-wall hole and mark/scribe its true
-    contact point against the (temporarily uninstalled or masked) divider
-    face before final placement — this makes the install self-correcting
-    for whatever the real, as-built float turns out to be (the ±2.9mm yaw
-    residual at the magnet end even with the faceplate seated, or the full
-    ±4.9mm bay float before it engages), instead of depending on either
-    number never mattering on paper. README's install steps (below) state
-    this explicitly.
-  - This is why `test_magnet_holes_coaxial_at_closed_position`
-    (`tests/test_retention.py`) is checked against a **0.6mm** tolerance
-    band, not the bay's full ±4.9mm float: that test asserts the two
-    *drilled hole positions* agree with the DESIGN.md numbers (a drafting
-    check), not that the assembled drawer will actually make contact
-    dead-center on first try — the self-registering install above is what
-    reconciles the two.
+- Install BEFORE assembly, into the loose parts. Use **6×2mm N52 discs** (4 needed, buy
+  6). Stack all four magnets in one column and mark a dot on the top face of the stack;
+  they then all have the same pole up. Identify each part's inside and outside face by the
+  labels (the joint labels and part letters are engraved on the inside face of parts
+  without art; in the cut + labels files every part is engraved inside). Press every
+  divider magnet in with its dot facing OUT, toward the drawers (the rear of the box), and
+  every drawer-back magnet with its dot facing IN, toward the divider. Because all four
+  are marked from the same stack, each drawer magnet attracts the divider magnet it meets,
+  and either drawer works in either bay. Use a drop of glue. **Install the magnets FLUSH
+  with the two MATING faces** (the drawer-Back's rear face and the divider's REAR face,
+  X = 82.55 — the faces that actually close the gap), recessing only on the far
+  (non-mating) side where the glue backfills; a 2mm disc recessed on its *mating* side,
+  mirrored on both parts, would leave a pole-to-pole air gap across the joint that
+  collapses the pull. The pull figures quoted for N35 discs in earlier revisions
+  (0.5–0.7 kg flush, roughly 0.1–0.17 kg recessed) do not apply to N52 and have not been
+  re-measured.
+- **Lateral float at the magnet end.** The magnet sits on the drawer's Back (leading)
+  wall, at the far end of the drawer from the faceplate. The faceplate seated in its
+  rear-wall opening holds its own end to ±0.75 mm, and the drawer is 218.6 mm long, so
+  the Back end can still swing sideways. The drawer guides (part #10) narrow the channel
+  at the divider end to 152.4 mm, so the drawer (149.0 mm wide) floats at most 1.7 mm each
+  way there. Without the guides the float was 4.9 mm each way
+  ((158.75 − 149.0) / 2), and the magnet pull is zero or negative beyond 4.5 mm. With N52
+  6 × 2 mm discs the pull at 1.7 to 2.0 mm lateral offset is above 3 N. The earlier claim
+  of about ±2.9 mm with the faceplate seated is withdrawn; 1.7 mm is the figure with the
+  guides. Widening the drawer is not an option, because it must pass the rear-wall
+  opening, whose posts must stay at least 3.0 mm wide.
+- `test_magnet_holes_coaxial_at_closed_position` (`tests/test_retention.py`) checks the
+  two drilled hole positions against the numbers in this document (a drafting check). It
+  does not claim the assembled drawer sits dead-centre.
 
 ### B. Lid lock — removed 2026-10-10
 
@@ -506,27 +523,37 @@ removed. Nothing in the current geometry depends on either design.
 
 ### C. Test-fit coupon
 
-`coupon.svg` / `coupon.dxf` (blue lines only) and `coupon_marked.svg` /
-`coupon_marked.dxf` (adds red tick marks above the thickness slots), built by
-`coupon_items()` in `cutset.py` for every thickness. All parts are measured with
-calipers; read them in this order: kerf square, pick the kerf set, then
+`coupon.svg` / `coupon.dxf` and `coupon_marked.svg` / `coupon_marked.dxf`, built by
+`coupon_items()` in `cutset.py` for every thickness. The marked coupon is the one with
+engraved ticks 1 to 8 between the thickness slots and the magnet holes (they used to touch
+the holes) and red line-engrave marks. The coupon is in every zip type (loose per kerf
+under `coupon/`, and on a sheet of each bed layout where there was room). All parts are
+measured with calipers; read them in this order: kerf square, pick the kerf set, then
 thickness, then try the joints.
 
-- **K**, a 10 mm square piece drawn with no kerf compensation: kerf = 10.00 −
-  measured width.
-- **Q**, a panel with eight thickness slots (drawn 2.8 … 3.5 mm in 0.1 steps,
-  left to right; thickness is about the drawn width + kerf for the narrowest
-  slot the plywood slides into without force; the marked file has 1 to 8 ticks
-  above the slots) and four magnet holes (drawn 5.3, 5.4, 5.5, 5.6 mm; cut hole =
-  drawn + kerf; the box wants 5.65 mm for a 6.0 mm magnet).
-- **R**, three pairs of three-finger corners (finger piece + hole piece)
-  compensated for the diode (0.12), CO2 (0.18) and Ponoko (0.20) kerf, left to
-  right in increasing size. The pair that goes together with firm hand pressure
-  and no gap is your kerf. Tight sliding along the length of the fingers means
-  your real kerf is smaller than the set assumes (use the next smaller kerf set);
-  loose or rattling means larger. Fingers that do not go through the plywood
-  thickness mean your plywood is thicker than the set (use the next thickness).
-- **S**, a lid slot block and strip.
+- **K**, a 10 mm square piece drawn with no kerf compensation: kerf = 10.00 − measured
+  width. Measure two directions and average. Kerf varies along the bed, so measure where
+  the box will be cut. The sets are 0.12, 0.18 and 0.20 mm. Between two sets take the
+  SMALLER kerf unless the reading is within 0.01 mm of the larger: a smaller assumed kerf
+  leaves joints loose by 2 × the difference, and a larger one leaves them tight and can
+  jam. About 0.15 means the 0.12 set. The 0.18 and 0.20 sets are close, and either works
+  on a CO2 laser.
+- **Q**, a panel with a clipped top-left corner as an orientation mark, eight thickness
+  slots running from the narrowest (2.8 mm drawn) to the widest (3.5 mm) from left to
+  right in 0.1 mm steps, and four magnet holes (drawn 5.3, 5.4, 5.5, 5.6 mm; cut hole =
+  drawn + kerf; the box wants 5.65 mm for a 6.0 mm magnet). Find the narrowest slot the
+  plywood enters without force; thickness = drawn width + kerf − 0.05, and pick the
+  thickness set (0.1 mm steps) nearest. If it falls between two slots, take the tighter
+  one.
+- **R**, three pairs of three-finger corners (finger piece + hole piece) that differ in
+  size: the smallest is compensated for the diode kerf (0.12, 1 tick), the middle for CO2
+  (0.18, 2 ticks) and the largest for Ponoko (0.20, 3 ticks). The pair that goes together
+  with firm hand pressure and no gap is your kerf. The fit has two separate directions.
+  Along the length of the fingers it depends on kerf: tight means use the next smaller
+  kerf set; loose or rattling means the next larger kerf set. Through the plywood
+  thickness it depends on the thickness: tight means the plywood is thicker, so use the
+  next thicker thickness set; loose means thinner, so the next thinner set.
+- **S**, a lid slot block and strip, cut for the kerf of the set the coupon came from.
 
 Choosing a kerf file set replaces the earlier practice of tuning `BURN` by editing
 config constants. The older `calibration.py` coupons (`kerf_coupon.svg`,
@@ -536,14 +563,15 @@ config constants. The older `calibration.py` coupons (`kerf_coupon.svg`,
 
 | Interface | Clearance | Rule |
 |---|---|---|
-| Drawer body ↔ opening width | 3.4 total | ≥ 1.5 per SPEC |
+| Drawer body ↔ opening width | 3.4 total (opening 152.4 at T = 3.175, 153.5 at 2.8) | ≥ 1.5 per SPEC |
 | Drawer body ↔ opening height | 1.5 | ≥ 1.5 |
 | Drawer body ↔ slot height | 5.24 | ≥ 1.5 |
 | Drawer body ↔ bay length | 0.475 | > 0 (not a sliding fit) |
 | Lid width ↔ slot span | 1.5 total | ≥ 1.5 |
+| Drawer lateral float at the divider end (with guides) | 1.7 each way | magnet pull above 3 N (zero beyond 4.5 mm) |
 | Lid thickness ↔ slot height | 1.2 | = 1.2 (documented deviation, v2) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
-| Webs in rear wall | 3.175 / 3.7375 (≥ 3.0 at every thickness) | ≥ 3.0 (`MIN_WEB`) |
+| Webs and posts in rear wall | 3.175 / 3.7375 (≥ 3.0 at every thickness; posts beside the openings are at least 3.0 wide) | ≥ 3.0 (`MIN_WEB`) |
 | Magnet hole (drawer Back) ↔ its own edges | ≥ 20 | ≥ 3.0 |
 | Magnet hole (divider) ↔ edges / shelf row | ≥ 23 | ≥ 8.0 (structural) |
 

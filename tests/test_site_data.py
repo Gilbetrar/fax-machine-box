@@ -22,7 +22,7 @@ def data():
 def test_schema(data):
     assert {"box", "parts", "steps", "inventory"} <= set(data)
     assert data["box"]["length"] == pytest.approx(304.8)
-    assert len(data["parts"]) == 21
+    assert len(data["parts"]) == 25
     for p in data["parts"]:
         for k in ("id", "name", "letter", "outline", "holes", "thickness", "transform", "color",
                   "assembly_step", "insert_direction", "exterior_face"):

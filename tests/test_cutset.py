@@ -26,7 +26,7 @@ def test_every_part_once_per_bed(built):
     out, info = built
     for bed, b in info["beds"].items():
         names = [n for sheet in b["parts"] for n in sheet]
-        assert len(names) == 21 == len(set(names)), bed
+        assert len(names) == 25 == len(set(names)), bed
 
 
 def test_sheet_counts_are_sensible(built):
@@ -86,7 +86,7 @@ def test_svg_has_only_cut_and_engrave_colours_and_no_text(built):
         txt = f.read_text()
         assert "<text" not in txt
         colours = set(re.findall(r'stroke="([^"]+)"', txt))
-        assert colours <= {"rgb(0,0,255)", "rgb(255,0,0)", "#808080"}
+        assert colours <= {"rgb(0,0,255)", "rgb(255,0,0)"}
         if not f.stem.endswith(("_engrave", "_marked")):
             # red-team G4: the cut-only files are blue lines and nothing else
             assert colours == {"rgb(0,0,255)"}, f.name

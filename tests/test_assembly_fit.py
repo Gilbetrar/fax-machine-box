@@ -193,7 +193,11 @@ def test_lid_engages_both_slots_with_play():
 def test_lid_covers_paper_compartment():
     assert c.SLIDING_LID["length"] <= c.LID_SLOT_X_END
     # closed lid front edge within 1mm of the front face
-    assert c.LID_SLOT_X_END - c.SLIDING_LID["length"] <= 1.0
+    # red-team H2: the lid stops 1.0 mm short of the slot end (the rounded corners), so the strip of the
+    # compartment the lid does not cover at the divider end is LID_SLOT_CORNER_R wide; the front edge
+    # sits LID_FRONT_RECESS behind the front wall plane, still over the wall
+    assert c.DIVIDER_X0 - c.LID_REAR_X <= 1.0 + 1e-9
+    assert c.LID_FRONT_RECESS <= c.T
 
 
 def test_lid_clears_rail_and_top_panel():

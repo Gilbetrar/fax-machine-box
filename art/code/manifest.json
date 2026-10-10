@@ -242,7 +242,7 @@
       "part_id": "lid",
       "title": "Sliding lid",
       "size_mm": [
-        79.0,
+        78.0,
         163.6
       ],
       "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
@@ -279,11 +279,11 @@
           "default": true,
           "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 16.3,
-          "paths": 61,
+          "ink_pct": 16.1,
+          "paths": 59,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 57
+          "svg_kb": 56
         },
         {
           "id": "c",
@@ -293,11 +293,11 @@
           "default": false,
           "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 20.2,
-          "paths": 51,
+          "ink_pct": 20.1,
+          "paths": 54,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 76
+          "svg_kb": 75
         }
       ]
     },
