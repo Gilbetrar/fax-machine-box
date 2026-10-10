@@ -392,39 +392,19 @@ def _path_signature(p):
 
 
 @pytest.mark.parametrize("side", ["left wall", "right wall"])
-def test_side_wall_matches_main_footprint(main_shell_svg, side):
-    """Every CUT path (outer boundary + every blue hole) on this side wall
-    must have an exact counterpart in `main`'s own generated side wall --
-    i.e. REV.B's fix (deleting the side-wall pivot-hole callback) did not
-    change anything else about the side walls' cut geometry. A stray
-    leftover pivot hole, a shifted finger-hole row, or any other regression
-    would show up as a mismatched signature set.
-
-    Scoped to CUT (blue) paths since 2026-07-10: the right wall's red
-    "FAX MACHINE" engraving was removed by Ben's decision (issue #25
-    open-item 1), so the engrave layer legitimately differs from a `main`
-    that predates the removal. Walls must currently carry NO red at all
-    (asserted here and in test_engrave_cut_clearance) until art-integration
-    lands its reviewed engrave layers."""
-    main_piece = _piece(main_shell_svg, side)
+def test_side_wall_matches_main_footprint(side):
+    """Side walls carry no lid-retention hardware holes (REV.A regression
+    guard).  Until v2 this compared the side wall's cut layer against
+    `main`; v2 deliberately changed the side walls (lid slot is now an open
+    notch in the outline, the divider hole row stops below the slot), so the
+    byte-identical check was replaced by this direct statement: no hole of
+    pivot size anywhere, and no red engraving."""
     cur_piece = _piece(SHELL_SVG, side)
-
-    def cut_sigs(piece):
-        return sorted(
-            _path_signature(p) for p in piece.all_paths()
-            if su.normalize_color(p.stroke) == "blue"
-        )
-
-    main_sigs = cut_sigs(main_piece)
-    cur_sigs = cut_sigs(cur_piece)
-
-    assert len(cur_sigs) == len(main_sigs), (
-        f"{side}: cut path count changed vs. main: main={len(main_sigs)}, current={len(cur_sigs)}"
-    )
-    assert cur_sigs == main_sigs, (
-        f"{side}: cut geometry differs from main's v1 output -- REV.B must "
-        f"leave the side walls' cut layer byte-identical to v1"
-    )
+    pivots = [
+        h for h in cur_piece.holes
+        if h.bbox.dims_match(EXPECTED_PIVOT_DRAWN_DIA, EXPECTED_PIVOT_DRAWN_DIA, tol=0.1)
+    ]
+    assert not pivots, f"{side}: unexpected pivot-sized hole(s) -- REV.A regression"
 
     cur_red = [p for p in cur_piece.all_paths() if su.normalize_color(p.stroke) == "red"]
     assert not cur_red, (
