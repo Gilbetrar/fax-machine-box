@@ -21,7 +21,7 @@ export const RULES = [
   { title: 'Write something', text: 'Write a phrase in the top band of page 1.',
     svg: wrap(page(58, 12, 124, 150) + `<path d="M58 56 H182" ${S}/>` + T(66, 32, 15, 'A duck with') + T(66, 49, 15, 'a cool hat.') + circ(164, 28, 1) +
       `<path d="M150 98 l18 -22 6 6 -18 22 -8 2z" fill="#f6d33c" ${S} stroke-width="2.4"/>`) },
-  { title: 'Pass the whole stack', text: 'Everyone hands their whole stack, all four pages, to the next player.',
+  { title: 'Pass the whole stack', text: 'Everyone hands their whole stack, all four pages, to the next player. Always pass in the same direction.',
     svg: wrap(stack(24, 82, 56, 70) + arrow(120, 82, 204, 96)) },
   { title: 'Draw', text: 'Draw the phrase in the space under the words.',
     svg: wrap(page(58, 8, 124, 156) + `<path d="M58 44 H182" ${S}/>` + squig(66, 22, 66) + squig(66, 34, 54) + circ(166, 24, 1) + duck(84, 50, 82)) },
@@ -33,6 +33,6 @@ export const RULES = [
   { title: 'Write it', text: 'Look at the drawing and write what you think it is in the top band of page 2.',
     svg: wrap(page(16, 32, 86, 108) + duck(24, 42, 70) + T(110, 96, 30, '=') +
       page(138, 32, 92, 108) + `<path d="M138 66 H230" ${S}/>` + T(144, 50, 12.5, 'A goose in') + T(144, 62, 12.5, 'a cap') + circ(216, 46, 2, 9)) },
-  { title: 'Hide the drawing, pass the whole stack', text: 'Move page 1, folded so only its drawing shows, to the back of the stack. Page 2 is now on top with the new words showing. Pass the whole stack.',
+  { title: 'Hide drawing, pass full stack', text: 'Turn page 1 face down and put it at the back of the stack, so page 2, with the new words, is on top. Pass the whole stack.',
     svg: wrap(stack(26, 76, 64, 80, 4, `<path d="M26 104 H90" ${S}/>` + squig(32, 88, 36) + circ(78, 90, 2, 8)) + arrow(132, 70, 210, 86)) },
 ];

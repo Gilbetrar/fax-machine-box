@@ -109,9 +109,9 @@ nav a:hover, nav a.on { background: var(--yellow); }
 .facts b { font: 700 16px var(--display); }
 .facts span { font-size: 13px; color: var(--ink-3); }
 
-.stage { position: relative; height: min(640px, 70vh); min-height: 420px; border-radius: 28px; background:
+.stage { position: relative; display: flex; flex-direction: column; height: min(680px, 74vh); min-height: 460px; border-radius: 28px; background:
   radial-gradient(120% 90% at 50% 38%, #fffdf6 0%, #fbf1d6 55%, #f3e3bd 100%); border: 2.5px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); overflow: hidden; }
-.stage canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; }
+.stage canvas { width: 100%; flex: 1 1 auto; min-height: 0; display: block; touch-action: pan-y; cursor: grab; }
 .stage canvas:active { cursor: grabbing; }
 .stage-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 700 18px var(--hand); color: var(--ink-3); pointer-events: none; }
 .stage-hint { position: absolute; top: 14px; right: 16px; font: 400 15px var(--hand); color: var(--ink-3); pointer-events: none; }
@@ -119,7 +119,7 @@ nav a:hover, nav a.on { background: var(--yellow); }
 .partcard b { display: block; font: 700 15px var(--display); }
 .partcard small { color: var(--ink-3); font-size: 12px; }
 .letter { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--yellow); border: 2px solid var(--ink); font: 800 17px var(--display); }
-.controls { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: rgba(255,255,255,.88); border: 2px solid var(--ink); border-radius: 16px; padding: 8px 10px; backdrop-filter: blur(4px); }
+.controls { flex: none; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #fff; border-top: 2px solid var(--ink); padding: 10px 14px; position: relative; z-index: 2; }
 .slider { display: flex; align-items: center; gap: 10px; font: 700 14px var(--body); flex: 1 1 200px; min-width: 180px; }
 input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
 
@@ -359,7 +359,7 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   .stage-hint { display: none; }
   .stage { height: auto; min-height: 0; max-height: none; display: flex; flex-direction: column; }
   .stage canvas { height: 92vw; max-height: 460px; }
-  .controls { position: static; gap: 6px; padding: 10px 12px 12px; border: 0; border-top: 2px solid var(--ink); border-radius: 0; background: #fff; }
+  .controls { gap: 6px; padding: 10px 12px 12px; }
   .partcard { top: 10px; left: 10px; }
   .params { grid-template-columns: 1fr; }
   .params dt { border-bottom: 0; padding-bottom: 0; }
@@ -454,3 +454,28 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
 .jpart svg { width: 100%; height: auto; max-height: 180px; display: block; }
 .jpart figcaption { display: flex; gap: 8px; align-items: center; font: 700 14px var(--display); }
 @media (max-width: 720px) { .cg { grid-template-columns: 1fr; } .cg-feat dl { grid-template-columns: 1fr; } .cg-feat dt { margin-top: 4px; } .jgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sheetdl { min-height: 44px; display: inline-grid; place-items: center; } }
+
+.hero-ph, .hero-lost { position: absolute; left: 0; right: 0; top: 0; bottom: 64px; width: 100%; height: calc(100% - 64px); object-fit: contain; pointer-events: none; z-index: 1; }
+.stage.lost canvas, .engrave-stage.lost canvas { visibility: hidden; }
+.engrave-stage.lost .art-still { display: grid; }
+
+/* touch: size by pointer, not width */
+@media (pointer: coarse) {
+  .chip, .segbtn, .facetabs button, .navtoggle, .thick button, .sheetdl, .buy, .mitem a.buy, .pbody .buy { min-height: 44px; }
+  .stepnav a { width: 44px; height: 44px; }
+  .controls .chip { padding: 8px 12px; }
+  input[type=range] { height: 44px; }
+  .foot a, .maker p a, .sheets a, .tbl a { display: inline-block; min-height: 44px; line-height: 44px; }
+  nav a { min-height: 44px; display: flex; align-items: center; }
+}
+.foot p { line-height: 2.2; }
+/* bed table as cards on narrow screens */
+@media (max-width: 600px) {
+  .beds-tbl thead { display: none; }
+  .beds-tbl, .beds-tbl tbody, .beds-tbl tr, .beds-tbl td { display: block; width: 100%; }
+  .beds-tbl tr { border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--paper); }
+  .beds-tbl td { border: 0; padding: 3px 0; }
+  .beds-tbl td.num { text-align: left; font: 600 14px var(--body); }
+  .beds-tbl td[data-l]::before { content: attr(data-l) ": "; font: 700 12px var(--body); color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+  .beds-tbl td:first-child::before { content: none; }
+}

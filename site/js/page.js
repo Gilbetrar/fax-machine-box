@@ -202,10 +202,12 @@ function initEngraving(ctx) {
 const DL = 'downloads/';
 export const dlState = { man: undefined, ready: null };
 const THICKS = Array.from({ length: 8 }, (_, i) => (2.8 + i * 0.1).toFixed(1));
-const fileUrl = f => /^(https?:|\/)/.test(f) ? f : DL + f;
+const fileUrl = f => /^(https?:|\/)/.test(f) ? f : DL + f + '?v=' + V;
+const mm2 = x => Number(x).toFixed(2);
+const mm1 = x => Number(x).toFixed(1);
 const dlBtn = (href, label, cls = 'btn-line') => h('a', { class: 'btn ' + cls, href: fileUrl(href), download: '' }, label);
 const soonBox = (title, text) => h('div', { class: 'soon', html: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="4" width="28" height="36" rx="3" fill="#fff" stroke="#1d1b19" stroke-width="2.4"/><path d="M12 14h16M12 20h16M12 26h10" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="8" fill="#f6d33c" stroke="#1d1b19" stroke-width="2.4"/><path d="M33 29v4l3 2" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/></svg>' }, h('div', {}, h('b', {}, title), h('span', {}, text)));
-const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2');
+const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2').replace(/\b0\.2 mm/g, '0.20 mm').replace(/\bi engraved ticks above slot i\b/g, 'one engraved tick above the first slot, two above the second, and so on').replace(/rounded to 0\.05\b/g, 'rounded to the nearest 0.05 mm');
 const sheetsTxt = n => n == null ? '' : `${n} sheet${n == 1 ? '' : 's'}`;
 function seg(label, opts, cur, onPick) {
   return h('div', { class: 'seg seg-inline', role: 'group', 'aria-label': label },
@@ -249,7 +251,12 @@ async function initFiles() {
     if (!K) { box.append(soonBox('No files for this kerf yet', 'Pick another kerf.')); return; }
     const V = K[st.ver];
     const row = h('div', { class: 'dl-row' });
-    if (V && V.zip) row.append(dlBtn(V.zip, `Download all beds (.zip, ${st.t} mm, ${K.kerf_mm} mm kerf)`, 'btn-ink'));
+    if (V && V.zip) row.append(dlBtn(V.zip, `Download all beds (.zip, ${st.t} mm, ${mm2(K.kerf_mm)} mm kerf)`, 'btn-ink'));
+    else if (V && V.beds) {   // cut + engrave comes as one zip per bed
+      const list = Object.entries(V.beds);
+      if (list.length) box.append(h('p', { class: 'pick-label' }, 'Cut + engrave files come one zip per laser bed:'));
+      for (const [bid, e] of list) row.append(dlBtn(e.zip, `${tidy(((man.beds || {})[bid] || {}).label || bid).split(' (')[0]} (.zip)`, 'btn-ink'));
+    }
     if (T.parts && T.parts.zip) row.append(dlBtn(T.parts.zip, 'One file per part (.zip)'));
     box.append(row);
     if (T.parts && T.parts.zip) box.append(h('p', { class: 'small' }, 'The one-file-per-part set has no kerf added, for services such as SendCutSend that apply their own; it also has the engraving for each art part on its own.'));
@@ -269,13 +276,13 @@ async function initFiles() {
         if (!e && b.engrave_kerfs && b.engrave_kerfs.length) why = `Engraved files for this bed use the ${b.engrave_kerfs.map(k => (kerfs.find(x => x.id === k) || { label: k }).label.split(' (')[0]).join(' or ')} kerf.`;
       } else { sheets = V && V.sheets ? V.sheets[id] : null; if (V && V.zip && sheets != null) href = V.zip; if (sheets == null) why = 'Not in this set.'; }
       tb.append(h('tr', {},
-        h('td', {}, h('b', {}, tidy(b.label)), b.note ? h('small', { class: 'bednote' }, tidy(b.note)) : null),
-        h('td', {}, tidy(b.stock && b.stock.name)),
-        h('td', { class: 'num' }, sheets != null ? String(sheets) : '–'),
+        h('td', { 'data-l': 'Laser bed' }, h('b', {}, tidy(b.label)), b.note ? h('small', { class: 'bednote' }, tidy(b.note)) : null),
+        h('td', { 'data-l': 'Stock' }, tidy(b.stock && b.stock.name)),
+        h('td', { class: 'num', 'data-l': 'Sheets' }, sheets != null ? String(sheets) : '–'),
         h('td', {}, href ? h('a', { class: 'sheetdl', href: fileUrl(href), download: '' }, st.ver === 'cut_engrave' ? 'Download' : 'In the zip') : h('small', {}, why))));
     }
     tbl.append(tb);
-    bedsEl.append(h('h4', { class: 'bedh' }, `Sheet layouts for ${st.t} mm, ${K.kerf_mm} mm kerf`), h('div', { class: 'tbl-wrap' }, tbl));
+    bedsEl.append(h('h4', { class: 'bedh' }, `Sheet layouts for ${st.t} mm, ${mm2(K.kerf_mm)} mm kerf`), h('div', { class: 'tbl-wrap' }, tbl));
   }
   THICKS.forEach(t => thick.append(h('button', { type: 'button', role: 'radio', 'data-t': t, onclick: () => { st.t = t; render(); } }, t)));
   thick.addEventListener('keydown', ev => {
@@ -331,9 +338,9 @@ function renderCouponGuide(man, st) {
     if (f.identify) lines.push(['Which is which', f.identify]);
     if (f.ticks) lines.push(['Tick marks', f.ticks]);
     if (f.formula) lines.push(['Work it out', f.formula]);
-    if (f.choose) lines.push(['Pick', f.choose.map(c => `${c.kerf_mm} mm: ${(man.kerfs && man.kerfs[c.set] ? man.kerfs[c.set].label.split(' (')[0] : c.set)} files`).join(' · ')]);
-    if (f.drawn_widths_mm) lines.push(['Drawn widths', f.drawn_widths_mm.join(', ') + ' mm']);
-    if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.join(', ') + ' mm']);
+    if (f.choose) lines.push(['Pick', f.choose.map(c => `${mm2(c.kerf_mm)} mm: ${(man.kerfs && man.kerfs[c.set] ? man.kerfs[c.set].label.split(' (')[0] : c.set)} files`).join(' · ')]);
+    if (f.drawn_widths_mm) lines.push(['Drawn widths', `${mm1(f.drawn_widths_mm[0])} to ${mm1(f.drawn_widths_mm[f.drawn_widths_mm.length - 1])} mm in ${mm1(f.drawn_widths_mm[1] - f.drawn_widths_mm[0])} mm steps`]);
+    if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.map(mm1).join(', ') + ' mm']);
     if (f.right) lines.push(['Right', f.right]);
     for (const k of ['tight_along_the_finger', 'loose_along_the_finger', 'tight_through_the_slot', 'loose_through_the_slot']) if (f[k]) lines.push([k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), f[k]]);
     if (f.then) lines.push(['Then', f.then]);
@@ -368,7 +375,7 @@ function renderJoints(ctx) {
     }
     el.append(grid);
     const unlNames = [...unl].map(L => byLetter[L] && cleanName(byLetter[L].name)).filter(Boolean);
-    if (unlNames.length) el.append(h('p', { class: 'small' }, `Parts with art carry no numbers, so the outside stays clean: ${[...new Set(unlNames)].join(', ').toLowerCase()}. Their art tells you which way they face.`));
+    if (unlNames.length) el.append(h('p', { class: 'small' }, `The parts with art (${[...new Set(unlNames)].join(', ').toLowerCase()}) have no numbers in the engraved files, so their outside stays clean, and a joint between an art part and a plain part shows its number on the plain part only. The cut + labels files number them too. The art shows which way they face.`));
   };
   if (dlState.man !== undefined) go(dlState.man); else dlState.ready = go;
 }
@@ -383,6 +390,14 @@ async function initMaterials() {
   const stock = man && man.beds && Object.entries(man.beds).find(([, b]) => /12 x 24/.test((b.stock && b.stock.name) || '') && b.stock.width_mm > 600);
   const t32 = man && man.thicknesses && man.thicknesses['3.2'];
   const n1224 = stock && t32 && t32.kerfs && Object.values(t32.kerfs).map(k => k.cut_only && k.cut_only.sheets && k.cut_only.sheets[stock[0]]).find(n => n != null);
+  // every plywood number comes from the 12 x 24 in layout's sheet count and the listed pack price
+  const ply = d.items.find(i => /12 × 24 in, box of (\d+)/.test(i.name));
+  if (ply && n1224) {
+    const pack = +ply.name.match(/box of (\d+)/)[1]; const boxes = Math.floor(pack / n1224); const per = ply.price_usd / pack * n1224;
+    ply.qty = n1224;
+    ply.note = `The 12 × 24 in layout uses ${n1224} sheets per box, so a box of ${pack} covers ${boxes} boxes, about ${fmtUSD(Math.round(per))} of plywood per box. Measure the thickness before you pick a cut file.`;
+    const t = $('#ply-cost'); if (t) t.textContent = `about ${fmtUSD(Math.round(per))}: ${n1224} sheets of 12 × 24 in`;
+  }
   for (const i of d.items) if (i.note) i.note = i.note.replace('{SHEETS_12x24}', n1224 || 'four');
   const items = d.items.filter(i => !(i.category === 'Game supplies' && /\b(pens?|pencils?)\b/i.test(i.name)));
   const cats = [...new Set(items.map(i => i.category))];
@@ -424,7 +439,7 @@ async function renderCatalog(cat, kit) {
   if (!cat && kit && kit.tiers) cat = catalogFromKit(kit);
   if (!cat) { el.append(soonBox('Drawing kit: pens and pencils', 'Recommendations are coming soon.')); return; }
   const when = cat.checked ? new Date(cat.checked + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
-  $('#kit-intro').textContent = 'Mix and match. Every pencil and pen here fits the COLORS and Lines drawers lying flat; sets that come in tins go in loose. Ben, who designed the box, marked his favorites and the ones he uses.' + (when ? ` Prices checked ${when}.` : '');
+  $('#kit-intro').textContent = 'Choose any mix from the lists below. Every pencil and pen here fits the COLORS and Lines drawers lying flat; sets that come in tins go in loose. Ben, who designed the box, marked his favorites and the ones he uses.' + (when ? ` Prices checked ${when}.` : '');
   for (const c of cat.categories) {
     const grid = h('div', { class: 'cgrid' });
     for (const i of c.items || []) {
@@ -451,7 +466,7 @@ const ICON = {
 function initOptions() {
   const opts = [
     { icon: 'space', title: 'A makerspace laser', cost: '~$45–105', sub: 'machine time per box, plus a one-time class', rec: true,
-      pts: ['NYC Resistor (Boerum Hill): $1 per minute self-serve after an $85 class; Epilog 60 W, 32 × 20 in bed', 'Engraves and cuts in one or two craft nights', 'Bring your own plywood (about $30)'] },
+      pts: ['NYC Resistor (Boerum Hill): $1 per minute self-serve after an $85 class; Epilog 60 W, 32 × 20 in bed', 'Engraves and cuts in one or two craft nights', 'Bring your own plywood'] },
     { icon: 'cloud', title: 'Online cutting service', cost: '~$150–200', sub: 'cut only, plus shipping',
       pts: ['SendCutSend: instant guest quote about $195 for 1/8 in Baltic birch; DXF files; no wood engraving', 'Ponoko: about $153 cut-only; engraving priced by machine time (adds roughly $60–200)', 'Easiest if you skip the art'] },
     { icon: 'shop', title: 'A local laser shop', cost: '$200+', sub: 'minimum order',
@@ -460,7 +475,7 @@ function initOptions() {
       pts: ['xTool S1 diode (498 × 319 mm bed) from $1,699; about 2 to 5 hours per box', 'xTool P2S 55 W CO2 from $2,999; under 2 hours', 'Needs real ventilation: birch plywood smoke is harsh'] },
   ];
   const el = $('#options');
-  for (const o of opts) el.append(h('article', { class: 'opt' + (o.rec ? ' rec' : ''), html: ICON[o.icon] }, o.rec ? h('span', { class: 'badge' }, 'recommended') : null, h('h3', {}, o.title), h('div', { class: 'cost' }, o.cost, h('small', {}, o.sub)), h('ul', {}, o.pts.map(p => h('li', {}, p)))));
+  for (const o of opts) el.append(h('article', { class: 'opt' + (o.rec ? ' rec' : ''), html: ICON[o.icon] }, o.rec ? h('span', { class: 'badge' }, 'recommended') : null, h('h3', {}, o.title), h('div', { class: 'cost' }, o.cost, h('small', {}, o.sub)), h('ul', {}, o.pts.map(p => h('li', {}, p, p === 'Bring your own plywood' ? [' (', h('span', { id: 'ply-cost' }, 'see the materials list'), ')'] : null)))));
   const t = $('#laser');
   t.append(h('table', { class: 'tbl' },
     h('thead', {}, h('tr', {}, h('th', {}, 'Machine'), h('th', {}, 'Cut'), h('th', {}, 'Engrave'), h('th', {}, 'Source'))),
@@ -472,7 +487,7 @@ function initParams(data) {
     ['thickness', `Plywood thickness. Nominal 1/8 in (${T ? T.toFixed(3) : '3.175'} mm); the files come in 0.1 mm steps from 2.8 to 3.5 mm.`],
     ['kerf', 'The width of wood the laser burns away. The generator adds half of it back to every edge so joints come out snug.'],
     ['finger play', `Extra gap in each finger slot so joints close without forcing${data.box && data.box.finger_play ? ': ' + data.box.finger_play + ' mm' : ''}.`],
-    ['slide clearance', 'Play around the drawers and the lid: 1.5 mm.'],
+    ['clearances', 'Gaps that let the drawers and lid slide: the faceplate has 0.75 mm all round in its opening, and the lid has about 1.2 mm of vertical play in its slots.'],
     ['magnet press fit', 'How much smaller the magnet hole is than the magnet: 0.35 mm.'],
     ['box', `${data.box ? `${data.box.length} × ${data.box.width} × ${data.box.height}` : '304.8 × 165.1 × 127'} mm outside.`],
   ];
@@ -502,7 +517,14 @@ async function boot() {
     const sync = () => { const cur = $('#variants .var.on canvas'); if (cur && cur !== ctx._still) { ctx._still = cur; ctx.onBurn(cur); } };
     new MutationObserver(sync).observe($('#variants'), { childList: true, subtree: true }); sync();
   };
-  const hasGL = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
+  const hasGL = (() => { try { const c = document.createElement('canvas'); const g = c.getContext('webgl2') || c.getContext('webgl'); if (!g) return false; const x = g.getExtension('WEBGL_lose_context'); x && x.loseContext(); return true; } catch { return false; } })();
+  // still picture under the canvas until the 3D box has its art (also the fallback on context loss)
+  if (heroSrc && hasGL) $('#hero-stage').prepend(h('img', { class: 'hero-ph', src: heroSrc, alt: '' }));
+  for (const [stageSel] of [['#hero-stage'], ['.engrave-stage']]) {
+    const st = $(stageSel);
+    st.addEventListener('fax-lost', () => { st.classList.add('lost'); if (stageSel === '#hero-stage' && heroSrc && !st.querySelector('.hero-lost')) st.prepend(h('img', { class: 'hero-lost', src: heroSrc, alt: 'The Fax Machine box' })); });
+    st.addEventListener('fax-restored', () => location.reload());
+  }
   if (!hasGL) { noGL(); return; }
   try { const m = await import('./render3d.js'); await m.start(ctx); }
   catch (e) { console.warn('3D unavailable:', e && e.message); noGL(); }

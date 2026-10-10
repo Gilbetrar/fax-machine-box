@@ -289,6 +289,17 @@ export class BoxModel {
     this.layout(this.state); this.root.updateMatrixWorld(true);
     return b;
   }
+  // world-space corners of every part's own box at a state (tighter than one union box)
+  cornersAt(st = this.target) {
+    this.layout(st); this.root.updateMatrixWorld(true);
+    const pts = [];
+    for (const u of Object.values(this.units)) {
+      const bb = new THREE.Box3().setFromObject(u.mesh);
+      for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? bb.max.x : bb.min.x, i & 2 ? bb.max.y : bb.min.y, i & 4 ? bb.max.z : bb.min.z));
+    }
+    this.layout(this.state); this.root.updateMatrixWorld(true);
+    return pts;
+  }
   groupOffset(g, st = this.target) {
     const e = st.explode;
     if (g === 'drawer_lower') return new THREE.Vector3(150 * st.drawer_lower + 560 * e, 0, 0);
@@ -325,7 +336,7 @@ export class Viewer {
     this.home = opts.home || { dir: [-1.0, 0.9, 0.62], dist: 860 };
     this.setView(this.home, false);
     const c = this.controls = new OrbitControls(cam, canvas);
-    c.target.copy(model.center); c.enableDamping = true; c.dampingFactor = 0.08; c.minDistance = 220; c.maxDistance = 1800;
+    c.target.copy(model.center); c.enableDamping = true; c.dampingFactor = 0.08; c.minDistance = 120; c.maxDistance = 4000;
     c.maxPolarAngle = Math.PI * 0.62; c.enablePan = false;
     c.autoRotate = !!opts.autoRotate; c.autoRotateSpeed = 0.6;
     // OrbitControls sets touch-action:none, which traps phone users on the canvas; let vertical swipes scroll the page
@@ -333,6 +344,9 @@ export class Viewer {
     c.addEventListener('start', () => { c.autoRotate = false; this._fly = null; });
     c.addEventListener('change', () => this.kick());
     this.raycaster = new THREE.Raycaster(); this.selected = null; this.onSelect = opts.onSelect || (() => {});
+    // if the GPU drops the context, stop drawing and let the page show its still picture
+    canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); this.lost = true; canvas.dispatchEvent(new CustomEvent('fax-lost', { bubbles: true })); });
+    canvas.addEventListener('webglcontextrestored', () => { this.lost = false; canvas.dispatchEvent(new CustomEvent('fax-restored', { bubbles: true })); this.kick(); });
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._bindPick(); this._resize(); new ResizeObserver(() => { this._resize(); this.kick(); }).observe(canvas);
     this.visible = true;
@@ -347,20 +361,32 @@ export class Viewer {
     this._fly = { from: this.camera.position.clone(), to: pos, tFrom: this.controls.target.clone(), tTo: target, t: 0 };
     this.controls.autoRotate = false; this.kick();
   }
-  // distance at which a box fits the view from direction dir
-  fitDistance(box, margin = 1.08) {
-    const r = box.getSize(new THREE.Vector3()).length() / 2;
-    const fv = THREE.MathUtils.degToRad(this.camera.fov);
-    const fh = 2 * Math.atan(Math.tan(fv / 2) * this.camera.aspect);
-    return Math.min(4000, Math.max(160, r / Math.sin(Math.min(fv, fh) / 2) * margin));
+  // Exact fit: aim at the box centre from direction dir and find the smallest
+  // distance at which all 8 corners project inside the frustum (with margin).
+  fitView(box, dirArr, margin = 1.06) {
+    const pointsIn = Array.isArray(box) ? box : null;
+    if (pointsIn) box = new THREE.Box3().setFromPoints(pointsIn);
+    let c = box.getCenter(new THREE.Vector3());
+    const D = new THREE.Vector3(...dirArr).normalize();
+    const up = Math.abs(D.z) > 0.98 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+    const R = new THREE.Vector3().crossVectors(up, D).normalize(), U = new THREE.Vector3().crossVectors(D, R);
+    const ty = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) / margin, tx = ty * this.camera.aspect;
+    // shift the aim point so the projected box is centred, then fit
+    const raw = pointsIn || [...Array(8)].map((_, i) => new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+    // centre the silhouette: shift the aim point to the middle of the projected extent
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const p of raw) { const r = p.clone().sub(c); const x = r.dot(R), y = r.dot(U); x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    c = c.clone().add(R.clone().multiplyScalar((x0 + x1) / 2)).add(U.clone().multiplyScalar((y0 + y1) / 2));
+    let d = 50;
+    for (const p of raw) { const r = p.clone().sub(c); const x = r.dot(R), y = r.dot(U), z = r.dot(D); d = Math.max(d, z + Math.abs(x) / tx, z + Math.abs(y) / ty); }
+    return { target: c, dist: Math.min(4000, d) };
   }
-  // keep the current viewing direction, re-aim at the box and back off until it fits
   fitTo(box, opts = {}) {
-    const c = box.getCenter(new THREE.Vector3());
     const dir = opts.dir ? new THREE.Vector3(...opts.dir).normalize() : this.camera.position.clone().sub(this.controls.target).normalize();
-    this.setView({ dir: dir.toArray(), target: c.toArray(), dist: this.fitDistance(box, opts.margin || 1.0) }, opts.animate !== false);
+    const f = this.fitView(box, dir.toArray(), opts.margin || 1.06);
+    this.setView({ dir: dir.toArray(), target: f.target.toArray(), dist: f.dist }, opts.animate !== false);
   }
-  fitModel(opts = {}) { this.fitTo(this.model.boxAt(), opts); }
+  fitModel(opts = {}) { this.fitTo(this.model.cornersAt(), opts); }
   snapshot() { this.model.update(10); this.controls.update(); this.renderer.render(this.scene, this.camera); return this.renderer.domElement.toDataURL('image/png'); }
   _resize() {
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight; if (!w || !h) return;
@@ -405,7 +431,7 @@ export class Viewer {
       if (f.t >= 1) this._fly = null; busy = true;
     }
     const ch = this.controls.update(); busy = busy || ch || this.controls.autoRotate;
-    if (this.visible) this.renderer.render(this.scene, this.camera);
+    if (this.visible && !this.lost) this.renderer.render(this.scene, this.camera);
     if (busy && this.visible) requestAnimationFrame(tt => this._tick(tt)); else this._running = false;
   }
 }
@@ -440,9 +466,26 @@ export class StillRenderer {
     const g = new THREE.Group(); g.position.set(...offset);
     const m = new THREE.Mesh(partGeometry(p), this.mat[style] || this.mat.hi); m.matrixAutoUpdate = false; m.matrix.copy(partMatrix(p));
     const l = new LineSegments2(partFatEdges(p), style === 'ghost' ? this.mat.ghostLine : this.mat.hiLine); l.matrixAutoUpdate = false; l.matrix.copy(partMatrix(p));
-    g.add(m, l); scene.add(g);
+    g.add(m, l);
+    // engraved art on highlighted and plain parts, so "engraved face out" shows in the pictures
+    const art = this.art && this.art[p.id];
+    if (art && style !== 'ghost') {
+      if (!art.mat) { const t = new THREE.CanvasTexture(art.canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; art.mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); }
+      if (!art.geo) art.geo = artOverlayGeometry(p, art.info.size_mm || p.size_mm, art.canvas.width, art.canvas.height, art.info.art_to_local);
+      const a = new THREE.Mesh(art.geo, art.mat); a.matrixAutoUpdate = false; a.matrix.copy(partMatrix(p)); a.renderOrder = 2; g.add(a);
+    }
+    scene.add(g);
     if (bounds) bounds.union(partBox(p).translate(new THREE.Vector3(...offset)));
     return g;
+  }
+  // load default-variant art as ink canvases: { part_id: { canvas, info } }
+  async loadArt(manifest, urlOf) {
+    this.art = {};
+    if (!manifest || !manifest.faces) return;
+    await Promise.all(Object.values(manifest.faces).map(async info => {
+      const vs = info.variants || []; const v = vs.find(x => x.default) || vs[0]; if (!v) return;
+      try { this.art[info.part_id] = { canvas: await inkCanvas(urlOf(v), [92, 58, 30], 0.75, 1024), info }; } catch (e) { console.warn(e.message); }
+    }));
   }
   addBox(scene, center, size, style = 'paper', bounds, quat) {
     const geo = new THREE.BoxGeometry(...size);
@@ -494,7 +537,8 @@ export class StillRenderer {
     } else this.r.clippingPlanes = [];
     this.r.render(scene, cam);
     const url = this.r.domElement.toDataURL('image/png');
-    scene.traverse(o => { if (o.geometry && !geoCache.has(o.geometry) && o.geometry.type !== 'ExtrudeGeometry' && o.geometry.type !== 'EdgesGeometry' && !o.isLineSegments2) o.geometry.dispose(); });
+    const keep = new Set(Object.values(this.art || {}).map(a => a.geo));
+    scene.traverse(o => { if (o.geometry && !keep.has(o.geometry) && o.geometry.type !== 'ExtrudeGeometry' && o.geometry.type !== 'EdgesGeometry' && !o.isLineSegments2) o.geometry.dispose(); });
     return url;
   }
 }

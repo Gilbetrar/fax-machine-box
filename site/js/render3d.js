@@ -31,16 +31,21 @@ function initHero(ctx, data) {
     onSelect(p, g) {
       if (!p) { card.hidden = true; return; }
       card.hidden = false; $('#pc-letter').textContent = p.letter || '?'; $('#pc-name').textContent = p.name;
-      $('#pc-hint').textContent = isDrawer(g) ? 'Tap again to slide the drawer' : g === 'lid' ? 'Tap again to slide the lid (it is held by friction, with no lock)' : (qty[p.letter] > 1 ? `Part ${p.letter} · ${qty[p.letter]} in the kit` : `Part ${p.letter}`);
+      const verb = matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click';
+      $('#pc-hint').textContent = isDrawer(g) ? `${verb} again to slide the drawer` : g === 'lid' ? `${verb} again to slide the lid` : (qty[p.letter] > 1 ? `${qty[p.letter]} in the kit` : '1 in the kit');
     },
   });
   const l = $('#hero-loading'); l && l.remove();
-  viewer.fitModel({ dir: viewer.home.dir, animate: false, margin: 1.02 }); viewer.home.dist = viewer.camera.position.distanceTo(viewer.controls.target);
-  let fitT = 0; const refit = () => { clearTimeout(fitT); fitT = setTimeout(() => viewer.fitModel({ margin: 1.02 }), 60); };
+  const fitHome = () => { const f = viewer.fitView(model.cornersAt({ ...model.target, explode: 0, drawer_lower: 0, drawer_upper: 0, lid: 0 }), viewer.home.dir, 1.06); viewer.home.dist = f.dist; viewer.home.target = f.target.toArray(); };
+  fitHome(); viewer.setView(viewer.home, false);
+  let touched = false; viewer.controls.addEventListener('start', () => { touched = true; });
+  // after any state change, fit the model's new bounding box from the current direction
+  let fitT = 0; const refit = () => { clearTimeout(fitT); fitT = setTimeout(() => viewer.fitModel({ margin: 1.04 }), 40); };
+  new ResizeObserver(() => { fitHome(); if (!touched) viewer.setView(viewer.home, false); else refit(); }).observe($('#hero-canvas'));
   $('#explode').addEventListener('input', e => { model.target.explode = +e.target.value; viewer.kick(); refit(); });
   for (const b of document.querySelectorAll('.controls .chip')) b.addEventListener('click', () => {
     const a = b.dataset.act;
-    if (a === 'home') { model.target.explode = 0; $('#explode').value = 0; model.target.drawer_lower = model.target.drawer_upper = model.target.lid = 0; viewer.select(null); viewer.setView(viewer.home); }
+    if (a === 'home') { model.target.explode = 0; $('#explode').value = 0; model.target.drawer_lower = model.target.drawer_upper = model.target.lid = 0; viewer.select(null); fitHome(); viewer.setView(viewer.home); touched = false; }
     else { if (a === 'lid') model.toggleLid(); else model.toggleDrawer(a); refit(); }
     syncChips(); viewer.kick();
   });
@@ -61,6 +66,7 @@ function initEngraving(ctx, data) {
   const st = ctx.artState, man = st.manifest; if (!man) return;
   const model = new BoxModel(data);
   const viewer = new Viewer($('#art-canvas'), model, { home: { dir: [-1, 0.9, 0.6], dist: 760 } });
+  window.faxArt = { model, viewer };
   let loaded = false;
   function focusFace(fid) {
     const face = man.faces[fid]; const p = data.parts.find(q => q.id === face.part_id); if (!p) return;
@@ -68,8 +74,12 @@ function initEngraving(ctx, data) {
     const side = isDrawer(g) && Math.abs(fr.n.y) > 0.9;   // drawer sides only show when the drawer is out
     Object.assign(model.target, { drawer_lower: side && g === 'drawer_lower' ? 1.35 : 0, drawer_upper: side && g === 'drawer_upper' ? 1.35 : 0, lid: 0, explode: 0 });
     const box = partBox(p).translate(model.groupOffset(g));
-    const dir = Math.abs(fr.n.z) > 0.9 ? new THREE.Vector3(-0.45, -0.3, 1.5) : fr.n.clone().add(new THREE.Vector3(0, 0, 0.32)).add(fr.R.clone().multiplyScalar(-0.22));
-    viewer.fitTo(box, { dir: dir.toArray(), margin: 1.05 });
+    // flat faces: look down from the art's bottom edge so the art reads upright on screen
+    const flat = Math.abs(fr.n.z) > 0.9;
+    let up = fr.U.clone();
+    if (face.art_to_local) { const [[, b0], [, d0]] = face.art_to_local; up = new THREE.Vector3(-b0, -d0, 0).transformDirection(partMatrix(p)); }
+    const dir = flat ? up.clone().multiplyScalar(-0.55).add(new THREE.Vector3(0, 0, 1)) : fr.n.clone().add(new THREE.Vector3(0, 0, 0.32)).add(fr.R.clone().multiplyScalar(-0.22));
+    viewer.fitTo(box, { dir: dir.toArray(), margin: flat ? 1.2 : 1.15 });
   }
   st.listeners.push(async (kind, fid) => {
     if (!loaded) { loaded = true; await applyArt(model, st, st.mode); }
@@ -225,8 +235,10 @@ export async function start(ctx) {
   const hero = initHero(ctx, data);
   initEngraving(ctx, data);
   // hero art: defaults only, after the first frame
+  const ph = document.querySelector('#hero-stage .hero-ph');
   const heroDone = idle().then(async () => {
     await applyArt(hero.model, ctx.artState, 'burn'); hero.viewer.kick();
+    if (ph) setTimeout(() => ph.remove(), 120);
     ctx.artState.listeners.push(async kind => { if (kind === 'choice') { await applyArt(hero.model, ctx.artState, 'burn'); hero.viewer.kick(); } });
     if (ctx.prerender) { await new Promise(r => setTimeout(r, 1500)); await save('hero', hero.viewer.snapshot()); }
   });
@@ -234,14 +246,18 @@ export async function start(ctx) {
   if (fresh && !ctx.prerender) return;           // the pre-rendered pictures already match this data
   await idle();
   const R = new StillRenderer(data); const slots = ctx.slots; const files = {};
+  await R.loadArt(ctx.artState.manifest, v => artUrl({ png: v.png_sm || v.png }) + '?v=' + V);
   const put = async (key, url) => { if (!url) return; if (slots[key]) slots[key].set(url); if (ctx.prerender) { await save(key, url); files[key] = `img/render/${key}.png`; } };
   const how = howPictures(data, R);
   for (const [id, url] of Object.entries(how)) await put('how-' + id, url);
   await nextFrame();
   const seen = new Set();
   for (const p of data.parts) { if (seen.has(p.letter)) continue; seen.add(p.letter); await put('inv-' + p.letter, inventoryPicture(p, R)); await nextFrame(); }
+  // steps were built from the raw (exporter-frame) data; bring their insert directions into the render frame
+  const leftHanded = String((ctx.data.box && ctx.data.box.handedness) || '').startsWith('l');
   for (const s of ctx.steps || []) {
-    let url = null; try { url = stepPicture(s, data, R); } catch (e) { console.warn('step', s.id, e); }
+    const sr = leftHanded && s.insert_direction ? { ...s, insert_direction: [s.insert_direction[0], -s.insert_direction[1], s.insert_direction[2]] } : s;
+    let url = null; try { url = stepPicture(sr, data, R); } catch (e) { console.warn('step', s.id, e); }
     await put('step-' + s.id, url); await nextFrame();
   }
   if (ctx.prerender) {
