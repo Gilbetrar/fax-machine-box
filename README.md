@@ -22,20 +22,17 @@ Generate every part, then nest them onto cut-ready sheets:
 
 ```bash
 .venv/bin/python -m faxbox.shell_generator    # outer shell: 8 pieces -> output/outer_shell.svg
-.venv/bin/python -m faxbox.generate_drawers   # one drawer's 6 pieces -> output/drawer.svg (cut TWICE)
-.venv/bin/python -m faxbox.generate_lids      # sliding lid: 1 piece -> output/lids.svg
+.venv/bin/python -m faxbox.generate_drawers   # one drawer's 6 pieces -> output/drawer.svg (cut TWICE); also output/guides.svg (the 4 drawer guides)
+.venv/bin/python -m faxbox.generate_lids      # sliding lid: 1 piece (78.0 mm long) -> output/lids.svg
 .venv/bin/python -m faxbox.layout             # nests all of the above onto output/sheet_1.svg, sheet_2.svg, ...
-.venv/bin/python -m faxbox.calibration        # kerf/thickness coupon + magnet-fit coupon -> output/kerf_coupon.svg, output/magnet_coupon.svg (cut BOTH on scrap FIRST, see "Cut-day checklist")
-.venv/bin/python -m faxbox.generate_hardware  # iteration-2 lid turn-button: 1 piece -> output/hardware.svg
+.venv/bin/python -m faxbox.calibration        # legacy kerf/thickness and magnet coupons -> output/kerf_coupon.svg, output/magnet_coupon.svg (the test-fit coupon in "Downloads" replaces them)
 ```
 
-**Iteration 2 (retention, issue #20):** `shell_generator.py`/`generate_drawers.py`
-also cut the retention holes described below (magnet holes in the divider +
-each drawer's leading wall, ONE turn-button pivot hole on the front wall —
-see "Know before you build" for why it's on the front wall and not the side
-walls) — they're part of the same generator runs above, not a separate step.
-`generate_hardware.py` and the magnet coupon are the only genuinely new
-outputs.
+**Retention (issue #20):** `shell_generator.py` and `generate_drawers.py` also
+cut the magnet holes (two in the divider, one in each drawer back) in the same
+runs. The turn-button lid lock was removed on 2026-10-10 (Ben's decision): there
+is no button part, no front-wall pivot hole and no hardware generator. The lid is
+held by friction in its slots only.
 
 `layout.py` also writes `output/final_layout.svg` — a combined, true-scale
 view of every sheet side by side, for eyeballing the whole nesting in a
@@ -45,21 +42,117 @@ and must never be sent for cutting** — send `sheet_1.svg`, `sheet_2.svg`,
 input: the right SVG to open and inspect before cutting is one of those, not
 `final_layout.svg`.
 
-## Cut files for every stock thickness
+## Downloads (cut files for every thickness and kerf)
 
     .venv/bin/python scripts/export_cutfiles.py        # site/downloads/
     .venv/bin/python scripts/export_site_data.py       # site/data/parts.json
 
-`export_cutfiles.py` writes full sets for 2.8 to 3.5 mm in 0.1 mm steps
-(SVG and DXF), a zip per thickness, a test-fit coupon, and layouts for the
-Ponoko sheet (790 x 384 mm), xTool S1 (498 x 319), xTool P2/P2S (600 x 305),
-Glowforge Pro (495 x 279) and a generic 600 x 400 bed. `manifest.json` lists
-the files and the sheet count per bed. Kerf compensation is 0.10 mm per side
-(Ponoko); finger holes are T + 0.1 mm at every thickness. Geometry reads
-`FAXBOX_THICKNESS` (mm) at import time, so one process makes one thickness.
-The generated files are not committed when they pass 30 MB (the folder's
-`.gitignore` then keeps only the manifest). DXF is written without extra
-dependencies (R12 ASCII, layers CUT and ENGRAVE, mm).
+`export_cutfiles.py` builds, for every thickness T from 2.8 to 3.5 mm in 0.1 mm
+steps and for each laser kerf (diode 0.12, CO2 0.18, Ponoko 0.20 mm), the files
+below into `site/downloads/`. Only `manifest.json`, `README.md` and `.gitignore`
+are committed there; the zips and the coupon files are built. `manifest.json`
+and `site/downloads/README.md` (written by the script) describe the schema.
+Geometry reads `FAXBOX_THICKNESS` (mm) at import time, so one process makes one
+thickness. Finger holes are T + 0.1 mm wide at every thickness. Finger-slot breakouts
+through an edge (the 0.05 mm hole-row breakouts) are merged into the outline in
+every file, so each such slot is one notch contour with no hairline strip left
+between the slot's cut and the outline's cut. Corner loops are removed, and
+every cut contour is a valid simple closed shape.
+
+| file | contents |
+|---|---|
+| `fax-machine-box_T<T>_k<kerf>_cut.zip` | Cut only. Blue lines only, so a service that cuts every line cuts exactly the parts. One set per layout, plus the coupon files |
+| `fax-machine-box_T<T>_k<kerf>_labels.zip` | Cut + labels, for your own laser. Parts lie inside face up. Red labels (part letter and name, plus joint numbers) and the red faceplate glue-up lines, all on layer LABELS |
+| `fax-machine-box_T<T>_k<kerf>_engrave_<layout>.zip` | Cut + engrave, one zip per layout. Parts with art lie OUTSIDE face up with the art as gray filled shapes (DXF: closed polylines on layer ENGRAVE; set that layer to fill / raster). Parts whose outline in the plain files shows the inside face (top panel, sliding lid, both faceplates, both left drawer sides) are mirrored here so the outside is up; the art is not mirrored. Parts without art lie inside face up and carry the red joint labels. Never flip a part to engrave a second side |
+| `fax-machine-box_T<T>_parts.zip` | One zero-kerf file per distinct part, for services that apply their own kerf, plus `faces/` with the 11 art parts in 15 variants |
+| `coupon/T<T>_coupon[_marked].svg` and `.dxf` | The test-fit coupon, loose (it is also inside every cut zip). See "Test-fit coupon" |
+
+**Colours.** Cut is a blue stroke `#0000FF`. The art (area engrave) is a gray
+fill `#808080`. Every single-line mark is a red stroke `#FF0000`: the part
+letters, the joint numbers, the faceplate glue-up lines and the coupon ticks.
+This is Ponoko's recommendation (blue stroke = cut, red stroke = line engrave,
+gray fill = area engrave; https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions ,
+checked 2026-10-10). Ponoko assigns a laser function to each line and fill
+colour at upload, so check the colour-to-function assignment on the upload page
+before you order. Only cuts are kerf-offset.
+Engraving stays at least 0.35 mm from every cut (art is trimmed back where a
+thickness moves a slot under it).
+
+**Formats.** DXF is R2000, units millimetres (INSUNITS 4), layers CUT, ENGRAVE
+and LABELS. SVG: 1 unit = 1 mm and the canvas is the size of the content, not of
+the bed.
+
+**Layouts and the stock each needs.**
+
+| layout | size (mm) | stock | kerf sets | engrave sets |
+|---|---|---|---|---|
+| `ponoko` | 790 x 384 | Ponoko supplies the sheet | 0.20 | 0.20 |
+| `xtool_s1` | 498 x 301.6 | each S1 sheet is one 12 x 24 in sheet cut to 498 mm long (108 mm offcut); the layout needs 4 sheets | all three | diode, CO2 |
+| `xtool_p2` | 594.9 x 301.6 (3 mm margin, 3 mm spacing) | whole 12 x 24 in sheets (really 301.6 x 606.4 mm, 11-7/8 x 23-7/8 in); the layout needs 3 sheets | all three | CO2 |
+| `glowforge_pro` | 495 x 279 | a sheet at least 495 x 279 mm (a 12 x 24 in sheet is too tall; cut it to 495 x 279 first) | all three | CO2 |
+| `generic_600x400` | 600 x 400 | a sheet at least 600 x 400 mm | all three | all three |
+| `nycr_32x20` | 812.8 x 508 | a sheet at least 32 x 20 in; the layout needs 2 sheets | all three | CO2 |
+
+Sheets per box: `glowforge_pro` 5, `generic_600x400` 3, `ponoko` 2, `xtool_s1` 4,
+`xtool_p2` 3, `nycr_32x20` 2. The canonical figure for 12 x 24 in stock is 3
+sheets per box (`xtool_p2`), recorded in `site/downloads/manifest.json` as
+`stock_12x24_sheets_per_box`.
+
+**Match marks.** Joints are numbered so assembly is "match 1 to 1". Each finger
+joint has a name made of the lower part letter and a number (for example C3),
+and the same name is engraved near the joint on both parts (on the inside face
+of parts without art). There are 25 joints. The bottom panel's rear edge and the
+faceplates are glued and carry no number. Parts with exterior art carry no marks
+on the outside. The structured joint map (part, edge, position) is in
+`manifest.json`.
+
+**Mirror note.** Every flat part can be turned over, so a box built with both
+side walls swapped and the divider turned left for right is a valid mirror-image
+box with all the engraved faces inside. The instructions say engraved face out;
+the labels on the inside faces make it obvious when something is inside out.
+
+## Test-fit coupon
+
+`coupon.svg` / `coupon.dxf` and `coupon_marked.svg` / `coupon_marked.dxf`. The
+marked coupon is the one with engraved ticks 1 to 8 between the thickness slots
+and the magnet holes. Cut it on a scrap of your real plywood before any real
+part. Every measurement on it is taken with calipers. Read it in this order:
+kerf square, pick the kerf set, then thickness, then try the joints. The coupon
+is in every zip type (loose per kerf under `coupon/`, and on a sheet of each bed
+layout where there was room).
+
+- **K, kerf square.** A 10 mm square piece drawn with no kerf compensation.
+  Kerf = 10.00 - measured width. Measure two directions and average them. Kerf
+  varies along the bed, so measure where the box will be cut. The sets are
+  0.12, 0.18 and 0.20 mm. Between two sets, take the smaller kerf unless the
+  reading is within 0.01 mm of the larger: a smaller assumed kerf leaves joints
+  loose by 2 x the difference, and a larger one leaves them tight and can jam.
+  A reading of about 0.15 means the 0.12 set. The 0.18 and 0.20 sets are close,
+  and either works on a CO2 laser.
+- **Q, thickness slots and magnet holes.** The panel has a clipped top-left
+  corner as an orientation mark. Eight slots run from the narrowest (2.8 mm
+  drawn) to the widest (3.5 mm) from left to right, in 0.1 mm steps. Find the
+  narrowest slot the plywood enters without force. Thickness = drawn width +
+  kerf - 0.05. Pick the thickness set (0.1 mm steps) nearest to that. If the
+  plywood falls between two slots, take the tighter one. The engraved ticks 1 to
+  8 sit between the slots and the magnet holes. Four magnet holes are drawn
+  5.3, 5.4, 5.5 and 5.6 mm; the cut hole is the drawn size plus the kerf. The
+  box wants a 5.65 mm hole for a 6.0 mm magnet.
+- **R, finger joints.** Three pairs of three-finger corners (a finger piece and
+  a hole piece) that differ in size, left to right: the smallest is compensated
+  for the diode kerf (0.12, 1 tick), the middle for CO2 (0.18, 2 ticks) and the
+  largest for Ponoko (0.20, 3 ticks). The pair that goes together with firm hand
+  pressure and no gap is your kerf. The fit has two separate directions.
+  Along the length of the fingers the fit depends on kerf: if it is tight, use
+  the next smaller kerf set; if it is loose or rattles, use the next larger kerf
+  set. Through the plywood thickness the fit depends on the thickness: if it is
+  tight, the plywood is thicker, so use the next thicker thickness set; if it is
+  loose, the plywood is thinner, so use the next thinner set.
+- **S, lid slot.** A lid slot block and a strip, cut for the kerf of the set the
+  coupon came from.
+
+Tuning for kerf means choosing a kerf file set. The files do not need editing,
+and `BURN` in `config.py` does not need to change.
 
 ## Test
 
@@ -93,8 +186,8 @@ fax-machine-box/
 │   ├── generate_drawers.py  # one drawer's 6 pieces (body x5 + faceplate); cut this sheet twice
 │   ├── generate_lids.py     # sliding lid (1 piece)
 │   ├── layout.py            # nests all parts onto bed-sized sheets for cutting
-│   ├── calibration.py       # kerf/ply-thickness coupon + magnet press-fit coupon (+ Ponoko combined coupon)
-│   ├── generate_hardware.py # iteration-2 lid turn-button (1 piece) -> output/hardware.svg
+│   ├── calibration.py       # legacy kerf/ply-thickness coupon + magnet press-fit coupon (+ Ponoko combined coupon)
+│   ├── cutset.py            # per-thickness, per-kerf cut/label/engrave sets and the test-fit coupon (used by scripts/export_cutfiles.py)
 │   └── ponoko.py            # Ponoko export mode -> output/ponoko/ (see "Ordering from Ponoko")
 ├── tests/                   # pytest harness: geometry, laser-compliance, and layout checks
 ├── docs/service-comparison.md  # laser service comparison + verified NYC Resistor constraints
@@ -104,25 +197,28 @@ fax-machine-box/
 
 ## Color coding
 
-- **Blue (`#0000FF`)** = cut line
-- **Red (`#FF0000`)** = engrave line (the faceplate glue-up registration
-  outlines; wall art arrives from the art pipeline).
-- **Gray** = reference-only text (part labels, sheet numbers). These are
-  *not* laser instructions — ignore/skip this color when setting up the job.
-  Sheet cut/engrave strokes themselves are drawn hairline-weight (0.0762mm)
-  so they don't get mistaken for fills.
+- **Blue stroke (`#0000FF`)** = cut line
+- **Gray fill (`#808080`)** = area engrave (the wall and panel art, in the
+  cut + engrave files). In the DXF files this is layer ENGRAVE; set it to fill /
+  raster.
+- **Red stroke (`#FF0000`)** = line engrave: every single-line mark (part
+  letters, joint numbers, the faceplate glue-up lines and the coupon ticks). In
+  the DXF files this is layer LABELS. Skip it if you do not want the marks
+  engraved. Strokes are drawn hairline-weight (0.0762mm) so they don't get
+  mistaken for fills.
 
-This is a convention this project chose (see DESIGN.md's "Decisions"
-section), not a documented NYC Resistor requirement — no color convention
-could be confirmed on their site. See `docs/service-comparison.md` for
-details.
+This follows Ponoko's recommended colours (see "Downloads"). Ponoko users should
+check the colour-to-function assignment at upload.
+
+NYC Resistor documents no colour convention that could be confirmed on their
+site (see DESIGN.md's "Decisions" section and `docs/service-comparison.md`).
 
 ## Parts checklist
 
-22 pieces total (8 shell, 12 drawer, 1 lid, 1 turn button), all cut from
+25 laser-cut pieces (8 shell, 12 drawer, 1 lid, 4 drawer guides), all cut from
 uniform plywood 2.8-3.5 mm thick (3.175 mm / 1/8" by default; pick the cut-file
-set that matches the sheet you measure), plus standalone calibration coupons
-(none are box parts, see "Cut-day checklist"). Matches DESIGN.md's parts list.
+set that matches the sheet you measure), plus the test-fit coupon
+(not a box part, see "Test-fit coupon"). Matches DESIGN.md's parts list.
 
 **Outer shell — `output/sheet_*.svg`, 8 pieces, cut once (from
 `outer_shell.svg`):**
@@ -130,11 +226,10 @@ set that matches the sheet you measure), plus standalone calibration coupons
 - [ ] 1× Bottom panel (inset between the four walls)
 - [ ] 1× Left Wall
 - [ ] 1× Right Wall
-- [ ] 1× Front Wall — iteration 2: carries the sole lid-retention
-  turn-button pivot hole (see "Know before you build")
+- [ ] 1× Front Wall
 - [ ] 1× Rear Wall (two drawer openings)
 - [ ] 1× Vertical Divider (separates paper compartment from drawer bay;
-  iteration 2: 2× magnet holes, one per drawer)
+  2× magnet holes, one per drawer, on the box centre line)
 - [ ] 1× Horizontal Shelf (splits the drawer bay into upper/lower slots)
 - [ ] 1× Top Panel (fixed, over the drawer bay — **not** a removable lid)
 
@@ -142,12 +237,14 @@ set that matches the sheet you measure), plus standalone calibration coupons
 the same sheet TWICE):**
 
 - [ ] 2× Front (body)
-- [ ] 2× Back (body) — iteration 2: this is the drawer's LEADING wall,
-  carries the magnet hole (see "Iteration-2 retention hardware")
+- [ ] 2× Back (body) — the drawer's LEADING wall; carries the magnet
+  hole, centred, so the part is mirror-symmetric and cannot go in turned round
+  (see "Magnets")
 - [ ] 2× Left Side (body)
 - [ ] 2× Right Side (body)
 - [ ] 2× Bottom (body)
-- [ ] 2× Faceplate (glued to the body front, not finger-jointed)
+- [ ] 2× Faceplate (glued to the body front, not finger-jointed; glued 0.75 mm
+  above the body's bottom edge so it is centred in the rear-wall opening)
 
 Drawer body external dimensions at 3.175 mm stock: 149.0mm (Y) × **218.6mm
 (X, pull direction)** × 53.5mm (Z) (width and length follow the stock
@@ -156,79 +253,75 @@ before you build").
 
 **Lid — 1 piece (from `lids.svg`):**
 
-- [ ] 1× Sliding Lid (rides in through-slots cut into both side walls)
+- [ ] 1× Sliding Lid, 78.0 mm long (rides in through-slots cut into both side
+  walls)
 
 There is **no separate flat/tabbed lid** — that part doesn't exist in this
 design. The drawer bay is covered by the fixed Top Panel above, not a
 removable cover.
 
-**Iteration-2 hardware — 1 piece (from `hardware.svg`), standalone, not
-part of the shell/drawer/lid sheets:**
+**Drawer guides — part J, 4 pieces (from `guides.svg`):**
 
-- [ ] 1× Turn Button (mounts on the front wall). Pivot hole Ø3.2mm. See
-  "Iteration-2 retention hardware" for the M3 hardware and install order.
+- [ ] 4× Drawer Guide, 40 mm long x 10 mm high x T thick, plain edges. Glued
+  flat against the inside faces of the left and right walls at the divider end,
+  two per drawer slot (see "Assembly steps").
 
-**Calibration — standalone, not part of the box:**
+**Test-fit coupon — standalone, not part of the box:**
 
-- [ ] 1× Kerf/thickness coupon (from `kerf_coupon.svg`) — five
-  ply-thickness gauge slots (2.95 / 3.05 / 3.175 / 3.30 / 3.40mm, spanning
-  past both ends of the 3.0–3.4mm stock band) and a 10mm reference square.
-  Cut this on scrap *before* cutting any real part; see "Cut-day checklist"
-  step 3.
-- [ ] 1× Magnet press-fit coupon (from `magnet_coupon.svg`) — 4
-  burn-compensated gauge holes, physically identical to same-labeled real
-  part holes (5.5 / 5.65 / 5.8 / 5.95mm). Cut on scrap right after the kerf
-  coupon; see "Cut-day checklist" step 3a.
+- [ ] 1× coupon (from `coupon.svg`, or `coupon_marked.svg`) with parts K, Q,
+  R and S. Cut it on scrap before any real part. See "Test-fit coupon" above.
 
 ## Hardware list, finishing, paper
 
-**Hardware (not laser cut), exact specs:**
+**Hardware (not laser cut):** magnets only.
 
 | Qty | Item | Spec |
 |---|---|---|
-| 1 | Bolt | M3 x 14 button head (ISO 7380), A2 stainless |
-| 2 | Washers | M3 flat, ISO 7089: 3.2 ID x 7 OD x 0.5 thick |
-| 1 | Nut | M3 nyloc, DIN 985: 5.5 mm across flats, 4.0 mm tall |
-| 4 (buy 6) | Magnets | 6 x 2 mm disc, N35 neodymium (N52 or 3 mm thick for a stronger pull) |
+| 4 (buy 6) | Magnets | 6 x 2 mm disc, N52 neodymium |
 
-Stack on the front wall: bolt head outside, washer, turn button, front wall,
-washer, nyloc nut inside the paper compartment. The stack is 5.0 mm plus two
-sheet thicknesses (11.35 mm at 3.175 mm stock, 12.0 mm at 3.5 mm). An M3 x 12
-bolt is flush with the nut face at 3.5 mm stock, so the nylon insert has no
-thread to grip. M3 x 14 leaves 2.0 to 3.4 mm of thread past the nut. Bolt and
-nut stand 6.5 to 7.9 mm out from the front wall's inner face at about Z = 107,
-centered side to side.
+The turn-button lid lock (M3 bolt, washers, nyloc nut) was removed on 2026-10-10.
+The lid is held by friction in its slots, and nothing else is bought.
 
-**Finishing:**
+**Finishing.** Assemble first and finish after.
 
-1. Sand lightly with 220 grit to remove the laser char from the faces you can
-   touch (the edges stay dark unless you wipe them with a damp cloth).
-2. Seal with a thin coat of clear water-based polyurethane or shellac, then
-   scuff lightly. Keep finish off the finger joints before glue-up.
-3. Rub paraffin wax or candle stub on the drawers' bottoms and sides and on
-   the lid edges and slot floors. Waxing is what makes them slide.
-4. Do not wax or seal the faces that get glued.
+1. Dry-fit and glue the box and the drawers as described under "Assembly steps".
+   Keep the finger joints and every glue face free of finish before gluing, so
+   no finish goes on until the glue has cured.
+2. When the glue has cured, wipe a thin coat of finish onto the assembled box
+   (clear water-based polyurethane or shellac), and scuff lightly. Keep it off
+   the lid slots and the faces the drawers ride on.
+3. Wax last. Rub paraffin wax or a candle stub on the lid slots and lid edges
+   and on the drawer runners (the drawers' bottoms and sides). Waxing is what
+   makes them slide.
 
 **Paper:** quarter letter, 4.25 x 5.5 in (107.95 x 139.7 mm), stands on edge in
 the paper compartment with the 5.5 in side across the box. At 3.175 mm stock
 the compartment is 111.95 mm tall under the lid, so the paper has 4.0 mm of
 headroom (3.35 mm at 3.5 mm stock). It is 158.75 mm wide inside, so there is
-19.05 mm of spare width (18.4 mm at 3.5 mm stock). Depth is 76.2 mm less the
-bolt (up to 7.9 mm), so 68 mm of paper stack fits, several hundred sheets.
+19.05 mm of spare width (18.4 mm at 3.5 mm stock). Depth is 76.2 mm (the divider
+sits 76.2 mm behind the front wall's inner face at every thickness), which holds
+about 760 sheets of 20 lb paper at the 10 sheets per mm DESIGN.md assumes.
 Letter paper cut in four gives quarter-letter pages.
 
 ## Wall identification (read this before assembly)
 
-The left and right side walls are **mirror images**, not identical parts, and
-the sheet labels are not cut or engraved, so identify a wall by its features:
+The left and right side walls are **mirror images**, not identical parts. In the
+plain cut files the part names are only in the manifest, so identify a wall by its
+features (the labels files and the engrave files also name each part):
 
 1. Hold the wall with the **lid slot notch near the top edge** and its **open
    mouth** (the notch reaches the edge of the wall) pointing left. The mouth
    end is the wall's front.
 2. Look at the vertical divider hole column, about 3 in (79.4 mm) in from the
-   mouth, just behind the closed end of the slot. Count the holes. The
-   **left wall has 8 holes, the right wall has 7** (the divider is keyed this
-   way).
+   mouth, just behind the closed end of the slot. Count the holes. The wall with
+   **one more hole** in that column is the **left wall** (the divider is keyed
+   this way). The counts depend on the plywood thickness:
+
+   | thickness | left wall | right wall |
+   |---|---|---|
+   | 2.8 to 2.9 mm | 9 | 8 |
+   | 3.0 to 3.2 mm | 8 | 7 |
+   | 3.3 to 3.5 mm | 7 | 6 |
 
 Getting this wrong puts the slot mouths at opposite ends of the box and
 nothing dry-fits: check before step 5.
@@ -245,7 +338,7 @@ Use slow-set PVA, a little on finger joints only. Dry-fit every step before
 gluing it. Have clamps staged. Wipe squeeze-out inside the drawer bay at once.
 
 **Identify the parts first.** The side walls are mirror images, see "Wall
-identification". The divider only fits one way (see step 4).
+identification". The divider only fits one way (see step 6).
 
 **Drawers (make two, identical).**
 
@@ -255,33 +348,54 @@ identification". The divider only fits one way (see step 4).
    The four vertical corners close together.
 3. Press the drawer bottom on from below. Its edges are plain; the walls' tabs
    go through its hole rows.
-4. Glue the faceplate to the front. Put the red-engraved rectangle on the glue
-   side, center the body on it, and line up the two grip slots so a finger
-   reaches through both. Clamp. Do not glue the drawers anywhere else.
+4. Glue the faceplate to the front. Center the body on the plate and glue the
+   plate 0.75 mm ABOVE the body's bottom edge, so that it sits centred in the
+   rear-wall opening with a 0.75 mm reveal on all four sides (the body's bottom
+   edge then sticks out 0.75 mm below the plate, and the body is 0.95 mm in from
+   each side edge of the plate). Line up the two grip slots so a finger reaches
+   through both (the plate's slot sits 8.75 mm below its top edge, the body
+   front's slot 8.0 mm below its own). In the cut + labels files the plate
+   carries red glue-up lines for the body's left edge, right edge and top edge;
+   there is no bottom line. Clamp. Do not glue the drawers anywhere else.
 
 **Box.**
 
-5. **Frame.** Lay the top panel and the shelf in their relative positions and
+5. **Drawer guides.** While each side wall lies flat, glue its two guides (part
+   J) to the inside face at the divider end. Each guide's rear end is flush with
+   the divider's rear face (X = 82.55, the rear edge of the divider-hole column
+   in the wall), and its bottom edge sits on the top edge of the bottom-panel
+   hole row (lower guide) or of the shelf hole row (upper guide). The lower
+   pair stand on the bay floor and the upper pair on the shelf. Let the glue set
+   before the walls go on.
+6. **Frame.** Lay the top panel and the shelf in their relative positions and
    push the divider toward the rear (+X) into them: the divider's top tabs go
-   into the top panel's front hole row, the shelf's front tabs into the
-   divider's hole row. The divider fits only one way: its two side edges are
+   into the top panel's front-edge holes (a single row of 10 to 13 holes,
+   depending on thickness, along its plain front edge; the top panel's side and
+   rear edges carry fingers), the shelf's front tabs into the divider's hole
+   row. The divider fits only one way: its two side edges are
    different lengths (the long finger run goes with the left wall, the side
    with the shorter run goes with the right wall). If it will not seat, it is
    turned the wrong way, so turn it; do not force it.
-6. **Right wall.** Move it onto the frame from the right (toward -Y). Lid slot
-   mouth to the front.
-7. **Rear wall.** Fit it from the rear (toward -X).
-8. **Left wall.** Fit it from the left (toward +Y).
-9. **Front wall.** Fit it from the front (toward +X).
-10. **Bottom panel.** Turn the box over and press the bottom in from below. Its
+7. **Right wall**, with its two guides already glued on. Move it onto the frame
+   from the right (toward -Y). Lid slot mouth to the front.
+8. **Rear wall.** Fit it from the rear (toward -X).
+9. **Left wall**, with its two guides already glued on. Fit it from the left
+   (toward +Y).
+10. **Front wall.** Fit it from the front (toward +X).
+11. **Bottom panel.** Turn the box over and press the bottom in from below. Its
     rear edge is plain and sits against the rear wall.
-11. Square the box (equal diagonals) and clamp. Check with the drawers: a
+12. Square the box (equal diagonals) and clamp. Check with the drawers: a
     square bay lets both drawers slide into their openings without binding.
-12. **Turn button.** Bolt it to the front wall (see "Hardware list").
 13. **Lid.** Slide it in from the front, over the front wall, into both slots,
-    until it stops at the divider. Never glue the lid or its slots.
-14. **Drawers.** Slide them in from the rear. Install the magnets as described
-    in "Iteration-2 retention hardware".
+    until it stops at the divider. Never glue the lid or its slots. Nothing
+    locks it in place; it stays by friction in the slots.
+14. **Drawers.** Slide them in from the rear. The magnets are already in the
+    parts (see "Magnets").
+
+**Match marks.** In the cut + labels and cut + engrave files every finger joint
+is numbered: the lower part letter plus a number (for example C3), engraved near
+the joint on both parts. Assembly is "match 1 to 1". The bottom panel's rear
+edge and the faceplates are glued and have no number.
 
 **Glue guidance.**
 
@@ -297,50 +411,53 @@ This design accepts some real tradeoffs to hit the SPEC envelope and the
 front-insert lid concept. None of these are bugs — they're documented so
 nobody "fixes" them mid-build or is surprised later:
 
-- **The sliding lid has no retention along its travel axis in v1** (no
-  turn-button installed yet). The divider stops it from sliding in too far
+- **The lid is 78 mm long and the box has drawer guides.** The lid (78.0 mm)
+  stops 1.0 mm short of the end of its slot, so it never touches the 1.0 mm
+  rounded corners at the rail's root. Four glued-in guides (part J) narrow the
+  drawer channel so the drawers cannot wander far enough to lose their magnets.
+- **The sliding lid is held by friction in its slots only.** The turn-button
+  lock was removed on 2026-10-10 (Ben's decision), so there is no button,
+  pivot hole, bolt or nut. The divider stops the lid from sliding in too far
   (rearward), but nothing stops it sliding back *out* the front. Tip the box
-  front-down and the lid will slide out. This is an accepted cost of the
-  front-insert design (the slots have to be open at the front edge for the
-  lid to go in at all) — **carry the box level**, especially with the lid
-  closed, until the iteration-2 turn-button (below) is installed.
-- **The drawers have no out-stop either in v1** (no magnets installed yet).
-  Nothing prevents a drawer from sliding fully out its rear-wall opening.
-  Tip the box rear-down and a drawer will slide free. Don't rely on friction
-  to keep drawers seated in transit until the iteration-2 magnets (below)
-  are installed.
-- **Iteration 2 (issue #20) adds retention for both**: a magnet pair per
-  drawer (drawer leading wall ↔ divider) and a single turn-button mounted on
-  the FRONT WALL's exterior face (an earlier side-wall version was found in
-  review to be geometrically incapable of retention and was replaced before
-  any part was cut — see DESIGN.md's "Retention (iteration 2...)" section B
-  for the proof). See "Iteration-2 retention hardware" below for the
-  shopping list and install order — **install AFTER the full dry-fit and
-  glue-up**, never before (the magnet holes and the pivot hole are already
-  cut into the shell/drawer parts above; only the hardware itself goes in
-  later).
-- **Drawer magnet lateral float, honestly stated.** The drawer is guided by
-  its rear-wall opening, not the bay walls, so it has up to ±4.9mm of
-  lateral play in the bay — the two magnet holes (drawer Back wall ↔
-  divider) are not guaranteed dead-center-coaxial the instant the magnets
-  come close; true centering only happens in the drawer's final ~2.4mm of
-  travel, as the faceplate itself enters its snug rear-wall opening. See
-  "Iteration-2 retention hardware" below for the self-registering install
-  step this implies (mark the actual contact point before gluing, don't
-  just trust the two holes' nominal positions).
+  front-down and the lid can slide out. This is an accepted cost of the
+  front-insert design (the slots have to be open at the front edge for the lid
+  to go in at all). **Carry the box level**, especially with the lid closed.
+- **The drawers are held shut by magnets.** One magnet pair per drawer (drawer
+  back to divider) holds each drawer closed; press them into the loose parts before assembly (see
+  "Magnets"). Without the magnets, nothing prevents a drawer from sliding fully
+  out its rear-wall opening when the box is tipped rear-down.
+- **Drawer magnet lateral float.** The drawer is guided by its rear-wall
+  opening and by the four drawer guides. The guides narrow the channel to
+  INTERIOR_WIDTH - 2T (152.4 mm at T = 3.175, the same as the rear-wall
+  opening), so a drawer (149.0 mm wide) floats at most 1.7 mm each way at its
+  far end. Without the guides it floated 4.9 mm each way ((158.75 - 149.0) / 2),
+  and the magnet pull is zero or negative beyond 4.5 mm. With N52 6 x 2 mm discs
+  the pull at 1.7 to 2.0 mm lateral offset is above 3 N. Widening the drawer is
+  not an option: it has to pass the rear-wall opening, whose posts must stay at
+  least 3.0 mm wide.
 - **Drawers close flush by bottoming out on the divider, not the rear
   wall.** The inset faceplate never bears against the rear-wall opening
-  frame — the drawer body's front face is what stops against the divider
-  at the far end of its travel. If a drawer doesn't sit flush, check for
-  glue or debris on the divider face, not the rear-wall opening.
+  frame — the drawer back (its leading wall) is what stops against the
+  divider's rear face (box X = 82.55) at the far end of its travel. If a
+  drawer doesn't sit flush, check for glue or debris on the divider face, not the rear-wall opening.
 - **The 7.5 mm rail above each lid slot is still the most fragile feature.**
   It is a thin cantilevered strip of ply above the slot, unsupported along
   most of its length. **Never force the lid.** If it binds, stop and look for a
   swollen or misaligned joint. Never pick the box up by the lid. Hand it over
   from the bottom.
-- **The rear wall's strip under the lower drawer opening is a plain 3.175 mm
-  web** (v2 removed the bottom-panel hole row that used to chop it into
-  chips). It is still thin; handle the rear wall by its edges before glue-up.
+- **The rear-wall posts either side of a drawer opening are at least 3.0 mm
+  wide** (MIN_WEB) at every thickness: OPENING_WIDTH = INTERIOR_WIDTH - 2 *
+  max(T, 3.0), which is 152.4 mm at T = 3.175 and 153.5 mm at 2.8. The drawer
+  and faceplate widths follow from the opening, so they are 0.4 mm narrower at
+  T = 2.8.
+- **The lid slot's two rear inside corners are rounded** with a 1.0 mm radius to
+  remove the stress concentration at the rail's root.
+- **The rear wall's strip under the lower drawer opening is a plain web of at
+  least 3.0 mm** (v2 removed the bottom-panel hole row that used to chop it into
+  chips). The lower drawer and its opening sit at Z = max(T, 3.0), so the strip
+  is T tall from 3.0 mm plywood up, and 3.0 mm at 2.8 and 2.9 mm plywood (where
+  the lower drawer then sits 0.2 and 0.1 mm above the bay floor). It is still
+  thin; handle the rear wall by its edges before glue-up.
 - **The "fixed" Top Panel is fixed by glue, not geometry.** Its finger
   holes in the walls break through the walls' top edge by design (see
   DESIGN.md), so before the PVA cures the panel can lift straight out —
@@ -352,66 +469,37 @@ nobody "fixes" them mid-build or is surprised later:
   SPEC's 1.5 mm play is still kept in-plane (lid width vs. slot span, drawer
   vs. opening).
 
-## Iteration-2 retention hardware (issue #20)
+## Magnets (issue #20)
 
-Not cut from plywood — buy these separately, and don't fit any of it until
-after the box is fully glued up and dry-fit (see "Assembly steps" above);
-the holes are already in the parts, this is a final, non-structural step.
+The magnets are the only hardware to buy. Press them into the loose parts
+BEFORE assembly. The holes are already in the parts.
 
 **Shopping list:**
-- 6× disc magnets, 6mm diameter × 2mm thick, N35 grade (4 needed — one
-  attracting pair per drawer, 2 drawers — **plus 2 spares** for a dropped/
-  chipped magnet or a scrap test-fit; recommended starting point — gentler
-  pull, ~0.5–0.7kg at contact, one-finger openable). **The quoted pull
-  assumes the magnets are pressed FLUSH with the two mating faces** (the
-  drawer Back's rear face and the divider's facing surface) — a 2mm disc
-  centered or recessed on its mating side leaves an air gap between the
-  pair, and a ~2.4mm total pole gap collapses the pull to roughly
-  0.1–0.17kg (see DESIGN.md "Retention" §A). Recess only on the far side;
-  glue backfills there. Force is tunable with no geometry change: buy N52
-  for a stronger pull, or 3mm-thick discs — the low-risk choice, since they
-  sit near-flush on both sides and can't be recessed wrong.
-- 1× M3×14 button-head bolt (turn-button pivot), see "Hardware list".
-- 1× M3 nyloc nut.
-- 2× M3 washer.
+- 6 disc magnets, 6 mm diameter x 2 mm thick, N52 neodymium. Four are needed
+  (one attracting pair per drawer, 2 drawers); buy 6 so there are 2 spares for a
+  dropped or chipped magnet or a scrap test-fit. **Press each magnet FLUSH with
+  the mating face** (the drawer Back's rear face and the divider's surface that
+  faces it). A 2 mm disc recessed on its mating side leaves an air gap between
+  the pair, and the gap weakens the pull a lot (see DESIGN.md "Retention" §A).
+  Recess only on the far side, where the glue backfills.
 
-**Install order:**
-1. Full dry-fit and glue-up first (see "Assembly steps"). The magnet holes
-   (divider + each drawer's leading wall) and the turn-button pivot hole
-   (front wall) are already cut into those parts — nothing extra to drill.
-2. **Magnets — self-registering install (don't just trust the nominal
-   hole positions):** with the box fully assembled and each drawer's
-   faceplate seated in its opening (fully closed, dry — no glue yet), glue
-   the DIVIDER-side magnet into its divider hole first. Then, with the
-   drawer held fully closed against the divider, reach through the
-   drawer's own Back-wall hole and mark the magnet's true contact point
-   (a pencil/scribe mark, or press a bit of clay/putty through to record
-   it) — this accounts for the drawer's own lateral float in the bay
-   (up to ±4.9mm, only narrowed down once the faceplate enters its
-   opening in the final ~2.4mm of travel), rather than assuming the two
-   holes are dead-center-coaxial on paper. THEN press-fit and CA-glue the
-   drawer-side magnet at the marked/confirmed position, polarity oriented
-   to attract (test with the two magnets before gluing either). **Press
-   each magnet in until it is flush with its MATING face** — both magnets'
-   working faces must be able to touch through the closed joint (see the
-   shopping-list note above; a recessed mating face collapses the pull).
-   Repeat per drawer.
-3. **Turn-button**: bolt the `Turn Button` piece (`output/hardware.svg`)
-   through the front wall's pivot hole with the M3 bolt (button head on the
-   OUTSIDE, so it's the piece you turn), a washer on each side, nyloc nut
-   snugged just tight enough that the button holds a rotated position by
-   friction alone (not spring-loaded) — don't overtighten to the point it
-   can't rotate by hand. The nut lands INSIDE the paper compartment — it's
-   reachable with the lid off, before the lid is slid in for the last time.
-4. Test both mechanisms: drawers should pull closed and require a
-   deliberate one-finger pull to open; the turn-button, rotated up, should
-   block the lid from sliding out the front, and rotated down, should swing
-   fully clear so the lid slides freely.
-5. **Magnet press-fit calibration**: `MAGNET_PRESS_FIT` in `config.py` (and
-   thus the drawer/divider hole diameters) is a starting guess like
-   `BURN`/`FINGER_PLAY` — cut `output/magnet_coupon.svg` on scrap (see
-   "Cut-day checklist" step 3 below) and press a real magnet into its 4
-   gauge holes before trusting the fit on real parts.
+**Install order (before assembly):**
+1. Stack all four magnets in one column and mark a dot on the top face of the
+   stack. They then all have the same pole up.
+2. Identify each part's inside and outside face by the labels. The joint labels
+   and part letters are engraved on the inside face of parts without art; in the
+   cut + labels files every part is engraved inside.
+3. Press each divider magnet into its hole with its dot facing OUT, toward the
+   drawers (the rear of the box). Press each drawer-back magnet in with its dot
+   facing IN, toward the divider. Because all four are marked from the same
+   stack, each drawer magnet attracts the divider magnet it meets, and either
+   drawer works in either bay. Use a drop of glue on each.
+4. Assemble the box and drawers as described under "Assembly steps".
+5. Test: each drawer should pull closed and need a deliberate one-finger pull to
+   open.
+6. **Magnet hole fit:** the box wants a 5.65 mm hole for the 6.0 mm magnet. The
+   coupon's four magnet holes (drawn 5.3 to 5.6 mm, cut size drawn + kerf) show
+   which size your laser and magnets want; see "Test-fit coupon".
 
 ## Cut-day checklist (NYC Resistor)
 
@@ -426,8 +514,8 @@ this checklist is current.
    current machine is an **Epilog Fusion 32 60W — 32"×20" (812×508mm) work
    area**, confirmed by their wiki (edited 2026), 2025–26 class listings,
    and Epilog's spec sheet for that exact model (sources in
-   docs/service-comparison.md). This project's three sheets measure
-   ~**21.8"×14.0"**, **21.6"×17.1"**, and **21.6"×9.8"** — all fit with
+   docs/service-comparison.md). The `nycr_32x20` layout (812.8 x 508 mm)
+   puts the whole box on 2 sheets, each at most 32 x 20 in, so it fits with
    room to spare. A five-second look at the machine confirms it (the
    Fusion 32 bed is visibly ~2.5ft wide). If it somehow isn't that machine,
    re-nest: change `SHEET_WIDTH_MM` / `SHEET_HEIGHT_MM` in
@@ -437,48 +525,34 @@ this checklist is current.
    plywood — cheap ply's interior voids can blow out this design's thinnest
    features (the 3.175mm webs in the rear-wall drawer openings and the
    7.5mm cantilevered lid rail) when the laser hits a void instead of solid
-   wood. Bring at least **three sheets, each at least 22"×15"**, plus extra
-   scrap for the kerf coupon and the magnet-fit coupon (steps 3/3a). Orient
+   wood. Bring **2 sheets of 32"×20"**, plus extra
+   scrap for the test-fit coupon (step 3). Orient
    sheets with the **face grain running along the sheet's long axis** for
    stiffness on the long spans.
-3. **Cut `output/kerf_coupon.svg` on scrap FIRST, before any real part.**
-   It has five ply-thickness gauge slots (2.95 / 3.05 / 3.175 / 3.30 /
-   3.40mm) and a 10mm reference square. Find which gauge slot *your actual sheet* fits
-   into snugly, and measure the cut size of the 10mm square with calipers.
-   If either is off from nominal, adjust `BURN` (kerf compensation) and/or
-   `FINGER_PLAY` (thickness compensation) in `src/faxbox/config.py` and
-   regenerate **everything** (`shell_generator`, `generate_drawers`,
-   `generate_lids`, `layout`, and `calibration` — then RE-CUT the coupon to
-   confirm before trusting the gauge slots) before cutting real parts. Do not skip this
-   because `BURN`/`FINGER_PLAY` already have values in the repo — those are
-   starting values, not calibrated ones.
-3a. **Cut `output/magnet_coupon.svg` on scrap right after the kerf coupon
-   (iteration 2, issue #20)** — same closed-loop rule applies: it has 4
-   burn-COMPENSATED gauge holes (5.5 / 5.65 / 5.8 / 5.95mm — drawn smaller
-   so the physical hole equals its label, exactly like the real part
-   holes; unlike the kerf square, which stays burn-neutral). Press a
-   real 6mm disc magnet into each; whichever seats snugly sets
-   `MAGNET_PRESS_FIT = MAGNET_DIA - <snuggest diameter>` in `config.py`.
-   **If you change `BURN` per step 3, re-cut this coupon too** before
-   trusting its readings — like the kerf coupon's own gauge slots, this
-   coupon's holes only read true once `BURN` matches the real kerf.
+3. **Cut the test-fit coupon on scrap FIRST, before any real part** (`coupon.svg`
+   or `coupon_marked.svg` from the downloads; see "Test-fit coupon"). Measure the
+   kerf square, pick the kerf file set (diode 0.12, CO2 0.18, Ponoko 0.20 mm),
+   then read the thickness slots and pick the thickness, then try the finger
+   joints. Choosing a kerf file set replaces any editing of `BURN` or
+   `FINGER_PLAY` in `config.py`. The `nycr_32x20` layout (812.8 x 508 mm) is the
+   ready-made file set for this laser.
 4. **CorelDraw import.** NYC Resistor's workflow is CorelDraw-based; their
    tips page warns Inkscape's raw SVG export can get corrupted there and
    recommends exporting PDF instead. On import: set all strokes to
    **hairline** if the importer doesn't respect the file's native
    0.0762mm hairline stroke width. Color mapping: **blue = vector cut**,
-   **red = engrave**, **gray text = ignore** (reference-only part/sheet
-   labels — not a cut or engrave instruction). The "FAX MACHINE" letters
-   are hatched engrave strokes, not filled shapes — engrave them at vector
-   (stroke) settings, same as the other red lines. If the SVG import gets
+   **red = line engrave** (part letters, joint numbers, glue-up lines),
+   **gray fill = area engrave**. In the cut + engrave files the art
+   is gray filled shapes: engrave it as a raster / fill, and engrave any red
+   line at vector (stroke) settings. If the SVG import gets
    mangled, run `.venv/bin/python scripts/export_pdf.py` to export
    PDF versions of the sheets and coupon (same folder, same names) as a
    fallback — the PDF page size matches each SVG's declared mm dimensions
    exactly, so physical scale carries over.
 5. **Cut order: engrave first, then interior holes, then part outlines
    (inside-out), and set this explicitly** — don't assume the driver
-   preserves file order. Engrave the red "FAX MACHINE" text and faceplate
-   registration outlines while the sheet is still whole and flat, then cut
+   preserves file order. Engrave the art (and the faceplate glue-up lines or the
+   joint labels, if you use them) while the sheet is still whole and flat, then cut
    interior finger-joint holes and slots, then cut part outlines free last.
    Cutting outlines before interior holes risks a loose piece shifting
    under the head before its holes are cut.
@@ -489,10 +563,9 @@ this checklist is current.
 7. **Take the laser class first** if you haven't (required for the $1/min
    self-serve rate; runs ~monthly). Operator-assisted time is $75/hr +
    $2/min if you skip it.
-8. **Cut all sheets, both coupons, and `output/hardware.svg` (1 turn-button
-   piece), then dry-fit before gluing anything** — see "Assembly steps"
-   above. Don't fit the magnets/turn-button bolts until after glue-up (see
-   "Iteration-2 retention hardware" above).
+8. **Cut all sheets, then dry-fit before gluing anything** — see "Assembly
+   steps" above. Press the magnets into the loose parts before assembly (see
+   "Magnets").
 
 ## Ordering from Ponoko
 
@@ -520,43 +593,45 @@ a reference-only `final_layout.svg` — never upload that one). Differences
 from the NYCR sheets, all verified against Ponoko's own current docs on
 2026-07-07 (source URLs in `src/faxbox/config.py`'s `PONOKO_*` constants):
 
-- **Kerf compensation:** `BURN = 0.10` (half Ponoko's published 0.20mm birch
-  kerf), vs. the NYCR default 0.08.
+- **Kerf compensation:** 0.10 mm per side (half Ponoko's published 0.20 mm birch
+  kerf); the downloads' `ponoko` layout is built only for the 0.20 kerf set.
 - **Sheets re-nested** to fit Ponoko's published 790×384mm max design area
   for birch plywood (the NYCR sheet 2 at ~549×434mm is too tall for it).
   Still 3 sheets — price scales with material.
-- **All 22 real parts on the sheets** — the 21 NYCR parts plus the
-  turn-button (standalone `hardware.svg` on the NYCR path) — **plus a
-  self-calibration coupon** (kerf square + 4-hole magnet press-fit gauge
-  row) nested into spare space, since Ponoko has no "cut a coupon on scrap
-  first" step: your first order IS the test cut.
-- **No gray reference text** — Ponoko requires text converted to outlines
+- **All 25 parts on the sheets**, plus (in the legacy `faxbox.ponoko`
+  export) a small self-calibration coupon nested into spare space, since Ponoko
+  has no "cut a coupon on scrap first" step: your first order IS the test cut.
+  With the downloads, add `coupon.svg` (it is inside the cut zip) to the order
+  as its own small part.
+- **No label text** — Ponoko requires text converted to outlines
   (it isn't read otherwise), and outlined part names would engrave onto
   visible faces. Identify parts by size against the "Parts checklist" above
   (each `<g>` also carries a `data-part` attribute if you open the SVG).
-- Colors are blue=cut / red=vector-engrave — Ponoko's recommended convention,
-  which happens to match this project's own.
+- Colors are blue stroke = cut, red stroke = line engrave, gray fill = area
+  engrave: Ponoko's recommended convention, which this project follows. Check
+  the colour-to-function assignment at upload.
 
 **Placing the order:** upload the three `output/ponoko/sheet_*.svg` files at
 ponoko.com, pick **Birch Plywood, 3.2mm** (their 1/8" stock — within this
-design's 3.0–3.4mm tolerance band), one sheet each. Their quote is instant
+design's 2.8–3.5 mm range; measure it and use the matching thickness set), one
+sheet each. Their quote is instant
 at upload. Typical turnaround is roughly ~8 business days production +
 shipping to NYC (check the quote page for current dates).
 
 **Calibrate from the first order** (closes the loop for order #2+):
 
-1. Find the small 110×25mm coupon strip. Measure its square hole with
-   calipers. Its tool path is drawn at exactly 10.0mm (burn-neutral), so:
-   `PONOKO_BURN = (measured − 10.0) / 2` — update it in
-   `src/faxbox/config.py` if it differs from the current 0.10.
-2. Press a real 6mm disc magnet into the 4 gauge holes (5.5 / 5.65 / 5.8 /
-   5.95mm, left to right after the square). Whichever seats snugly sets
-   `MAGNET_PRESS_FIT = MAGNET_DIA − <snuggest diameter>`.
-3. If the first order's finger joints are loose/tight, the kerf-square
-   reading from step 1 is the fix — regenerate and the next order is dialed
-   in. (If joints on the FIRST order don't assemble at all, that's a
+1. Find the coupon (see "Test-fit coupon"). Measure the kerf square (part K,
+   drawn 10 mm with no kerf compensation) with calipers: kerf = 10.00 −
+   measured width. If it is not close to 0.20 mm, use the file set whose kerf
+   is nearest for the next order.
+2. Press a real 6 mm disc magnet into the four magnet holes (drawn 5.3, 5.4,
+   5.5 and 5.6 mm; cut size = drawn + kerf, left to right). The box wants a
+   5.65 mm hole.
+3. If the first order's finger joints are loose or tight, the kerf-square
+   reading from step 1 and the three-finger corner pairs (part R) say which
+   kerf set to use for the next order. (If joints on the FIRST order don't assemble at all, that's a
    thickness problem, not kerf — check the delivered ply with calipers
-   against the 3.0–3.4mm band.)
+   against the 2.8–3.5 mm range of the thickness sets.)
 
 ## Rebuilding sheets for a different laser bed
 

@@ -22,7 +22,7 @@ def data():
 def test_schema(data):
     assert {"box", "parts", "steps", "inventory"} <= set(data)
     assert data["box"]["length"] == pytest.approx(304.8)
-    assert len(data["parts"]) == 22
+    assert len(data["parts"]) == 25
     for p in data["parts"]:
         for k in ("id", "name", "letter", "outline", "holes", "thickness", "transform", "color",
                   "assembly_step", "insert_direction", "exterior_face"):
@@ -46,7 +46,7 @@ def test_transform_places_outline_inside_the_box(data):
     for p in data["parts"]:
         m = np.array(p["transform"])
         pts = np.array([[x, y, 0, 1] for x, y in p["outline"]]) @ m.T
-        assert pts[:, 0].min() >= -c.T - 1e-6 and pts[:, 0].max() <= c.SHELL_EXT["length"] + 1e-6
+        assert pts[:, 0].min() >= -1e-6 and pts[:, 0].max() <= c.SHELL_EXT["length"] + 1e-6
         assert pts[:, 1].min() >= -1e-6 and pts[:, 1].max() <= c.SHELL_EXT["width"] + 1e-6
         assert pts[:, 2].min() >= -1e-6 and pts[:, 2].max() <= c.SHELL_EXT["height"] + 1e-6
 

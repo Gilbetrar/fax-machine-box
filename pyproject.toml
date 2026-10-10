@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Laser-cut fax machine themed box generator using Boxes.py"
 requires-python = ">=3.9"
 dependencies = [
-    "boxes @ git+https://github.com/florianfesti/boxes.git",
+    "boxes @ git+https://github.com/florianfesti/boxes.git@836f5f72bedb33ac4262ed925545eacb31e926a8",  # pinned: the commit every part was generated with
     "shapely>=2.0",      # partgeom / assembly3d: zero-kerf outlines, 3D checks
     "numpy",
     "svgpathtools",

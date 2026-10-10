@@ -83,14 +83,13 @@ def test_bottom_panel_rear_edge_is_plain(parts):
     assert max(xs) == pytest.approx(p.width, abs=1e-6)
 
 
-# --- hardware stack and paper ---------------------------------------------------------
+# --- hardware and paper -----------------------------------------------------------------
 
-def test_bolt_stack_has_thread_through_the_nylon():
-    """M3x12 left 0.0 mm past the nut at T = 3.5; M3x14 leaves >= 2 mm."""
-    assert c.HARDWARE["bolt_length"] == 14.0
-    assert c.BOLT_PROTRUSION_PAST_NUT >= 2.0 - 1e-9
-    # and the bolt is not so long that the paper bay loses more than 8 mm of depth
-    assert c.BOLT_INTRUSION_INTO_PAPER_BAY <= 8.5
+def test_only_magnets_are_hardware():
+    """The turn-button lock (bolt, washers, nyloc nut) was removed on 2026-10-10."""
+    assert set(c.HARDWARE) == {"magnet", "magnet_thickness", "magnets_needed", "magnets_to_buy"}
+    assert "N52" in c.HARDWARE["magnet"]
+    assert c.HARDWARE["magnets_needed"] == 4
 
 
 def test_quarter_letter_paper_stands_on_edge_with_clearance():
@@ -103,6 +102,44 @@ def test_quarter_letter_paper_stands_on_edge_with_clearance():
 def test_lid_rail_and_clearance_v2():
     assert c.LID_RAIL_HEIGHT >= 7.0
     assert c.LID_SLOT_VERTICAL_CLEARANCE >= 1.2 - 1e-9
-    # button-down cap stays clear of the front wall top
-    cap_top = c.TURN_BUTTON_PIVOT_BOX_Z + c.TURN_BUTTON["pivot_from_blunt_end"]
-    assert c.FRONT_WALL_TOP - cap_top >= 1.0
+
+
+# --- red-team pass 1 fixes (G17, G20, G22) ----------------------------------------------
+
+def test_strip_under_lower_opening_is_at_least_min_web():
+    """G22: the strip was T tall (2.8-2.9 mm at thin stock, below MIN_WEB)."""
+    assert c.BOTTOM_OPENING_Z0 >= c.MIN_WEB - 1e-9, (c.T, c.BOTTOM_OPENING_Z0)
+    # the drawer rests on the opening floor, so it is never below it
+    assert c.BOTTOM_DRAWER_Z0 == pytest.approx(c.BOTTOM_OPENING_Z0)
+    # and the slot above still holds the drawer: top of the drawer under the shelf
+    assert c.BOTTOM_DRAWER_Z0 + c.DRAWER_BODY["height"] <= c.SHELF_Z0 - 1.0
+
+
+def test_faceplate_is_centred_in_its_opening():
+    """G20: reveal was 0 at the bottom and 1.5 mm at the top."""
+    for z0, z1 in ((c.BOTTOM_OPENING_Z0, c.BOTTOM_OPENING_Z1), (c.TOP_OPENING_Z0, c.TOP_OPENING_Z1)):
+        zf = z0 + c.FACEPLATE_Z_OFFSET
+        assert zf - z0 == pytest.approx(c.FACEPLATE_REVEAL)
+        assert z1 - (zf + c.FACEPLATE["height"]) == pytest.approx(c.FACEPLATE_REVEAL)
+
+
+def test_magnet_holes_are_centred(parts):
+    """G17: a hole 40 mm off centre made a flipped drawer back (or a mirror
+    built box) miss its magnet by 80 mm."""
+    assert c.MAGNET_Y_OFFSET == 0.0
+    def centres(pid):
+        out = []
+        for h in parts[pid].holes:
+            w, ht = h.bounds[2] - h.bounds[0], h.bounds[3] - h.bounds[1]
+            if abs(w - ht) < 0.05 and abs(w - c.MAGNET_HOLE_DIA) < 0.5:
+                out.append(((h.bounds[0] + h.bounds[2]) / 2, (h.bounds[1] + h.bounds[3]) / 2))
+        return out
+    back = centres("d_back")
+    assert len(back) == 1 and back[0][0] == pytest.approx(parts["d_back"].width / 2, abs=0.01)
+    div = centres("divider")
+    assert len(div) == 2 and all(x == pytest.approx(parts["divider"].width / 2, abs=0.01) for x, _ in div)
+    # and the part really is mirror symmetric in its width now
+    from shapely.affinity import scale
+    g = parts["d_back"].solid
+    mirrored = scale(g, xfact=-1, origin=(parts["d_back"].width / 2, 0))
+    assert g.symmetric_difference(mirrored).area < 0.1

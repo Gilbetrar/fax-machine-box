@@ -100,10 +100,19 @@ SHELF_Z1 = SHELF_Z0 + T                          # 65.0875
 
 # --- Rear wall drawer openings ----------------------------------------------
 
-OPENING_WIDTH = INTERIOR_WIDTH - 2 * T           # 152.4 (leaves T webs at corners)
+# The posts either side of an opening are at least MIN_WEB wide (they were T,
+# 2.8-2.9 mm at thin stock): 152.4 at T = 3.175, 153.5 at 2.8.
+OPENING_WIDTH = INTERIOR_WIDTH - 2 * max(T, MIN_WEB)
 OPENING_HEIGHT = 55.0
-# Sill-free: each opening's bottom edge is exactly its slot's floor.
-BOTTOM_OPENING_Z0 = FLOOR_TOP                    # 3.175
+# Sill-free: each opening's bottom edge is exactly its slot's floor.  The
+# lower slot's floor is the bay floor, except at thin stock: the strip of
+# rear wall under the opening is BOTTOM_OPENING_Z0 tall and must be at least
+# MIN_WEB, so at T < MIN_WEB the lower drawer (and its opening) sit
+# MIN_WEB - T above the bay floor (0.2 mm at 2.8 mm stock; the drawer then
+# rests on that strip at the faceplate end and on the bay floor at the far
+# end, a tilt of 0.05 degrees).
+BOTTOM_DRAWER_Z0 = max(FLOOR_TOP, MIN_WEB)       # 3.175 (3.0 at T = 2.8, 2.9)
+BOTTOM_OPENING_Z0 = BOTTOM_DRAWER_Z0
 BOTTOM_OPENING_Z1 = BOTTOM_OPENING_Z0 + OPENING_HEIGHT    # 58.175
 TOP_OPENING_Z0 = SHELF_Z1                        # 65.0875
 TOP_OPENING_Z1 = TOP_OPENING_Z0 + OPENING_HEIGHT          # 120.0875
@@ -123,15 +132,29 @@ DRAWER_BODY = {   # external
     "height": 53.5,    # Z
 }
 
+# Drawer guides (red-team H1): four plywood strips glued to the bay walls at the
+# divider end, two per drawer slot, standing on the bay floor (lower) or the
+# shelf (upper).  They narrow the channel to INTERIOR_WIDTH - 2T, which is the
+# rear-wall opening width at T >= 3.0, so the far end of a drawer can float no
+# further than its front end can (about 1.7 mm each way) instead of 4.9 mm.
+DRAWER_GUIDE = {"length": 40.0, "height": 10.0}        # X along the wall, Z; thickness T
+
 FACEPLATE = {
     "width": OPENING_WIDTH - 2 * FACEPLATE_REVEAL,    # 150.9
     "height": OPENING_HEIGHT - 2 * FACEPLATE_REVEAL,  # 53.5
 }
+# The drawer body (53.5 high) rests on the opening's floor; the faceplate is
+# the same height, so to leave FACEPLATE_REVEAL all round it is glued this far
+# ABOVE the body's bottom edge (body bottom edge sticks out 0.75 below it).
+FACEPLATE_Z_OFFSET = FACEPLATE_REVEAL
 
 # Closed grip slot cut through BOTH faceplate and body front, aligned
 # (DESIGN.md: 30 x 15 r7.5, slot top 8.0 below the part top edge).
 DRAWER_GRIP_SLOT = {"width": 30.0, "height": 15.0, "radius": 7.5,
                     "top_below_edge": 8.0}
+# On the faceplate the same slot sits FACEPLATE_Z_OFFSET further below the
+# plate's top edge, because the plate is glued that far above the body.
+FACEPLATE_SLOT_TOP_BELOW_EDGE = DRAWER_GRIP_SLOT["top_below_edge"] + FACEPLATE_Z_OFFSET
 
 # --- Drawer retention (iteration 2, issue #20): magnet pair per drawer ------
 # DESIGN.md "Retention (iteration 2)": one 6mm-nominal disc magnet press-fit
@@ -180,8 +203,9 @@ MAGNET_HOLE_DIA = MAGNET_DIA - MAGNET_PRESS_FIT   # 5.65, physical target size
 # safe -- the choice of side is arbitrary given that clearance margin, so +40
 # (toward increasing Y, the right/engraved-wall side) was picked for no
 # reason beyond matching the literal offset direction in the design brief.
-MAGNET_Y_OFFSET = 40.0
-MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 122.55
+MAGNET_Y_OFFSET = 0.0     # was 40.0: centred, so a drawer back turned round or a
+                          # mirror-built box still lines the magnets up
+MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 82.55, the box centre line
 
 # Z: "drawer mid-height" is a property of the drawer body alone (half its own
 # height), independent of which slot it sits in; for the DIVIDER hole (a
@@ -190,96 +214,22 @@ MAGNET_BOX_Y = T + INTERIOR_WIDTH / 2 + MAGNET_Y_OFFSET   # 122.55
 # floor (sill-free bottom opening, see DESIGN.md #4), the top drawer rests on
 # the shelf's top face (sill-free top opening) -- so the two divider holes
 # sit at different Z, one per drawer.
-MAGNET_BOTTOM_DRAWER_Z = FLOOR_TOP + DRAWER_BODY["height"] / 2   # 29.925
+MAGNET_BOTTOM_DRAWER_Z = BOTTOM_DRAWER_Z0 + DRAWER_BODY["height"] / 2   # 29.925
 MAGNET_TOP_DRAWER_Z = SHELF_Z1 + DRAWER_BODY["height"] / 2       # 91.8375
 
-# --- Lid retention (iteration 2 REV.B, issue #20 + adversarial review
-# finding #1): ONE turn-button on the FRONT WALL's exterior face.
-#
-# REV.A (a pivot + paddle on each SIDE wall, just below/behind the lid slot
-# mouth) was proven geometrically incapable of retention and was caught in
-# adversarial review before any part was cut: a side-wall paddle sweeps that
-# wall's own exterior plane (e.g. the left wall's exterior sits at box
-# Y -T..0), while the lid edge riding in that wall's through-slot occupies
-# box Y 0..SLIDE_CLEARANCE/2-ish (the lid's own thickness band, box Y
-# 0.75..3.175 for the left wall) and exits by travelling along X -- the
-# paddle's sweep plane and the lid's travel band are disjoint volumes at
-# every pivot position and paddle length, so no parameter tweak could have
-# fixed it; the mechanism retained nothing. REV.B replaces it with a single
-# button mounted on the FRONT WALL's exterior face (box X=0 plane), which
-# the lid's own front edge physically crosses on its way out -- see
-# DESIGN.md "Retention (iteration 2)" section B for the full geometry and
-# the disjoint-volume proof for why REV.A could never have worked.
-TURN_BUTTON = {
-    "length": 22.0,               # paddle axis (pivot -> tip)
-    "width": 9.0,                 # cross-axis; half-width doubles as the
-                                   # blunt-end cap radius for the paddle's
-                                   # stadium shape
-    "pivot_from_blunt_end": 4.5,  # = width/2: pivot sits at the blunt end's
-                                   # own rounded-cap center
-    "pivot_hole_dia": 3.2,        # M3 clearance
-}
-# Pivot position on the FRONT WALL's exterior face, in BOX coordinates
-# (Y = wall center, Z = 110.0). Checked >=3mm from every other front-wall
-# feature: the bottom-panel hole line sits at Z~1.5875 (>100mm clear); the
-# two vertical edges finger-joint to the side walls over a ~T-wide zone at
-# each end, and the pivot sits at the wall's own Y-center
-# (INTERIOR_WIDTH/2 = 79.375mm local, i.e. box Y=82.55) -- 79.375mm from
-# either jointed edge, far past the 3mm minimum; the wall's own plain top
-# edge (Z=FRONT_WALL_TOP=118.025) is 8.025mm above the pivot.
-TURN_BUTTON_PIVOT_BOX_Y = SHELL_EXT["width"] / 2   # 82.55, front wall center
-TURN_BUTTON_PIVOT_BOX_Z = FRONT_WALL_TOP - 8.0   # 107.125 (was 110.0 before the lid slot dropped)
+# --- Lid retention ----------------------------------------------------------
+# None.  The turn-button lock (a bolted paddle on the front wall) was removed
+# on 2026-10-10 (Ben's decision): the sliding lid is held by friction in its
+# slots only.  There is no button part, no front-wall pivot hole and no bolt,
+# washer or nut.
 
-# The lid's own physical Z-band where it crosses the front wall's plane on
-# exit: the lid rests on the slot floor under gravity, so it occupies the
-# bottom T of the slot's vertical clearance band (LID_SLOT_BOTTOM ->
-# LID_SLOT_BOTTOM + T = 118.025 -> 121.2), not the full
-# LID_SLOT_BOTTOM..LID_SLOT_TOP clearance span (that extra 0.8mm is slop
-# above the lid, not lid material). The lid's front edge itself sits
-# recessed ~0.4mm behind the front-wall plane at full rearward travel
-# (SLIDING_LID length 79.0 vs. the 79.375mm to the divider stop), so there
-# is a small (~0.4mm) free-slide gap before the button makes contact -- see
-# DESIGN.md for the full blocking-slop note.
-LID_FRONT_BAND_Z0 = LID_SLOT_BOTTOM                  # 118.025
-LID_FRONT_BAND_Z1 = LID_FRONT_BAND_Z0 + T            # 121.2
-
-# Reach (pivot -> tip) needed for the button, rotated to vertical, to clear
-# the lid band's top (LID_FRONT_BAND_Z1) by >=1mm:
-# TURN_BUTTON_MIN_REACH_UP = (LID_FRONT_BAND_Z1 + 1) - TURN_BUTTON_PIVOT_BOX_Z
-#                          = 122.2 - 110.0 = 12.2mm.
-# The button's actual reach (length - pivot_from_blunt_end = 22 - 4.5 = 17.5)
-# exceeds this, so rotated fully vertical the tip lands at box Z = 110 +
-# 17.5 = 127.5 -- 5.3mm past the required 122.2mm, standing proud in
-# open air above/in front of the lid slot region (nothing else is there to
-# hit). Rotated fully DOWN (180 deg from vertical), the button's near
-# (blunt-cap) edge lands at box Z = 110 + pivot_from_blunt_end = 114.5,
-# comfortably (3.525mm) below FRONT_WALL_TOP=118.025 -- the whole paddle
-# clears the lid's travel path so the lid slides freely when the button is
-# disengaged.
-
-# Hardware stack through the front wall (v2: M3x14, was M3x12).  Bearing
-# stack under the bolt head: washer + button (T) + front wall (T) + washer +
-# nyloc nut.  At T = 3.5 that is 0.5 + 3.5 + 3.5 + 0.5 + 4.0 = 12.0 mm, which
-# leaves an M3x12 flush with the nut face (no thread through the nylon
-# insert); M3x14 leaves 2.0 mm (3.4 mm at T = 2.8).
+# Hardware to buy: magnets only.
 HARDWARE = {
-    "bolt": "M3x14 button-head (ISO 7380), A2 stainless",
-    "bolt_length": 14.0,
-    "washer": "M3 flat washer (ISO 7089: 3.2 ID x 7 OD x 0.5)",
-    "washer_thickness": 0.5,
-    "washers": 2,
-    "nut": "M3 nyloc (DIN 985: 5.5 mm across flats, 4.0 mm tall)",
-    "nut_height": 4.0,
-    "magnet": "6 x 2 mm N35 neodymium disc",
+    "magnet": "6 x 2 mm N52 neodymium disc",
     "magnet_thickness": 2.0,
     "magnets_needed": 4,
     "magnets_to_buy": 6,
 }
-BOLT_PROTRUSION_PAST_NUT = (HARDWARE["bolt_length"]
-                            - (2 * HARDWARE["washer_thickness"] + 2 * T + HARDWARE["nut_height"]))
-# How far bolt + nut stick into the paper compartment, measured from the
-# front wall's inner face.
-BOLT_INTRUSION_INTO_PAPER_BAY = HARDWARE["bolt_length"] - (HARDWARE["washer_thickness"] + 2 * T)
 
 # Paper: quarter letter (4.25 x 5.5 in), standing on edge in the compartment
 # with the 5.5 in side along Y and the 4.25 in side vertical.
@@ -290,8 +240,15 @@ PAPER_SIDE_ROOM = INTERIOR_WIDTH - PAPER["width"]
 
 # --- Sliding lid -------------------------------------------------------------
 
+# The re-entrant corners at the rear end of the slot (the root of the rail's
+# cantilever) are rounded with this radius; the lid stops short of the arcs so
+# it never touches them even when it is lifted against the rail.
+LID_SLOT_CORNER_R = 1.0
+LID_REAR_X = DIVIDER_X0 - LID_SLOT_CORNER_R       # X of the lid's rear end when pushed home (78.375)
+LID_FRONT_RECESS = 0.375                          # lid front edge behind the front wall plane when home
+
 SLIDING_LID = {
-    "length": DIVIDER_X0 - 0.375,                     # X (79.0 at T=3.175)
+    "length": LID_REAR_X - LID_FRONT_RECESS,          # X (78.0 at T=3.175; was 79.0)
     "width": SHELL_EXT["width"] - SLIDE_CLEARANCE,    # 163.6 (rides in through-slots)
 }
 LID_GRIP_SLOT = {"width": 30.0, "height": 10.0, "radius": 5.0,

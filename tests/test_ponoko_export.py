@@ -4,7 +4,7 @@ test_layout.py's own `sheets` fixture) and check the emitted
 output/ponoko/sheet_*.svg files against the Ponoko order requirements: sheets
 within Ponoko's published birch-plywood workable area, only Ponoko's two
 colors present (no gray reference text, no <text> elements at all), the
-right part count (21 NYCR parts + 1 turn button + 1 self-calibration
+right part count (25 parts + 1 self-calibration
 coupon = 23), engrave content only where DESIGN.md places it, the
 kerf-square coupon at true nominal 10.0mm, and provider BURN actually
 changing drawn geometry relative to the NYCR default.
@@ -175,8 +175,8 @@ def test_ponoko_sheets_no_gray_anywhere(ponoko_sheets):
 
 
 # =============================================================================
-# Part count: 21 NYCR parts (8 shell + 12 drawer + 1 lid) + 1 turn button +
-# 1 self-calibration coupon = 23
+# Part count: 25 parts (8 shell + 12 drawer + 1 lid + 4 drawer guides) + 1
+# self-calibration coupon = 26
 # =============================================================================
 
 def test_ponoko_part_count_matches(ponoko_sheets):
@@ -188,7 +188,8 @@ def test_ponoko_part_count_matches(ponoko_sheets):
     assert by_source["Drawer 1"] == 6
     assert by_source["Drawer 2"] == 6
     assert by_source["Lid"] == 1
-    assert by_source["Hardware"] == 1
+    assert by_source["Guides"] == 4
+    assert "Hardware" not in by_source          # the turn button was removed (2026-10-10)
     assert by_source["Calibration"] == 1
 
 

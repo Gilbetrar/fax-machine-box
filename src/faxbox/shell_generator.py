@@ -40,6 +40,7 @@ from faxbox.config import (
     DIVIDER_ROW_TOP_Z,
     LID_RAIL_HEIGHT,
     LID_SLOT_BOTTOM,
+    LID_SLOT_CORNER_R,
     LID_SLOT_HEIGHT,
     LID_SLOT_X_END,
     LID_SLOT_TOP,
@@ -54,9 +55,6 @@ from faxbox.config import (
     TOP_OPENING_Z0,
     TOP_OPENING_Z1,
     TOP_PANEL_HOLE_Z,
-    TURN_BUTTON,
-    TURN_BUTTON_PIVOT_BOX_Y,
-    TURN_BUTTON_PIVOT_BOX_Z,
     WALL_HEIGHT,
 )
 from faxbox.svglabels import enforce_reference_labels
@@ -91,15 +89,23 @@ class SlotMouthEdge(edges.BaseEdge):
 
     description = "Lid slot mouth"
 
-    def __init__(self, boxes, rail: float, slot_h: float, depth: float, rail_first: bool) -> None:
+    def __init__(self, boxes, rail: float, slot_h: float, depth: float, rail_first: bool,
+                 radius: float = 0.0) -> None:
         super().__init__(boxes, None)
+        self.radius = radius
         self.rail, self.slot_h, self.depth, self.rail_first = rail, slot_h, depth, rail_first
         self.length = rail + slot_h
 
     def __call__(self, length, **kw):
         if length and abs(length - self.length) > 1e-5:
             raise ValueError("Wrong length for SlotMouthEdge")
-        notch = (90, self.depth, -90, self.slot_h, -90, self.depth, 90)
+        r = self.radius
+        if r:
+            # the two rear corners of the slot are rounded (arc of radius r): each straight run
+            # next to an arc is r shorter
+            notch = (90, self.depth - r, (-90, r), self.slot_h - 2 * r, (-90, r), self.depth - r, 90)
+        else:
+            notch = (90, self.depth, -90, self.slot_h, -90, self.depth, 90)
         if self.rail_first:
             self.boxes.polyline(self.rail, *notch)
         else:
@@ -164,11 +170,11 @@ class OuterShell(Boxes):
         slot_depth = LID_SLOT_X_END - T
         front_edge_top_to_bottom = edges.CompoundEdge(
             self,
-            [SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, True), "f"],
+            [SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, True, LID_SLOT_CORNER_R), "f"],
             [front_plain_z, FRONT_WALL_TOP])
         front_edge_bottom_to_top = edges.CompoundEdge(
             self,
-            ["f", SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, False)],
+            ["f", SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, False, LID_SLOT_CORNER_R)],
             [FRONT_WALL_TOP, front_plain_z])
         rear_edge = self.edges["f"]  # full height, mates rear wall
 
@@ -223,21 +229,12 @@ class OuterShell(Boxes):
     def _build_front_wall(self) -> None:
         """Front wall: INTERIOR_WIDTH (local X = box Y - T) x
         FRONT_WALL_HEIGHT (local Y = box Z), Z = 0 -> FRONT_WALL_TOP
-        (DESIGN.md #3).
-
-        Also carries the sole lid-retention turn-button pivot hole
-        (DESIGN.md "Retention (iteration 2)" section B, adversarial-review
-        REV.B): a single M3-clearance hole on this wall's exterior face, at
-        box (Y, Z) = (TURN_BUTTON_PIVOT_BOX_Y, TURN_BUTTON_PIVOT_BOX_Z). No
-        mirroring needed -- there is only one front wall and only one
-        button. Local X = box Y - T, same mapping the bottom-panel hole
-        line above already uses; local Y = box Z directly (this wall's Z
-        axis is unextended -- see test_front_wall_blank_size)."""
+        (DESIGN.md #3).  Plain panel apart from the bottom-panel finger-hole
+        row: the turn-button pivot hole it used to carry was removed with the
+        lid lock (2026-10-10)."""
 
         def callback() -> None:
             self.fingerHolesAt(0, T / 2, INTERIOR_WIDTH, angle=0)
-            pivot_local_x = TURN_BUTTON_PIVOT_BOX_Y - T
-            self.hole(pivot_local_x, TURN_BUTTON_PIVOT_BOX_Z, d=TURN_BUTTON["pivot_hole_dia"])
 
         self.rectangularWall(
             INTERIOR_WIDTH, FRONT_WALL_HEIGHT, "eFeF",
@@ -363,8 +360,11 @@ class OuterShell(Boxes):
         self._build_top_panel()
 
 
-def generate_shell(provider: str | None = None) -> Path:
+def generate_shell(provider: str | None = None, burn: float | None = None) -> Path:
     """Generate outer shell SVG file.
+
+    `burn` overrides the provider's per-side kerf compensation (mm); the cut
+    sets use it to generate one file set per laser kerf.
 
     `provider` selects a faxbox.config.PROVIDERS entry (falls back to the
     FAXBOX_PROVIDER env var, then "nycr" -- see config.resolve_provider).
@@ -381,7 +381,7 @@ def generate_shell(provider: str | None = None) -> Path:
     shell.parseArgs([
         "--output", str(output_file),
         "--thickness", str(MATERIAL_THICKNESS),
-        "--burn", str(provider_cfg["burn"]),
+        "--burn", str(provider_cfg["burn"] if burn is None else burn),
         "--reference", "0",
         "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
     ])

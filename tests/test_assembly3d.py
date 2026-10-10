@@ -3,8 +3,7 @@
 Every part is placed in box coordinates from its zero-kerf outline.  These
 tests re-derive from volumes that the box assembles: no interference, every
 finger lands in a hole, the divider only fits one way, the assembly order is
-possible step by step, the drawers and the lid slide, the magnet and bolt
-holes line up.
+possible step by step, the drawers and the lid slide, the magnet holes line up.
 """
 
 import itertools
@@ -51,7 +50,7 @@ def test_divider_correct_way_is_clean(plates):
     assert not [i for i in a3.interferences(plates, thr=1.0) if "divider" in i[1:]]
 
 
-@pytest.mark.parametrize("pid", ["right", "left", "top", "shelf", "bottom"])
+@pytest.mark.parametrize("pid", ["right", "left", "top", "shelf", "bottom", "rear", "front"])
 def test_wrong_flip_of_walls_and_panels_is_blocked_or_symmetric(plates, pid):
     """Each of these either fits only one way or is mirror-symmetric (the
     shelf, top and bottom are symmetric about the box centre line)."""
@@ -65,6 +64,9 @@ def test_wrong_flip_of_walls_and_panels_is_blocked_or_symmetric(plates, pid):
         if not i and u == base_unfilled:
             ok_flips.append(flip)
     assert plates[pid].flip in ok_flips
+    if pid in ("rear", "front"):
+        # upside down is blocked; turned left for right it is symmetric
+        assert (0, 1) not in ok_flips and (1, 1) not in ok_flips, ok_flips
     if pid in ("right", "left"):
         assert ok_flips == [plates[pid].flip]
 
@@ -104,6 +106,7 @@ def test_drawer_assembly_order(plates):
 def test_drawer_slides_out_clear_of_the_box(plates, tag):
     names = [f"{tag}_{s}" for s in ("back", "front", "left", "right", "bottom", "face")]
     shell = ["bottom", "right", "left", "front", "rear", "divider", "shelf", "top"]
+    shell += [n for n in plates if "guide" in n]
     worst, first = a3.sweep_collision(plates, names, a3.X, 1, 300, shell, thr=1.0)
     assert worst == 0.0, first
 
@@ -162,12 +165,11 @@ def test_magnet_holes_are_coaxial_at_closed_position(plates):
     assert plates["B_back"].rc[0] == pytest.approx(plates["divider"].rc[1], abs=c.DRAWER_BAY_GAP + 1e-6)
 
 
-def test_turn_button_pivot_is_coaxial_with_front_wall_hole(plates):
-    dia = c.TURN_BUTTON["pivot_hole_dia"]
-    fw = _hole_centres(plates["front"], dia, (a3.Y, a3.Z))
-    bt = _hole_centres(plates["button"], dia, (a3.Y, a3.Z))
-    assert fw and bt and np.hypot(fw[0][0] - bt[0][0], fw[0][1] - bt[0][1]) < 0.05
-    assert plates["button"].rc[1] == pytest.approx(plates["front"].rc[0])
+def test_no_button_plate_and_front_wall_has_no_pivot_hole(plates):
+    assert "button" not in plates
+    assert not _hole_centres(plates["front"], 3.2, (a3.Y, a3.Z))
+    assert all(p[1] != "button" for p in a3.INVENTORY)
+    assert all("button" not in s["parts"] for s in a3.ASSEMBLY_STEPS)
 
 
 def test_matrices_map_outline_corners_into_box_bounds(plates):
@@ -190,7 +192,57 @@ def test_all_placements_have_the_same_handedness(plates):
 def test_overall_envelope(plates):
     lo = [min(p.box_bounds()[a][0] for p in plates.values()) for a in range(3)]
     hi = [max(p.box_bounds()[a][1] for p in plates.values()) for a in range(3)]
-    assert lo[a3.X] == pytest.approx(-T, abs=1e-6)       # turn button on the front
+    assert lo[a3.X] == pytest.approx(0, abs=1e-6)
     assert hi[a3.X] == pytest.approx(c.SHELL_EXT["length"], abs=1e-6)
     assert lo[a3.Y] == pytest.approx(0, abs=1e-6) and hi[a3.Y] == pytest.approx(c.SHELL_EXT["width"], abs=1e-6)
     assert lo[a3.Z] == pytest.approx(0, abs=1e-6) and hi[a3.Z] == pytest.approx(c.SHELL_EXT["height"], abs=1e-6)
+
+
+# --- drawer guides (red-team H1) and the rounded lid slot (H2) ------------------------------------
+
+def test_four_guides_sit_on_the_walls_at_the_divider_end(plates):
+    g = {n: p for n, p in plates.items() if "guide" in n}
+    assert sorted(g) == ["B_guideL", "B_guideR", "T_guideL", "T_guideR"]
+    for n, p in g.items():
+        b = p.box_bounds()
+        assert b[a3.X][0] == pytest.approx(c.BAY_X0) and b[a3.X][1] - b[a3.X][0] == pytest.approx(c.DRAWER_GUIDE["length"])
+        floor = c.FLOOR_TOP if n[0] == "B" else c.SHELF_Z1
+        assert b[a3.Z] == pytest.approx((floor, floor + c.DRAWER_GUIDE["height"]))
+        wall_inner = T if n.endswith("L") else c.SHELL_EXT["width"] - T
+        face = b[a3.Y][0] if n.endswith("L") else b[a3.Y][1]
+        assert face == pytest.approx(wall_inner)                     # flush against the wall
+
+
+def test_guides_limit_the_drawer_float_to_the_front_clearance(plates):
+    """The channel between the guides is INTERIOR_WIDTH - 2T, which equals the rear-wall
+    opening width at T >= 3.0, so the far end can float no further than the front end.
+    N52 6 x 2 mm discs pull 3.7 N at 2.0 mm lateral offset (red-team magnet model), so a
+    float of at most 2.0 mm keeps the closed-drawer pull above 3 N.  Without the guides
+    the float was (bay - drawer) / 2 = 4.9 mm, where the pull is negative."""
+    channel = c.INTERIOR_WIDTH - 2 * T
+    drawer = c.DRAWER_BODY["width"]
+    float_far = (channel - drawer) / 2
+    assert 0 < float_far <= 2.0, float_far
+    bay_float = (c.INTERIOR_WIDTH - drawer) / 2
+    assert bay_float > 4.0 and float_far < bay_float / 2
+    # and the measured plates agree: drawer sides clear the guides by that amount
+    for tag in "BT":
+        left_side = plates[f"{tag}_left"].box_bounds()[a3.Y]
+        guide = plates[f"{tag}_guideL"].box_bounds()[a3.Y]
+        assert left_side[0] - guide[1] == pytest.approx(float_far, abs=1e-6)
+
+
+def test_lid_slot_rear_corners_are_rounded_and_the_lid_clears_them(plates):
+    from shapely.geometry import box as sbox
+    wall = plates["right"].geom
+    h = c.LID_SLOT_HEIGHT
+    r = c.LID_SLOT_CORNER_R
+    zone = sbox(c.DIVIDER_X0 - 3, c.LID_SLOT_BOTTOM, c.DIVIDER_X0, c.LID_SLOT_BOTTOM + h)
+    void = zone.area - zone.intersection(wall).area
+    sharp = 3 * h
+    assert sharp - void == pytest.approx(2 * (1 - np.pi / 4) * r * r, abs=0.06)       # two quarter-round fillets
+    shell = ["right", "left"]
+    # pushed home and lifted against the rail: still no contact with the fillets
+    worst, _ = a3.sweep_collision(plates, ["lid"], a3.X, -1, 1, shell, dz=c.LID_SLOT_VERTICAL_CLEARANCE - 0.01, thr=0.01)
+    assert worst == 0.0
+    assert plates["lid"].box_bounds()[a3.X][1] == pytest.approx(c.LID_REAR_X) and c.SLIDING_LID["length"] == pytest.approx(c.LID_REAR_X - c.LID_FRONT_RECESS)

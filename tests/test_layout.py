@@ -45,8 +45,9 @@ EXPECTED_LABELS = (
     + [f"Drawer 1: {name}" for name in DRAWER_LABELS]
     + [f"Drawer 2: {name}" for name in DRAWER_LABELS]
     + ["Lid: Sliding Lid"]
+    + [f"Guides: Drawer Guide {i}" for i in range(1, 5)]
 )
-assert len(EXPECTED_LABELS) == 21  # 8 shell + 12 drawer (6x2) + 1 lid
+assert len(EXPECTED_LABELS) == 25  # 8 shell + 12 drawer (6x2) + 1 lid + 4 drawer guides (red-team H1)
 
 
 @pytest.fixture(scope="session")
@@ -84,8 +85,8 @@ def test_every_part_appears_expected_number_of_times(sheets):
     )
 
 
-def test_total_part_count_is_21(sheets):
-    assert len(_all_pieces(sheets)) == 21
+def test_total_part_count_is_25(sheets):
+    assert len(_all_pieces(sheets)) == 25
 
 
 # =============================================================================
@@ -334,7 +335,7 @@ MIN_VIABLE_BED_HEIGHT = 185.26
 
 
 def _all_source_pieces() -> list[fl.Piece]:
-    """Load all 21 real pieces (no packing/nesting) straight from the
+    """Load all 25 real pieces (no packing/nesting) straight from the
     regenerated source SVGs -- for tests that only care about _pack_pieces'
     behavior at a given bed size, not the full sheet_*.svg pipeline."""
     shell_svg, drawer_svg, lids_svg = fl._require_source_svgs(OUTPUT_DIR)
@@ -343,6 +344,8 @@ def _all_source_pieces() -> list[fl.Piece]:
     pieces += fl._load_pieces(drawer_svg, "Drawer 1")
     pieces += fl._load_pieces(drawer_svg, "Drawer 2")
     pieces += fl._load_pieces(lids_svg, "Lid")
+    from faxbox import generate_drawers
+    pieces += fl._load_pieces(generate_drawers.generate_guides(), "Guides")
     return pieces
 
 
@@ -378,17 +381,17 @@ def test_largest_part_measures_304_96_by_165_26mm(regenerate_svgs):
     assert widest.source == "Shell" and widest.label.endswith("Wall")
 
 
-def test_pack_pieces_at_reduced_bed_places_all_21_no_overlap(regenerate_svgs):
+def test_pack_pieces_at_reduced_bed_places_all_25_no_overlap(regenerate_svgs):
     pieces = _all_source_pieces()
     sheets = fl._pack_pieces(pieces, sheet_width=458.0, sheet_height=304.0)
-    assert sum(len(s) for s in sheets) == 21
+    assert sum(len(s) for s in sheets) == 25
     _assert_no_overlaps_and_margins_held(sheets, fl.MARGIN_MM)
 
 
-def test_pack_pieces_at_exact_minimum_viable_bed_places_all_21_no_overlap(regenerate_svgs):
+def test_pack_pieces_at_exact_minimum_viable_bed_places_all_25_no_overlap(regenerate_svgs):
     pieces = _all_source_pieces()
     sheets = fl._pack_pieces(pieces, sheet_width=MIN_VIABLE_BED_WIDTH, sheet_height=MIN_VIABLE_BED_HEIGHT)
-    assert sum(len(s) for s in sheets) == 21
+    assert sum(len(s) for s in sheets) == 25
     _assert_no_overlaps_and_margins_held(sheets, fl.MARGIN_MM)
 
 

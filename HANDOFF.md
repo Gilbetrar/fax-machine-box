@@ -58,7 +58,6 @@ Laser-cut 3.175mm birch-ply box for Ben's "Fax Machine" pen-and-paper game (tele
 - **tests/test_retention.py's `main_shell_svg` fixture** copies an explicit file list from `main:src/faxbox/` — if shell_generator gains a new import, ADD IT to that list (bit us with svglabels).
 - **Renders for eyeballing:** `scripts/qa_render.py --sheets <files>` (defaults to ponoko sheets — pass your files explicitly); art proofs via `scripts/art_proofs.py` (no args).
 - Boxes.py: labels via `move(label=…)` render engrave-red — every generator write site must call `svglabels.enforce_reference_labels()` (systemic guard tests exist). Ponoko flow: colors assigned per-file at quote time; text must be outlined/absent; wood cut ON the line, BURN baked in.
-- google MCP: [account note redacted]. Ben↔Clark record in iMessage (+1[redacted]). Asana revisit-marker task gid [redacted]; hardware-buy task [redacted].
 - Don't SendMessage a running subagent a spec change — kill and respawn.
 
 ## Hard constraints
