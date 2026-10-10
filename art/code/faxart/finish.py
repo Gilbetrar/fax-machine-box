@@ -16,13 +16,14 @@ OUT = Path(__file__).resolve().parents[1] / "out"
 
 
 def finish(face_id: str, ink: np.ndarray, protect: np.ndarray | None = None,
-           knock: bool = True, keepout_mm: float = R.KEEPOUT_MM) -> np.ndarray:
+           knock: bool = True, keepout_mm: float = R.KEEPOUT_MM,
+           thicken_mm: float = 0.35) -> np.ndarray:
     """ink (bool, canvas at R.PPM) -> laser-legal mask clipped to the wood."""
     mat = material_mask(face_id, R.PPM, keepout_mm)
     assert mat.shape == ink.shape, (mat.shape, ink.shape)
     orig = ink & mat
     m = R.remove_small(orig, R.SPECK_MM2)
-    m = R.thicken_to_min(m, 0.35)
+    m = R.thicken_to_min(m, thicken_mm)
     # close sub-minimum gaps first, then decide what counts as a large solid
     m = cv2.morphologyEx(R.u8(m), cv2.MORPH_CLOSE, R.disk(7)).astype(bool)
     if knock:

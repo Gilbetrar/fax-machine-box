@@ -22,8 +22,8 @@ import cv2
 import numpy as np
 
 from . import raster as R
-from .ai_faces import load_gray
-from .finish import Variant, finish
+from .ai_faces import finish, load_gray
+from .finish import Variant
 
 K = 0.14157
 Y_REF = 1536.0

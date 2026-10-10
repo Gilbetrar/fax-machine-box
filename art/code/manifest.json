@@ -19,9 +19,9 @@
           "default": true,
           "notes": "Display lettering kept solid black (Ben's style); other large solids get gap channels.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
-          "ink_pct": 26.2,
-          "paths": 62,
-          "svg_kb": 146
+          "ink_pct": 25.4,
+          "paths": 53,
+          "svg_kb": 157
         },
         {
           "id": "outline",
@@ -31,9 +31,9 @@
           "default": false,
           "notes": "Lettering redrawn as a 0.9 mm outline with light coded hatching inside: much less burn time and charring than solid.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png (approved)",
-          "ink_pct": 15.3,
-          "paths": 454,
-          "svg_kb": 246
+          "ink_pct": 14.5,
+          "paths": 459,
+          "svg_kb": 256
         }
       ]
     },
@@ -56,9 +56,9 @@
           "default": false,
           "notes": "Full title. The lid through-slot (y 5.1-8.9 mm, front 76 mm) cuts through 'Fun For'.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 25.4,
-          "paths": 443,
-          "svg_kb": 284
+          "ink_pct": 24.5,
+          "paths": 440,
+          "svg_kb": 280
         },
         {
           "id": "nofunfor",
@@ -68,9 +68,9 @@
           "default": true,
           "notes": "'Fun For' removed so the lid slot crosses blank wood; the title reads 'Terrible Writers & Artists of All Ages'.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png (approved)",
-          "ink_pct": 25.2,
-          "paths": 437,
-          "svg_kb": 282
+          "ink_pct": 24.3,
+          "paths": 434,
+          "svg_kb": 279
         }
       ]
     },
@@ -93,9 +93,9 @@
           "default": true,
           "notes": "Fit above the bottom finger-joint row (art bottom at 113.4 mm). '44' kept as drawn in the source.",
           "source": "art/ai-versions/final/IMG_4229_ai_vH1.png (approved)",
-          "ink_pct": 27.9,
-          "paths": 86,
-          "svg_kb": 130
+          "ink_pct": 25.7,
+          "paths": 89,
+          "svg_kb": 136
         }
       ]
     },
@@ -118,9 +118,9 @@
           "default": true,
           "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 22.1,
-          "paths": 160,
-          "svg_kb": 241
+          "ink_pct": 21.6,
+          "paths": 186,
+          "svg_kb": 242
         },
         {
           "id": "c",
@@ -130,9 +130,9 @@
           "default": false,
           "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 20.3,
-          "paths": 209,
-          "svg_kb": 231
+          "ink_pct": 19.8,
+          "paths": 241,
+          "svg_kb": 232
         }
       ]
     },
@@ -155,8 +155,8 @@
           "default": true,
           "notes": "Head-anchored window: the mosaic snake head sits on the sliding lid; the cat is trimmed off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 16.4,
-          "paths": 57,
+          "ink_pct": 15.8,
+          "paths": 64,
           "svg_kb": 64
         },
         {
@@ -167,8 +167,8 @@
           "default": false,
           "notes": "Cat-anchored window: the full cat and floral border survive at the rear of the top panel; the snake head is trimmed. The old blank grip-capsule patch is filled with wallpaper.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 20.5,
-          "paths": 47,
+          "ink_pct": 20.2,
+          "paths": 52,
           "svg_kb": 77
         }
       ]
@@ -244,7 +244,7 @@
           "source": "art/trimmed/IMG_4233.jpeg (Ben's original, one continuous panel)",
           "ink_pct": 13.9,
           "paths": 123,
-          "svg_kb": 107
+          "svg_kb": 106
         }
       ]
     },
@@ -294,7 +294,7 @@
           "source": "art/trimmed/IMG_4237.jpeg (Ben's original, one continuous panel)",
           "ink_pct": 22.3,
           "paths": 266,
-          "svg_kb": 185
+          "svg_kb": 184
         }
       ]
     },
@@ -319,7 +319,7 @@
           "source": "art/trimmed/IMG_4239.jpeg (Ben's original, one continuous panel)",
           "ink_pct": 27.6,
           "paths": 255,
-          "svg_kb": 195
+          "svg_kb": 194
         }
       ]
     }

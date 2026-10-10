@@ -11,7 +11,15 @@ import cv2
 import numpy as np
 
 from . import raster as R
-from .finish import Variant, finish
+from .finish import Variant
+from .finish import finish as _finish
+
+
+def finish(face_id, ink, **kw):
+    # the approved hatch is fine pen work: thicken sub-minimum strokes only to
+    # 0.30 mm (rule 0.25) so the shading doesn't darken more than it must
+    kw.setdefault("thicken_mm", 0.30)
+    return _finish(face_id, ink, **kw)
 from .geometry import FACES
 
 REPO = Path(__file__).resolve().parents[3]
@@ -46,7 +54,12 @@ def ai_ink(face_id, name, src_box, dst_box_mm=None, t=128):
     size = FACES[face_id].size_mm
     dst = dst_box_mm or (0, 0, size[0], size[1])
     g = R.warp_affine(load_gray(name), box_to_rect(src_box, dst), size)
-    return R.threshold_gray(g, t)
+    ink = R.threshold_gray(g, t)
+    # nothing from outside the chosen source box (e.g. a drawn frame line)
+    X0, Y0, X1, Y1 = [int(round(v * R.PPM)) for v in dst]
+    keep = np.zeros(ink.shape, bool)
+    keep[max(0, Y0):Y1, max(0, X0):X1] = True
+    return ink & keep
 
 
 def solid_regions(ink: np.ndarray, solid_mm: float = 2.4) -> np.ndarray:

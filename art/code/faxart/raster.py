@@ -236,7 +236,9 @@ def enforce_laser_rules(mask: np.ndarray, material: np.ndarray | None = None,
         if material is not None:
             m = m & material
         m = fill_pinholes(m)
-    return remove_small(m)
+    # final pass with a margin over the 0.09 mm2 rule: curve fitting can
+    # shave a near-limit island under it
+    return fill_pinholes(remove_small(m, 1.4 * SPECK_MM2), 1.4 * SPECK_MM2)
 
 
 # ---------------------------------------------------------------- coded hatching
