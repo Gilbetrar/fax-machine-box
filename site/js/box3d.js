@@ -238,6 +238,7 @@ export class BoxModel {
     else { dir = new THREE.Vector3(0, 0, 1); dist = 0; }
     const v = dir.multiplyScalar(isDrawer(grp) ? dist * 0.5 + 22 : dist * 1.15 + 40);
     // the lid also pulls out of the front, so it clears the top panel
+    if (/guide/i.test(p.id + ' ' + (p.name || ''))) v.multiplyScalar(0.55);   // stay near their wall, but clear of it
     if (grp === 'lid' && p.insert_direction) v.add(new THREE.Vector3(...p.insert_direction).normalize().multiplyScalar(-70));
     return v;
   }

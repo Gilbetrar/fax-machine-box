@@ -1,2 +1,2 @@
 // Rewritten by scripts/build_site.py with a content hash, so a deploy never pairs new HTML with stale files.
-export const V = '332f6a3a51';
+export const V = 'fe2eee0d32';

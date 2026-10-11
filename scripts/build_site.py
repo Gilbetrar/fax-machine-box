@@ -42,15 +42,25 @@ def copy_art() -> None:
         if f.suffix.lower() not in (".png", ".svg"):
             continue
         shutil.copy2(f, dst / f.name)
-        if f.suffix.lower() == ".png":
-            im = Image.open(f)
-            im.thumbnail((640, 640))
-            im.save(sm / f.name, optimize=True)
+        if f.suffix.lower() == ".png":      # phone textures: small WebP
+            im = Image.open(f).convert("RGB")
+            im.thumbnail((720, 720))
+            im.save(sm / (f.stem + ".webp"), quality=80, method=6)
+    th = dst / "th"
+    th.mkdir()
+    for f in sorted(src.glob("*.png")):      # card thumbnails for the engraving comparisons
+        im = Image.open(f).convert("L")
+        im.thumbnail((440, 440))
+        im.save(th / f.name, optimize=True)
     man = json.loads((ROOT / "art" / "code" / "manifest.json").read_text())
     for face in man.get("faces", {}).values():
         for v in face.get("variants", []):
             if v.get("png"):
-                v["png_sm"] = "art/sm/" + Path(v["png"]).name
+                v["png_sm"] = "art/sm/" + Path(v["png"]).stem + ".webp"
+                v["png_th"] = "art/th/" + Path(v["png"]).name
+    style = man.get("style") or {}
+    if isinstance(style.get("description"), str):   # the file is public; keep it neutral
+        style["description"] = style["description"].replace("Ben's hand-drawn", "The original hand-drawn")
     (SITE / "data" / "art-manifest.json").write_text(json.dumps(man, indent=1) + "\n")
     print(f"art: {len(list(dst.glob('*')))} files, small textures in {sm.relative_to(ROOT)}")
 
@@ -71,6 +81,13 @@ def optimize_renders() -> None:
         after += f.stat().st_size
     if before:
         print(f"renders: {before // 1024} KB -> {after // 1024} KB")
+    hero = d / "hero.png"
+    idx = d / "index.json"
+    if hero.exists() and idx.exists():     # light placeholder / no-WebGL still
+        Image.open(hero).save(d / "hero.webp", quality=82, method=6)
+        data = json.loads(idx.read_text())
+        data.setdefault("files", {})["hero_small"] = "img/render/hero.webp"
+        idx.write_text(json.dumps(data, indent=1) + "\n")
 
 
 def site_hash() -> str:

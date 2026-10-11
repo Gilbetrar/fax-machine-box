@@ -39,6 +39,7 @@
   "step-box_lid": "img/render/step-box_lid.png",
   "step-drawers_in": "img/render/step-drawers_in.png",
   "step-finishing": "img/render/step-finishing.png",
-  "hero": "img/render/hero.png"
+  "hero": "img/render/hero.png",
+  "hero_small": "img/render/hero.webp"
  }
 }

@@ -13,13 +13,18 @@ const SMALL = () => innerWidth < 760 || (navigator.deviceMemory && navigator.dev
 // texture URL for a variant: smaller file on phones when the build made one
 const texUrl = v => { const p = (SMALL() && v.png_sm) || v.png || v.svg; return artUrl({ png: p }) + '?v=' + V; };
 
-async function applyArt(model, artState, mode) {
+// apply art to some faces (default: all). Textures load only for the faces asked for.
+async function applyArt(model, artState, mode, only) {
   const man = artState.manifest; if (!man) return;
-  await Promise.all(Object.entries(man.faces).map(([fid, face]) => {
+  const ids = only || Object.keys(man.faces);
+  await Promise.all(ids.filter(fid => man.faces[fid]).map(fid => {
+    const face = man.faces[fid];
     const vs = face.variants || []; const v = vs.find(x => x.id === artState.choice[fid]) || vs.find(x => x.default) || vs[0];
     return model.setArt(fid, face, v && { ...v, png: texUrl(v), svg: null }, mode).catch(e => console.warn(e.message));
   }));
 }
+// faces seen from the hero's starting view; the rest load on the first interaction
+const HOME_FACES = ['left', 'front', 'top', 'lid'];
 
 // ---------- hero ----------
 function initHero(ctx, data) {
@@ -67,8 +72,9 @@ function initEngraving(ctx, data) {
   const model = new BoxModel(data);
   const viewer = new Viewer($('#art-canvas'), model, { home: { dir: [-1, 0.9, 0.6], dist: 760 } });
   window.faxArt = { model, viewer };
-  let loaded = false;
-  function focusFace(fid) {
+  const shown = new Set();
+  let current = null;
+  function focusFace(fid, animate = true) {
     const face = man.faces[fid]; const p = data.parts.find(q => q.id === face.part_id); if (!p) return;
     const g = p.group; const fr = artFrame(p);
     const side = isDrawer(g) && Math.abs(fr.n.y) > 0.9;   // drawer sides only show when the drawer is out
@@ -79,15 +85,23 @@ function initEngraving(ctx, data) {
     let up = fr.U.clone();
     if (face.art_to_local) { const [[, b0], [, d0]] = face.art_to_local; up = new THREE.Vector3(-b0, -d0, 0).transformDirection(partMatrix(p)); }
     const dir = flat ? up.clone().multiplyScalar(-0.55).add(new THREE.Vector3(0, 0, 1)) : fr.n.clone().add(new THREE.Vector3(0, 0, 0.32)).add(fr.R.clone().multiplyScalar(-0.22));
-    viewer.fitTo(box, { dir: dir.toArray(), margin: flat ? 1.2 : 1.15 });
+    // fit at the target state (drawer out) and at the canvas's real size
+    viewer._resize();
+    viewer.fitTo(box, { dir: dir.toArray(), margin: flat ? 1.22 : 1.15, animate });
+  }
+  // the face being shown, plus the faces whose art runs across it (top + lid)
+  const facesFor = fid => [fid, ...((man.links || [['top', 'lid']]).find(g => g.includes(fid)) || []).filter(x => x !== fid)];
+  async function show(fid) {
+    current = fid; focusFace(fid); viewer.kick();
+    const need = facesFor(fid).filter(f => !shown.has(f)); need.forEach(f => shown.add(f));
+    if (need.length) { await applyArt(model, st, st.mode, need); viewer.kick(); }
   }
   st.listeners.push(async (kind, fid) => {
-    if (!loaded) { loaded = true; await applyArt(model, st, st.mode); }
-    if (kind === 'face') focusFace(fid);
-    else if (kind === 'choice' || kind === 'mode') await applyArt(model, st, st.mode);
-    viewer.kick();
+    if (kind === 'face') return show(fid);
+    if (kind === 'choice' || kind === 'mode') { await applyArt(model, st, st.mode, [...shown]); viewer.kick(); }
   });
-  if (st.current) { loaded = true; applyArt(model, st, st.mode).then(() => { focusFace(st.current); viewer.kick(); }); }
+  new ResizeObserver(() => { if (current) { focusFace(current, false); viewer.kick(); } }).observe($('#art-canvas'));
+  if (st.current) show(st.current);
 }
 
 // ---------- still pictures ----------
@@ -245,10 +259,14 @@ export async function start(ctx) {
   initEngraving(ctx, data);
   // hero art: defaults only, after the first frame
   const ph = document.querySelector('#hero-stage .hero-ph');
+  let heroAll = false;
+  const loadRest = async () => { if (heroAll) return; heroAll = true; await applyArt(hero.model, ctx.artState, 'burn'); hero.viewer.kick(); };
+  for (const ev of ['pointerdown', 'wheel', 'keydown']) $('#hero-stage').addEventListener(ev, loadRest, { once: true, passive: true });
   const heroDone = idle().then(async () => {
-    await applyArt(hero.model, ctx.artState, 'burn'); hero.viewer.kick();
+    await applyArt(hero.model, ctx.artState, 'burn', ctx.prerender ? null : HOME_FACES); hero.viewer.kick();
+    if (ctx.prerender) heroAll = true;
     if (ph) setTimeout(() => ph.remove(), 120);
-    ctx.artState.listeners.push(async kind => { if (kind === 'choice') { await applyArt(hero.model, ctx.artState, 'burn'); hero.viewer.kick(); } });
+    ctx.artState.listeners.push(async (kind, fid) => { if (kind === 'choice') { await applyArt(hero.model, ctx.artState, 'burn', heroAll ? null : HOME_FACES); hero.viewer.kick(); } });
     if (ctx.prerender) { await new Promise(r => setTimeout(r, 1500)); await save('hero', hero.viewer.snapshot()); }
   });
   const fresh = ctx.renders && ctx.renders.hash === ctx.dataHash;

@@ -46,7 +46,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 141,
-     "png_sm": "art/sm/left__solid.png"
+     "png_sm": "art/sm/left__solid.webp",
+     "png_th": "art/th/left__solid.png"
     },
     {
      "id": "outline",
@@ -61,7 +62,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 232,
-     "png_sm": "art/sm/left__outline.png"
+     "png_sm": "art/sm/left__outline.webp",
+     "png_th": "art/th/left__outline.png"
     }
    ]
   },
@@ -111,7 +113,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 259,
-     "png_sm": "art/sm/right__funfor.png"
+     "png_sm": "art/sm/right__funfor.webp",
+     "png_th": "art/th/right__funfor.png"
     },
     {
      "id": "outline",
@@ -126,7 +129,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 299,
-     "png_sm": "art/sm/right__outline.png"
+     "png_sm": "art/sm/right__outline.webp",
+     "png_th": "art/th/right__outline.png"
     },
     {
      "id": "nofunfor",
@@ -141,7 +145,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 257,
-     "png_sm": "art/sm/right__nofunfor.png"
+     "png_sm": "art/sm/right__nofunfor.webp",
+     "png_th": "art/th/right__nofunfor.png"
     }
    ]
   },
@@ -191,7 +196,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 157,
-     "png_sm": "art/sm/front__outline.png"
+     "png_sm": "art/sm/front__outline.webp",
+     "png_th": "art/th/front__outline.png"
     },
     {
      "id": "traced",
@@ -206,7 +212,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 126,
-     "png_sm": "art/sm/front__traced.png"
+     "png_sm": "art/sm/front__traced.webp",
+     "png_th": "art/th/front__traced.png"
     }
    ]
   },
@@ -256,7 +263,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 203,
-     "png_sm": "art/sm/top__a.png"
+     "png_sm": "art/sm/top__a.webp",
+     "png_th": "art/th/top__a.png"
     },
     {
      "id": "c",
@@ -271,7 +279,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 225,
-     "png_sm": "art/sm/top__c.png"
+     "png_sm": "art/sm/top__c.webp",
+     "png_th": "art/th/top__c.png"
     }
    ]
   },
@@ -321,7 +330,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 93,
-     "png_sm": "art/sm/lid__a.png"
+     "png_sm": "art/sm/lid__a.webp",
+     "png_th": "art/th/lid__a.png"
     },
     {
      "id": "c",
@@ -336,7 +346,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 75,
-     "png_sm": "art/sm/lid__c.png"
+     "png_sm": "art/sm/lid__c.webp",
+     "png_th": "art/th/lid__c.png"
     }
    ]
   },
@@ -386,7 +397,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 43,
-     "png_sm": "art/sm/B_face__traced.png"
+     "png_sm": "art/sm/B_face__traced.webp",
+     "png_th": "art/th/B_face__traced.png"
     }
    ]
   },
@@ -436,7 +448,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 36,
-     "png_sm": "art/sm/T_face__traced.png"
+     "png_sm": "art/sm/T_face__traced.webp",
+     "png_th": "art/th/T_face__traced.png"
     }
    ]
   },
@@ -486,7 +499,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 102,
-     "png_sm": "art/sm/B_left__traced.png"
+     "png_sm": "art/sm/B_left__traced.webp",
+     "png_th": "art/th/B_left__traced.png"
     }
    ]
   },
@@ -536,7 +550,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 83,
-     "png_sm": "art/sm/B_right__traced.png"
+     "png_sm": "art/sm/B_right__traced.webp",
+     "png_th": "art/th/B_right__traced.png"
     }
    ]
   },
@@ -586,7 +601,8 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 177,
-     "png_sm": "art/sm/T_left__traced.png"
+     "png_sm": "art/sm/T_left__traced.webp",
+     "png_th": "art/th/T_left__traced.png"
     }
    ]
   },
@@ -636,13 +652,14 @@
      "thin": 0,
      "gap": 0,
      "svg_kb": 185,
-     "png_sm": "art/sm/T_right__traced.png"
+     "png_sm": "art/sm/T_right__traced.webp",
+     "png_th": "art/th/T_right__traced.png"
     }
    ]
   }
  },
  "style": {
   "name": "traced-line + coded hatch",
-  "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.4 mm clear of every cut."
+  "description": "The original hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.4 mm clear of every cut."
  }
 }

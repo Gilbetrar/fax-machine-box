@@ -162,13 +162,15 @@ function initEngraving(ctx) {
     const chosen = variantById(fid, artState.choice[fid]);
     for (const v of face.variants || []) {
       const png = artUrl({ png: v.png || v.svg });
-      const inkImg = h('img', { src: vurl(v.svg ? artUrl({ svg: v.svg }) : png), alt: cleanVariantLabel(v.label) + ', line art', loading: 'lazy' });
+      const thumb = v.png_th ? artUrl({ png: v.png_th }) : png;   // small picture for the card; full SVG on request
+      const inkImg = h('img', { src: vurl(thumb), alt: cleanVariantLabel(v.label) + ', line art', loading: 'lazy', decoding: 'async' });
       const burnSlot = h('div', { class: 'burnslot' });
       const on = v === chosen;
       const btn = h('button', { class: 'var' + (on ? ' on' : ''), 'aria-pressed': on, type: 'button' },
         h('div', { class: 'pair' }, inkImg, burnSlot),
         h('div', { class: 'lbls', 'aria-hidden': 'true' }, h('span', {}, 'line art'), h('span', {}, 'burned on birch')),
-        h('div', { class: 'cap' }, h('div', {}, h('b', {}, cleanVariantLabel(v.label) || v.id), v.notes ? h('small', {}, ' ' + v.notes) : null), on ? h('span', { class: 'tag' }, 'on the box') : null));
+        h('div', { class: 'cap' }, h('div', {}, h('b', {}, cleanVariantLabel(v.label) || v.id), v.notes ? h('small', {}, ' ' + v.notes) : null,
+          v.svg ? h('a', { class: 'fullsize', href: vurl(artUrl({ svg: v.svg })), target: '_blank', rel: 'noopener', onclick: e => e.stopPropagation() }, 'Full-size line art') : null), on ? h('span', { class: 'tag' }, 'on the box') : null));
       btn.addEventListener('click', () => {
         artState.choice[fid] = v.id;
         for (const other of linkedFaces(fid)) if ((man.faces[other].variants || []).some(x => x.id === v.id)) artState.choice[other] = v.id;
@@ -176,7 +178,7 @@ function initEngraving(ctx) {
         for (const f of artState.listeners) f('choice', fid);
       });
       vbox.append(btn);
-      burnPreview(vurl(png), 700).then(c => { burnSlot.append(c); if (on) ctx.onBurn && ctx.onBurn(c); }).catch(e => console.warn(e.message));
+      burnPreview(vurl(thumb), 560).then(c => { burnSlot.append(c); if (on) ctx.onBurn && ctx.onBurn(c); }).catch(e => console.warn(e.message));
     }
     const links = linkedFaces(fid);
     if (links.length) vbox.append(h('p', { class: 'small linknote' }, `The ${links.map(f => faceLabel(f, man.faces[f]).toLowerCase()).join(' and ')} changes with it: the art runs across both.`));
@@ -256,7 +258,7 @@ async function initFiles() {
     if (V && V.zip) row.append(dlBtn(V.zip, `Download all beds (.zip, ${st.t} mm, ${mm2(K.kerf_mm)} mm kerf)`, 'btn-ink'));
     else if (V && V.beds) {   // cut + engrave comes as one zip per bed
       const list = Object.entries(V.beds);
-      if (list.length) box.append(h('p', { class: 'pick-label' }, 'Cut + engrave files come one zip per laser bed:'));
+      if (list.length) box.append(h('p', { class: 'pick-label' }, 'Cut + engrave files are laid out for one bed at a time, so there is one zip per bed (no all-beds zip):'));
       for (const [bid, e] of list) row.append(dlBtn(e.zip, `${tidy(((man.beds || {})[bid] || {}).label || bid).split(' (')[0]} (.zip)`, 'btn-ink'));
     }
     if (T.parts && T.parts.zip) row.append(dlBtn(T.parts.zip, 'One file per part (.zip)'));
@@ -272,7 +274,7 @@ async function initFiles() {
     for (const [id, b] of beds) {
       let sheets = null, href = null, why = '';
       const kerfOK = !b.kerfs || b.kerfs.includes(st.kerf);
-      if (!kerfOK) why = `Uses its own kerf: pick ${(kerfs.find(k => k.id === b.kerfs[0]) || { label: b.kerfs[0] }).label.split(' (')[0]}.`;
+      if (!kerfOK) { const kk = man.kerfs && man.kerfs[b.kerfs[0]]; why = `Cuts with a ${kk ? mm2(kk.kerf_mm) : ''} mm kerf: pick the ${kk ? mm2(kk.kerf_mm) + ' mm' : b.kerfs[0]} kerf above to get its files.`; }
       else if (st.ver === 'cut_engrave') {
         const e = V && V.beds && V.beds[id];
         if (e) { sheets = e.sheets; href = e.zip; } else why = 'Engraved files for this bed come with the CO2 kerf.';
@@ -318,7 +320,7 @@ function couponSVG(layout) {
   const col = { Q: '#fdf5cf', R: '#e7f0fb', S: '#e6f3e6', K: '#fbe3df' };
   let o = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coupon layout"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" fill="#fff" stroke="#c9bfae" stroke-width="0.6" stroke-dasharray="3 2"/>`;
   for (const r of layout) {
-    const L = r.part[0]; const y = H - r.y_mm - r.height_mm;
+    const L = r.part[0]; const y = r.y_mm;
     o += `<rect x="${r.x_mm}" y="${y}" width="${r.width_mm}" height="${r.height_mm}" rx="1" fill="${col[L] || '#eee'}" stroke="#1d1b19" stroke-width="0.7"/>`;
     o += `<text x="${r.x_mm + r.width_mm / 2}" y="${y + r.height_mm / 2 + 2.6}" font-family="Rubik, sans-serif" font-weight="800" font-size="7.5" text-anchor="middle" fill="#1d1b19">${L}</text>`;
   }
@@ -375,7 +377,13 @@ function renderCouponGuide(man, st) {
     if (f.drawn_widths_mm) lines.push(['Drawn widths', `${mm1(f.drawn_widths_mm[0])} to ${mm1(f.drawn_widths_mm[f.drawn_widths_mm.length - 1])} mm in ${mm1(f.drawn_widths_mm[1] - f.drawn_widths_mm[0])} mm steps`]);
     if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.map(mm1).join(', ') + ' mm']);
     if (f.right) lines.push(['Right', f.right]);
-    for (const k of ['tight_along_the_finger', 'loose_along_the_finger', 'tight_through_the_slot', 'loose_through_the_slot']) if (f[k]) lines.push([k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), f[k]]);
+    for (const k of ['tight_along_the_finger', 'loose_along_the_finger', 'tight_through_the_slot', 'loose_through_the_slot']) if (typeof f[k] === 'string') lines.push([k.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), f[k]]);
+    for (const [k, label] of [['along_the_fingers', 'Along the fingers'], ['through_the_thickness', 'Through the thickness']]) {
+      const g = f[k]; if (!g || typeof g !== 'object') continue;
+      if (g.what) lines.push([label, g.what]);
+      if (g.tight) lines.push(['  Too tight', g.tight]);
+      if (g.loose) lines.push(['  Too loose', g.loose]);
+    }
     if (f.then) lines.push(['Then', f.then]);
     right.append(h('div', { class: 'cg-feat' }, h('h4', {}, h('span', { class: 'letter' }, f.part || '?'), FEATURE_NAMES[f.id] || f.id.replace(/_/g, ' ')),
       h('dl', {}, lines.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, tidy(v))]))));
@@ -428,8 +436,9 @@ async function initMaterials() {
   if (ply && n1224) {
     const pack = +ply.name.match(/box of (\d+)/)[1]; const boxes = Math.floor(pack / n1224); const per = ply.price_usd / pack * n1224;
     ply.qty = n1224;
-    ply.note = `The 12 × 24 in layout uses ${n1224} sheets per box, so a box of ${pack} covers ${boxes} boxes, about ${fmtUSD(Math.round(per))} of plywood per box. Measure the thickness before you pick a cut file.`;
-    const t = $('#ply-cost'); if (t) t.textContent = `about ${fmtUSD(Math.round(per))}: ${n1224} sheets of 12 × 24 in`;
+    const s1 = t32 && t32.kerfs && Object.values(t32.kerfs).map(k => k.cut_only && k.cut_only.sheets && k.cut_only.sheets.xtool_s1).find(n => n != null);
+    ply.note = `The 12 × 24 in layout (xTool P2 bed, or any bed that takes a whole 12 × 24 in sheet) uses ${n1224} sheets per box, so a box of ${pack} covers ${boxes} boxes, about ${fmtUSD(Math.round(per))} of plywood per box.` + (s1 ? ` The xTool S1 layout cuts each sheet to 498 mm and needs ${s1}.` : '') + ' Other beds are listed with their sheet counts under Cut files. Measure the thickness before you pick a cut file.';
+    const t = $('#ply-cost'); if (t) t.textContent = `about ${fmtUSD(Math.round(per))}: ${n1224} sheets of 12 × 24 in with the 12 × 24 in layout`;
   }
   for (const i of d.items) if (i.note) i.note = i.note.replace('{SHEETS_12x24}', n1224 || 'four');
   const items = d.items.filter(i => !(i.category === 'Game supplies' && /\b(pens?|pencils?)\b/i.test(i.name)));
@@ -510,9 +519,9 @@ function initOptions() {
   const el = $('#options');
   for (const o of opts) el.append(h('article', { class: 'opt' + (o.rec ? ' rec' : ''), html: ICON[o.icon] }, o.rec ? h('span', { class: 'badge' }, 'recommended') : null, h('h3', {}, o.title), h('div', { class: 'cost' }, o.cost, h('small', {}, o.sub)), h('ul', {}, o.pts.map(p => h('li', {}, p, p === 'Bring your own plywood' ? [' (', h('span', { id: 'ply-cost' }, 'see the materials list'), ')'] : null)))));
   const t = $('#laser');
-  t.append(h('table', { class: 'tbl' },
+  t.append(h('table', { class: 'tbl laser-tbl' },
     h('thead', {}, h('tr', {}, h('th', {}, 'Machine'), h('th', {}, 'Cut'), h('th', {}, 'Engrave'), h('th', {}, 'Source'))),
-    h('tbody', {}, LASER.rows.map(r => h('tr', {}, h('td', {}, h('b', {}, r.machine)), h('td', {}, r.cut), h('td', {}, r.engrave), h('td', {}, h('a', { href: r.url, target: '_blank', rel: 'noopener' }, r.source)))))));
+    h('tbody', {}, LASER.rows.map(r => h('tr', {}, h('td', {}, h('b', {}, r.machine)), h('td', { 'data-l': 'Cut' }, r.cut), h('td', { 'data-l': 'Engrave' }, r.engrave), h('td', { 'data-l': 'Source' }, h('a', { href: r.url, target: '_blank', rel: 'noopener' }, r.source)))))));
 }
 function initParams(data) {
   const T = data.box && data.box.thickness;
@@ -529,7 +538,10 @@ function initParams(data) {
 
 // ---------- boot ----------
 async function boot() {
-  initChrome(); renderRules(); initOptions(); initFiles(); initMaterials();
+  initChrome(); renderRules(); initOptions();
+  // the cut-file manifest (and the lists that use it) load when the reader gets near them
+  const near = new IntersectionObserver(es => { if (!es.some(e => e.isIntersecting)) return; near.disconnect(); initFiles(); initMaterials(); }, { rootMargin: '1200px' });
+  for (const id of ['build', 'files', 'materials', 'cutting']) near.observe(document.getElementById(id));
   const ctx = { slots: {}, artState, prerender: /[?&]prerender=1/.test(location.search), reduced: REDUCED };
   const [text, art, renders] = await Promise.all([getText('data/parts.json'), getJSON('data/art-manifest.json'), getJSON('img/render/index.json')]);
   ctx.renders = renders;
@@ -539,7 +551,7 @@ async function boot() {
   initParams(ctx.data);
   renderHow(ctx); renderInventory(ctx); renderJoints(ctx); renderSteps(ctx); initEngraving(ctx);
   // hero still for browsers without WebGL (replaced by the live model when it loads)
-  const heroSrc = renderSrc(ctx, 'hero');
+  const heroSrc = renderSrc(ctx, 'hero_small') || renderSrc(ctx, 'hero');
   const noGL = () => {
     $('#hero-stage').classList.add('nogl');
     const l = $('#hero-loading'); if (l) l.remove();

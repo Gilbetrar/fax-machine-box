@@ -1,4 +1,4 @@
-// Ben's eight-panel rules card, redrawn. Each panel is a small hand-drawn SVG.
+// The eight-panel rules card from the original box, redrawn. Each panel is a small hand-drawn SVG.
 const S = 'fill="none" stroke="#1d1b19" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
 const T = (x, y, s, txt, extra = '') => `<text x="${x}" y="${y}" font-family="Kalam, cursive" font-weight="700" font-size="${s}" fill="#1d1b19" ${extra}>${txt}</text>`;
 const page = (x, y, w, hh, fill = '#fff') => `<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="2" fill="${fill}" ${S}/>`;

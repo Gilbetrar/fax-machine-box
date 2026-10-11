@@ -485,3 +485,27 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
 .cg-svg svg path[stroke="rgb(255,0,0)"] { stroke-width: 1px; }
 .sw.fill { height: 12px; border-top: 0; background: var(--c); transform: translateY(1px); border-radius: 2px; }
 @media (max-width: 720px) { .foot a { display: inline-block; min-height: 44px; line-height: 44px; } input[type=range] { height: 44px; } }
+
+.fullsize { display: inline-block; margin-top: 4px; font: 600 12.5px var(--body); color: var(--blue); }
+
+/* engraving stage: the style toggle sits in a bar under the 3D view, never over the art */
+.engrave-stage { display: flex; flex-direction: column; }
+.engrave-stage canvas { flex: 1 1 auto; min-height: 0; height: auto; }
+.engrave-stage .seg.stage-bar { position: static; align-self: flex-start; margin: 10px 12px 12px; flex: none; }
+.engrave-stage .art-still { bottom: 64px; }
+.engrave-stage { padding-bottom: 0; }
+/* thickness buttons at least 44 px wide on touch */
+@media (pointer: coarse) { .thick { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); } .thick button { min-width: 44px; } }
+/* hover colours only for real hovers, so a tapped chip does not stay lit */
+@media (hover: none) { .chip:hover { background: #fff; } .chip.on:hover { background: var(--yellow); } nav a:hover { background: transparent; } }
+.step { scroll-margin-top: 140px; }
+@media (max-width: 720px) { .step { scroll-margin-top: 130px; } }
+/* laser table as cards on phones */
+@media (max-width: 600px) {
+  .laser-tbl thead { display: none; }
+  .laser-tbl, .laser-tbl tbody, .laser-tbl tr, .laser-tbl td { display: block; width: 100%; }
+  .laser-tbl tr { border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--paper); }
+  .laser-tbl td { border: 0; padding: 3px 0; }
+  .laser-tbl td[data-l]::before { content: attr(data-l) ": "; font: 700 12px var(--body); color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+  .tbl-wrap { overflow-x: visible; }
+}
