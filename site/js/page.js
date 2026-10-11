@@ -210,7 +210,7 @@ const mm2 = x => Number(x).toFixed(2);
 const mm1 = x => Number(x).toFixed(1);
 const dlBtn = (href, label, cls = 'btn-line') => h('a', { class: 'btn ' + cls, href: fileUrl(href), download: '' }, label);
 const soonBox = (title, text) => h('div', { class: 'soon', html: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="4" width="28" height="36" rx="3" fill="#fff" stroke="#1d1b19" stroke-width="2.4"/><path d="M12 14h16M12 20h16M12 26h10" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="8" fill="#f6d33c" stroke="#1d1b19" stroke-width="2.4"/><path d="M33 29v4l3 2" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/></svg>' }, h('div', {}, h('b', {}, title), h('span', {}, text)));
-const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2').replace(/\b0\.2 mm/g, '0.20 mm').replace(/\bi engraved ticks (above|below|between) slot i( and the magnet holes)?/g, (m, w, x) => `one engraved tick ${w === 'between' ? 'beside' : w} the first slot, two beside the second, and so on${x ? ', between the slots and the magnet holes' : ''}`).replace(/rounded to 0\.05\b/g, 'rounded to the nearest 0.05 mm').replace(/\(see finger_joints\)/g, '(see Finger joints below)');
+const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2').replace(/\b0\.2 mm/g, '0.20 mm').replace(/\bi engraved ticks (above|below|between) slot i( and the magnet holes)?/g, (m, w, x) => `one engraved tick ${w === 'between' ? 'beside' : w} the first slot, two beside the second, and so on${x ? ', between the slots and the magnet holes' : ''}`).replace(/rounded to 0\.05\b/g, 'rounded to the nearest 0.05 mm').replace(/\(see finger_joints\)/g, '(see Finger joints below)').replace(/the narrowest slot your plywood slides into without force/g, 'the narrowest slot your plywood slides into freely, with a visible gap');
 const sheetsTxt = n => n == null ? '' : `${n} sheet${n == 1 ? '' : 's'}`;
 function seg(label, opts, cur, onPick) {
   return h('div', { class: 'seg seg-inline', role: 'group', 'aria-label': label },
@@ -373,6 +373,7 @@ function renderCouponGuide(man, st) {
     if (f.ticks) lines.push(['Tick marks', f.ticks]);
     if (f.formula) lines.push(['Work it out', f.formula]);
     if (f.rounding) lines.push(['Rounding', f.rounding]);
+    if (f.id === 'thickness_slots') lines.push(['Range', 'The box files cover 2.8 to 3.5 mm. Plywood outside that range is not supported.']);
     if (f.choose) lines.push(['Pick', f.choose.map(c => `${mm2(c.kerf_mm)} mm: ${(man.kerfs && man.kerfs[c.set] ? man.kerfs[c.set].label.split(' (')[0] : c.set)} files`).join(' · ')]);
     if (f.drawn_widths_mm) lines.push(['Drawn widths', `${mm1(f.drawn_widths_mm[0])} to ${mm1(f.drawn_widths_mm[f.drawn_widths_mm.length - 1])} mm in ${mm1(f.drawn_widths_mm[1] - f.drawn_widths_mm[0])} mm steps`]);
     if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.map(mm1).join(', ') + ' mm']);

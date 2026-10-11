@@ -11,7 +11,7 @@ import time):
                                    a service that cuts every line cuts exactly
                                    the parts
   labels/<bed>_sheet_N.svg|dxf     CUT + LABELS (for your own laser): parts lie
-                                   inside face up; gray part labels (layer
+                                   inside face up; red part labels (layer
                                    LABELS) and the faceplate glue-up lines (red)
   <bed>_sheet_N_engrave.svg|dxf    CUT + ENGRAVE: parts lie outside face up with
                                    the art (default variants)
@@ -1009,7 +1009,7 @@ README_KINDS = {
 Blue hairline (#0000FF) is the only line colour: cut through. Nothing is engraved, so a
 service that cuts every line cuts exactly the parts. Parts lie as drawn. Where a sheet had room, the
 coupon is on it (the small pieces labelled coupon in the file). coupon.svg|dxf is blue only;
-coupon_marked.svg|dxf has the same cuts plus red tick marks (engrave) above the thickness slots and on
+coupon_marked.svg|dxf has the same cuts plus red tick marks (engrave) below the thickness slots and on
 the joint pairs: cut it on your own laser only.
 """,
     "labels": """CUT + LABELS
@@ -1054,8 +1054,15 @@ Do not flip anything. Engraving stays at least 0.35 mm from every cut.
 """
 
 
+README_ASSEMBLY_NOTES = """
+BEFORE THE GLUE SETS: put each drawer in and check that it pulls shut (the magnet pair attracts).
+THE DRAWERS HAVE NO STOP: support a drawer once it is more than halfway out, or it tips and drops.
+"""
+
+
 def readme_text(kind: str, kerf: float, kerf_id: str) -> str:
-    return (README_COMMON.format(T=T, kerf=kerf, burn=kerf / 2, kerf_id=kerf_id) + "\n" + README_KINDS[kind])
+    return (README_COMMON.format(T=T, kerf=kerf, burn=kerf / 2, kerf_id=kerf_id) + "\n" + README_KINDS[kind]
+            + README_ASSEMBLY_NOTES)
 
 
 # --- building a set --------------------------------------------------------------------------------------

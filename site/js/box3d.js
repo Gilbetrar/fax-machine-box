@@ -200,6 +200,12 @@ export class BoxModel {
     this.box = B; this.center = new THREE.Vector3(B.length / 2, B.width / 2, B.height / 2);
     this.art = {}; // face -> overlay mesh
     for (const p of this.parts) this._addPart(p);
+    // drawer guides ride with the panel they are glued to, lifted clear of it
+    for (const u of Object.values(this.units)) {
+      if (!/guide/i.test(u.part.id + ' ' + (u.part.name || ''))) continue;
+      const host = /^T_/.test(u.part.id) ? this.units.shelf : this.units.bottom;
+      if (host) u.explodeDir = host.explodeDir.clone().add(new THREE.Vector3(0, 0, 32));
+    }
     this._addMagnets();
   }
   _addPart(p) {
@@ -238,7 +244,6 @@ export class BoxModel {
     else { dir = new THREE.Vector3(0, 0, 1); dist = 0; }
     const v = dir.multiplyScalar(isDrawer(grp) ? dist * 0.5 + 22 : dist * 1.15 + 40);
     // the lid also pulls out of the front, so it clears the top panel
-    if (/guide/i.test(p.id + ' ' + (p.name || ''))) v.multiplyScalar(0.55);   // stay near their wall, but clear of it
     if (grp === 'lid' && p.insert_direction) v.add(new THREE.Vector3(...p.insert_direction).normalize().multiplyScalar(-70));
     return v;
   }

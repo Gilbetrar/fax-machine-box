@@ -389,7 +389,7 @@ Body = open-top finger-jointed box, captive bottom:
   exclusive. A magnet pair per drawer holds it closed (see "Retention" §A);
   without the magnets a drawer slides free if the box is tipped rear-down.
 - Lateral play in the bay is limited by the drawer guides (part #10) to
-  1.7 mm each way at the far end. Without the guides it was 4.9 mm/side; the drawer
+  about 1.7 mm each way at the far end (1.8 mm at T 2.9, 1.9 mm at T 2.8). Without the guides it was 4.9 mm/side; the drawer
   was guided by its opening alone.
 
 Faceplate (6th piece), glued to the body front:
@@ -416,7 +416,7 @@ Faceplate (6th piece), glued to the body front:
   40, taper 30 degrees, tip width 0.8 mm). They lie flat on the bottom panel (lower pair)
   or on the shelf (upper pair), against the side edge of that panel (the edge that meets
   the wall's inner face), two per drawer slot.
-- Each rib's rear end is flush with the line where the divider's rear face stands: for the
+- Each rib's FRONT end (its square end, toward the paper slot) is flush with the line where the divider's rear face stands: for the
   shelf that is the shelf's own front edge (X = 82.55, ignoring the tabs); for the bottom
   panel it is the rear edge of the row of divider slots.
 - The end that faces the rear opening (the leading end, at the rear of the box) is cut at
@@ -431,7 +431,7 @@ Faceplate (6th piece), glued to the body front:
   without one.
 - The channel between the ribs is `INTERIOR_WIDTH − 2T` (152.4 mm at T = 3.175, the same as
   the rear-wall opening), so a drawer (149.0 mm wide) floats at most 1.7 mm each way at
-  its far end. Without the ribs it floated 4.9 mm each way ((158.75 − 149.0) / 2), and
+  its far end (1.8 mm at T 2.9, 1.9 mm at T 2.8). Without the ribs it floated 4.9 mm each way ((158.75 − 149.0) / 2), and
   the magnet pull is zero or negative beyond 4.5 mm. With N52 6 × 2 mm discs the pull at
   1.7 to 2.0 mm lateral offset is above 3 N.
 - Widening the drawer is not an option: the drawer must pass the rear-wall opening,

@@ -449,7 +449,7 @@ nobody "fixes" them mid-build or is surprised later:
 - **Drawer magnet lateral float.** The drawer is guided by its rear-wall
   opening and by the four drawer guides. The guides (flat ribs, with a 30 degree lead-in at the rear end that funnels in a drawer corner arriving slightly yawed) narrow the channel to
   INTERIOR_WIDTH - 2T (152.4 mm at T = 3.175, the same as the rear-wall
-  opening), so a drawer (149.0 mm wide) floats at most 1.7 mm each way at its
+  opening), so a drawer (149.0 mm wide) floats at most about 1.7 mm (1.8 at T 2.9, 1.9 at T 2.8) each way at its
   far end. Without the guides it floated 4.9 mm each way ((158.75 - 149.0) / 2),
   and the magnet pull is zero or negative beyond 4.5 mm. With N52 6 x 2 mm discs
   (the grade the pull figures are for; weaker grades hold less) the pull at 1.7 to 2.0 mm lateral offset is above 3 N. Widening the drawer is

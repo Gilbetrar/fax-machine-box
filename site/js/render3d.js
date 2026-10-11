@@ -79,7 +79,11 @@ function initEngraving(ctx, data) {
     const g = p.group; const fr = artFrame(p);
     const side = isDrawer(g) && Math.abs(fr.n.y) > 0.9;   // drawer sides only show when the drawer is out
     Object.assign(model.target, { drawer_lower: side && g === 'drawer_lower' ? 1.35 : 0, drawer_upper: side && g === 'drawer_upper' ? 1.35 : 0, lid: 0, explode: 0 });
-    const box = partBox(p).translate(model.groupOffset(g));
+    // frame the face together with the faces its art or its look belongs with, so nothing reads as cropped
+    const group = [fid, ...((man.links || [['top', 'lid']]).find(x => x.includes(fid)) || [])];
+    if (/_face$/.test(fid)) group.push('B_face', 'T_face');
+    const box = new THREE.Box3();
+    for (const f2 of new Set(group)) { const q = man.faces[f2] && data.parts.find(x => x.id === man.faces[f2].part_id); if (q) box.union(partBox(q).translate(model.groupOffset(q.group))); }
     // flat faces: look down from the art's bottom edge so the art reads upright on screen
     const flat = Math.abs(fr.n.z) > 0.9;
     let up = fr.U.clone();
@@ -87,7 +91,7 @@ function initEngraving(ctx, data) {
     const dir = flat ? up.clone().multiplyScalar(-0.55).add(new THREE.Vector3(0, 0, 1)) : fr.n.clone().add(new THREE.Vector3(0, 0, 0.32)).add(fr.R.clone().multiplyScalar(-0.22));
     // fit at the target state (drawer out) and at the canvas's real size
     viewer._resize();
-    viewer.fitTo(box, { dir: dir.toArray(), margin: flat ? 1.22 : 1.15, animate });
+    viewer.fitTo(box, { dir: dir.toArray(), margin: flat ? 1.12 : 1.22, animate });
   }
   // the face being shown, plus the faces whose art runs across it (top + lid)
   const facesFor = fid => [fid, ...((man.links || [['top', 'lid']]).find(g => g.includes(fid)) || []).filter(x => x !== fid)];

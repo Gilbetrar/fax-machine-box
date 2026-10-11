@@ -31,10 +31,10 @@ export const EXTRA_STEPS = [
     caption: 'Magnets go in while the parts are loose, before anything is assembled. Stack all four magnets in one column. Put a marker dot on the top face of the stack, slide that magnet off, dot the next top face, and so on, so every dot marks the same pole. Then find each part\'s inside face: in the cut + labels and cut + engrave files it carries the part letter and joint numbers. With cut-only files there are no labels, so mark the inside face of every part in pencil while you dry-fit. Press the two divider magnets into their holes from the divider\'s rear face (the side the drawers close against), dot facing the rear, flush with that face. Press each drawer-back magnet in with its dot facing into the drawer, flush with the outside face that meets the divider. Each pair then attracts, and either drawer works in either bay. A drop of CA glue holds a loose magnet; before it sets, hold each drawer back against the divider and check that the pair pulls together.',
     hardware: ['4 × 6 × 2 mm disc magnet'], tools: ['marker', 'CA glue'] },
   { before: 'box_frame', id: 'guides_shelf', title: 'Drawer guides on the shelf', focus: 'guides_shelf',
-    caption: 'Glue the two upper drawer guides (part J, small ribs) flat on the top face of the shelf. Each lies against the side edge that will meet a wall, its square end flush with the shelf\'s front edge and its tapered end toward the rear of the box. Let them set before the frame goes together.',
+    caption: 'Glue the two upper drawer guides (part J, small ribs) flat on the top face of the shelf. The two ribs are a mirror pair: each lies against the side edge that will meet a wall, with its angled face toward the middle of the shelf (the drawer side) and the narrow 0.8 mm tip against the wall. Its square end lines up with the front edge of the shelf body, not the tips of the tabs that stick out about 3 mm past it; the tapered end points to the rear of the box. Let them set before the frame goes together.',
     tools: ['wood glue'] },
   { before: 'box_bottom', id: 'guides_bottom', title: 'Drawer guides on the bottom panel', focus: 'guides_bottom',
-    caption: 'Glue the two lower drawer guides flat on the inside face of the bottom panel. Each lies against a side edge, its square end flush with the rear edge of the row of divider slots and its tapered end toward the rear. Let them set.',
+    caption: 'Glue the two lower drawer guides flat on the inside face of the bottom panel. Like the upper pair they are mirror images: each lies against a side edge, angled face toward the middle (the drawer side) and the narrow tip against the wall, its square end flush with the rear edge of the row of divider slots and its tapered end toward the rear. Let them set.',
     tools: ['wood glue'] },
   { after: 'box_bottom', id: 'square', title: 'Square and clamp', focus: 'square',
     caption: 'Measure both diagonals. When they match, clamp or tape the box for 30 to 60 minutes, and give the glue 24 hours before you load it. Slide each drawer into its opening once while the glue is soft to check the bay is square.',
@@ -80,7 +80,9 @@ export function buildSteps(data) {
   const fill = t => String(t || '').replace('{MAGNETS}', mf.total).replace('{BACK_SIDE}', mf.side ? `, which sits off-center: put that end against the drawer's ${mf.side} side, so in the box it lines up with the divider's magnet holes` : '');
   const out = (data.steps || []).map((s, i) => {
     const t = STEP_TEXT[s.id] || {};
-    const base = s.caption || s.text || s.description || '';
+    const base = (s.caption || s.text || s.description || '')
+      .replace(/^Glue the two upper drawer guides on the shelf, then join/, 'Join')
+      .replace(/, with its two lower drawer guides already glued on\./, '.');
     return { ...s, n: stepNumber(s, i), title: s.title || t.title || base.split(/[.:]/)[0], caption: fill([t.pre, base, t.note].filter(Boolean).join(' ')),
       hardware: (s.hardware || t.hardware || []).map(fill), tools: s.tools || t.tools || [], diagram: t.diagram };
   });
