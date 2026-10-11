@@ -1,5 +1,5 @@
 {
- "hash": "f7e12ad",
+ "hash": "ec3f9531",
  "files": {
   "how-paper": "img/render/how-paper.png",
   "how-drawers": "img/render/how-drawers.png",
@@ -28,12 +28,13 @@
   "step-drawer_right_side": "img/render/step-drawer_right_side.png",
   "step-drawer_bottom": "img/render/step-drawer_bottom.png",
   "step-drawer_face": "img/render/step-drawer_face.png",
-  "step-guides": "img/render/step-guides.png",
+  "step-guides_shelf": "img/render/step-guides_shelf.png",
   "step-box_frame": "img/render/step-box_frame.png",
   "step-box_right": "img/render/step-box_right.png",
   "step-box_rear": "img/render/step-box_rear.png",
   "step-box_left": "img/render/step-box_left.png",
   "step-box_front": "img/render/step-box_front.png",
+  "step-guides_bottom": "img/render/step-guides_bottom.png",
   "step-box_bottom": "img/render/step-box_bottom.png",
   "step-square": "img/render/step-square.png",
   "step-box_lid": "img/render/step-box_lid.png",

@@ -179,6 +179,7 @@ function stepPicture(step, data, R) {
   const n = step.n ?? 0;
   const by = Object.fromEntries(data.parts.map(p => [p.id, p]));
   let hi = stepParts(step).map(id => by[id]).filter(Boolean);
+  if (hi.some(p => !/guide/i.test(p.id)) ) hi = hi.filter(p => !/guide/i.test(p.id + ' ' + (p.name || '')) || /^drawers_in$/.test(step.id));
   const order = p => p.assembly_step ?? 999;
   const s = R._scene(), b = new THREE.Box3();
   const mags = (data.hardware && data.hardware.magnets) || [];
@@ -196,14 +197,16 @@ function stepPicture(step, data, R) {
     }
     return R.render(s, b, { dir: [0.8, -1, 0.5] });
   }
-  if (step.focus === 'guides') {
-    const walls = data.parts.filter(p => /^(left|right)$/i.test(p.id) || /^(left|right) wall$/i.test(p.name));
-    const guides = data.parts.filter(p => /guide/i.test(p.id + ' ' + p.name));
-    // the right wall seen from inside, its two guides pulled off toward the camera
-    const rw = walls.find(w => /right/i.test(w.id + w.name)) || walls[0];
-    if (rw) R.addPart(s, rw, 'plain', [0, 0, 0], b);
-    for (const q of guides.filter(q => /R$|right/i.test(q.id))) R.addPart(s, q, 'hi', [0, 28, 0], b);
-    return R.render(s, b, { dir: [-0.45, 1, 0.4] });
+  if (step.focus === 'guides_shelf' || step.focus === 'guides_bottom') {
+    // the panel the guides glue onto, guides lifted just above their places, seen from above the rear
+    const host = step.focus === 'guides_shelf' ? findPart(data, /^shelf$/i) : findPart(data, /^bottom$|bottom panel/i);
+    const guides = data.parts.filter(p => /guide/i.test(p.id + ' ' + (p.name || '')) && (step.focus === 'guides_shelf' ? /^T_/.test(p.id) : /^B_/.test(p.id)));
+    if (!host) return null;
+    R.addPart(s, host, 'plain', [0, 0, 0], b);
+    for (const q of guides) {
+      R.addPart(s, q, 'hi', [0, 0, 14], b);
+    }
+    return R.render(s, b, { dir: [0.9, -0.55, 1] });
   }
   if (!hi.length) {
     const shell = data.parts.filter(p => !isDrawer(p.group));
@@ -227,10 +230,13 @@ function stepPicture(step, data, R) {
     R.addPart(s, p, 'ghost', [0, 0, 0], b);
   }
   const byDir = new Map(); let small = true;
+  // drawer guides glue onto a panel first: show them lifted off that panel, seen from above
+  const isGuide = p => /guide/i.test(p.id + ' ' + (p.name || ''));
+  const hasGuides = hi.some(isGuide) && hi.some(p => !isGuide(p));
   for (const p of hi) {
     const dir = step.insert_direction || p.insert_direction;
     const D = family ? 30 : allDrawer ? 120 : 50;
-    const off = dir ? dir.map(v => -v * D) : [0, 0, 0];
+    let off = dir ? dir.map(v => -v * D) : [0, 0, 0];
     const pb = partBox(p); if (pb.getSize(new THREE.Vector3()).length() > 60) small = false;
     R.addPart(s, p, 'hi', off, b);
     if (dir) { const k = dir.join(','); if (!byDir.has(k)) byDir.set(k, { dir, box: new THREE.Box3() }); byDir.get(k).box.union(pb.translate(new THREE.Vector3(...off))); }
