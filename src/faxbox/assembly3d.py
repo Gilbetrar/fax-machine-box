@@ -98,11 +98,12 @@ def _placements() -> dict[str, Placement]:
         zf = z0 + c.FACEPLATE_Z_OFFSET
         add(f"{tag}_face", Y, (yc - fw / 2, yc + fw / 2), Z, (zf, zf + fh), X, (xb1, xb1 + T),
             group="drawer", step=f"drawer_{tag}")
-    # drawer guides: strips on the bay walls at the divider end, standing on the floor / the shelf
-    gl, gh = c.DRAWER_GUIDE["length"], c.DRAWER_GUIDE["height"]
-    for tag, zg in (("B", c.FLOOR_TOP), ("T", c.SHELF_Z1)):
-        add(f"{tag}_guideL", X, (xb0, xb0 + gl), Z, (zg, zg + gh), Y, (T, 2 * T), step="left")
-        add(f"{tag}_guideR", X, (xb0, xb0 + gl), Z, (zg, zg + gh), Y, (W - 2 * T, W - T), step="right")
+    # drawer guides: ribs lying flat on the bottom panel (lower) / the shelf (upper) against the side
+    # walls at the divider end; local y runs away from the wall, the tapered end faces the rear opening
+    gl = c.DRAWER_GUIDE["length"]
+    for tag, zg, step in (("B", c.FLOOR_TOP, "bottom"), ("T", c.SHELF_Z1, "frame")):
+        add(f"{tag}_guideL", X, (xb0, xb0 + gl), Y, (T, 2 * T), Z, (zg, zg + T), step=step)
+        add(f"{tag}_guideR", X, (xb0, xb0 + gl), Y, (W - 2 * T, W - T), Z, (zg, zg + T), flip=(0, 1), step=step)
     return P
 
 
@@ -130,7 +131,8 @@ class Plate:
         self.ra, self.rb, self.rc = pl.ra, pl.rb, pl.rc
         g = pg.load_all()[source_part(pid)]
         self.part = g
-        assert abs((self.ra[1] - self.ra[0]) - g.width) < 1e-3 and abs((self.rb[1] - self.rb[0]) - g.height) < 1e-3, (
+        # the generators write coordinates to 0.001 mm, so a size can read 0.001 off
+        assert abs((self.ra[1] - self.ra[0]) - g.width) < 2e-3 and abs((self.rb[1] - self.rb[0]) - g.height) < 2e-3, (
             pid, self.ra, self.rb, g.width, g.height)
         self.local = g.solid
         self.holes_local = g.holes
@@ -331,18 +333,18 @@ DIRVEC = {"+X": (1, 0, 0), "-X": (-1, 0, 0), "+Y": (0, 1, 0), "-Y": (0, -1, 0), 
 # move while going in.  tests/test_assembly3d.py re-derives from collisions
 # that every step is possible in this order and in this direction.
 ASSEMBLY_STEPS = [
-    dict(id="frame", parts=["divider", "shelf", "top"], direction="+X",
-         text="Join the top panel and the shelf to the divider: slide the divider toward the rear until its tabs seat in the top panel and shelf slots."),
-    dict(id="right", parts=["right", "B_guideR", "T_guideR"], direction="-Y",
-         text="Fit the right wall onto the frame from the right, with its two drawer guides already glued on."),
+    dict(id="frame", parts=["divider", "shelf", "top", "T_guideL", "T_guideR"], direction="+X",
+         text="Glue the two upper drawer guides on the shelf, then join the top panel and the shelf to the divider: slide the divider toward the rear until its tabs seat in the top panel and shelf slots."),
+    dict(id="right", parts=["right"], direction="-Y",
+         text="Fit the right wall onto the frame from the right."),
     dict(id="rear", parts=["rear"], direction="-X",
          text="Fit the rear wall from the rear."),
-    dict(id="left", parts=["left", "B_guideL", "T_guideL"], direction="+Y",
-         text="Fit the left wall from the left, with its two drawer guides already glued on."),
+    dict(id="left", parts=["left"], direction="+Y",
+         text="Fit the left wall from the left."),
     dict(id="front", parts=["front"], direction="+X",
          text="Fit the front wall from the front."),
-    dict(id="bottom", parts=["bottom"], direction="+Z",
-         text="Turn the box over and press the bottom panel in from below."),
+    dict(id="bottom", parts=["bottom", "B_guideL", "B_guideR"], direction="+Z",
+         text="Turn the box over and press the bottom panel in from below, with its two lower drawer guides already glued on."),
     dict(id="lid", parts=["lid"], direction="+X",
          text="Slide the lid into its slots from the front."),
 ]

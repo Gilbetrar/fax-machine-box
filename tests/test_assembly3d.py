@@ -79,7 +79,7 @@ def test_assembly_order_is_possible_step_by_step(plates):
 def test_divider_enters_frame_from_the_front_only(plates):
     """With the top panel and shelf in place the divider can only move
     toward +X to engage them."""
-    present = ["top", "shelf", "divider"]
+    present = ["top", "shelf", "divider", "T_guideL", "T_guideR"]
     free = [a3.DIRNAME[(ax, -s)] for (ax, s) in a3.DIRNAME
             if a3.leaves_freely(plates, ["divider"], present, ax, s)]
     assert free == ["+X"]
@@ -200,17 +200,48 @@ def test_overall_envelope(plates):
 
 # --- drawer guides (red-team H1) and the rounded lid slot (H2) ------------------------------------
 
-def test_four_guides_sit_on_the_walls_at_the_divider_end(plates):
+def test_four_guides_lie_on_the_bottom_panel_and_the_shelf_against_the_walls(plates):
     g = {n: p for n, p in plates.items() if "guide" in n}
     assert sorted(g) == ["B_guideL", "B_guideR", "T_guideL", "T_guideR"]
     for n, p in g.items():
         b = p.box_bounds()
         assert b[a3.X][0] == pytest.approx(c.BAY_X0) and b[a3.X][1] - b[a3.X][0] == pytest.approx(c.DRAWER_GUIDE["length"])
         floor = c.FLOOR_TOP if n[0] == "B" else c.SHELF_Z1
-        assert b[a3.Z] == pytest.approx((floor, floor + c.DRAWER_GUIDE["height"]))
+        assert b[a3.Z] == pytest.approx((floor, floor + T), abs=2e-3)    # T high, resting on the panel
+        assert b[a3.Y][1] - b[a3.Y][0] == pytest.approx(T, abs=2e-3)    # T wide
         wall_inner = T if n.endswith("L") else c.SHELL_EXT["width"] - T
         face = b[a3.Y][0] if n.endswith("L") else b[a3.Y][1]
-        assert face == pytest.approx(wall_inner)                     # flush against the wall
+        assert face == pytest.approx(wall_inner, abs=2e-3)               # flush against the wall
+
+
+def test_guide_leading_end_is_tapered_in_plan(plates):
+    """V5: a yawed drawer corner must be funnelled in, not meet a square end face.  The end that faces
+    the rear opening is cut at 30 degrees in plan, down to a 0.8 mm tip."""
+    from shapely.geometry import box as sbox
+    for n in ("B_guideL", "B_guideR", "T_guideL", "T_guideR"):
+        geom = plates[n].geom                                  # (X, Y) plan of the rib
+        x0, y0, x1, y1 = geom.bounds
+        assert x1 - x0 == pytest.approx(c.DRAWER_GUIDE["length"])
+        inner_y = y1 if n.endswith("L") else y0                 # the face the drawer meets
+        # at the rear end the rib is only the tip wide; at the other end it is T wide
+        tip = geom.intersection(sbox(x1 - 0.02, y0 - 1, x1, y1 + 1))
+        base = geom.intersection(sbox(x0, y0 - 1, x0 + 0.01, y1 + 1))
+        assert tip.area / 0.02 == pytest.approx(c.DRAWER_GUIDE["tip_width"], abs=0.02)
+        assert base.area / 0.01 == pytest.approx(T, abs=0.02)
+        # the taper reaches the full width after (T - tip) / tan 30 = 4.1 mm
+        run = (T - c.DRAWER_GUIDE["tip_width"]) / np.tan(np.radians(c.DRAWER_GUIDE["taper_deg"]))
+        mid = geom.intersection(sbox(x1 - run - 0.01, y0 - 1, x1 - run + 0.01, y1 + 1))
+        assert mid.area / 0.02 == pytest.approx(T, abs=0.05)
+
+
+def test_guide_taper_angle_is_30_degrees_and_the_yaw_margin_is_small(plates):
+    """The wedge face makes 30 degrees with the travel direction (a square end met the drawer corner
+    head-on).  The whole guide clearance is under a degree of drawer yaw."""
+    run = (T - c.DRAWER_GUIDE["tip_width"]) / np.tan(np.radians(c.DRAWER_GUIDE["taper_deg"]))
+    assert np.degrees(np.arctan((T - c.DRAWER_GUIDE["tip_width"]) / run)) == pytest.approx(30.0)
+    channel = c.INTERIOR_WIDTH - 2 * T
+    yaw = np.degrees(np.arctan((channel - c.DRAWER_BODY["width"]) / c.DRAWER_BODY["length"]))
+    assert 0 < yaw < 1.0
 
 
 def test_guides_limit_the_drawer_float_to_the_front_clearance(plates):
@@ -225,11 +256,10 @@ def test_guides_limit_the_drawer_float_to_the_front_clearance(plates):
     assert 0 < float_far <= 2.0, float_far
     bay_float = (c.INTERIOR_WIDTH - drawer) / 2
     assert bay_float > 4.0 and float_far < bay_float / 2
-    # and the measured plates agree: drawer sides clear the guides by that amount
     for tag in "BT":
-        left_side = plates[f"{tag}_left"].box_bounds()[a3.Y]
+        bottom = plates[f"{tag}_bottom"].box_bounds()[a3.Y]
         guide = plates[f"{tag}_guideL"].box_bounds()[a3.Y]
-        assert left_side[0] - guide[1] == pytest.approx(float_far, abs=1e-6)
+        assert bottom[0] - guide[1] == pytest.approx(float_far, abs=2e-3)
 
 
 def test_lid_slot_rear_corners_are_rounded_and_the_lid_clears_them(plates):

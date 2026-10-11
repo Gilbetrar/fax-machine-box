@@ -96,22 +96,24 @@ def parse_sheet(path: Path):
     return parts
 
 
-def written_clearance(rec: dict, tol: float = 0.002) -> dict:
-    """Engrave-to-cut figures computed only from what is in the file."""
+def written_clearance(rec: dict, burn: float = 0.0, tol: float = 0.002) -> dict:
+    """Engrave-to-cut figures computed only from what is in the file.  Distances are measured to the
+    BURNT edge: the cut path moved in by `burn` (= kerf / 2) with round joins (red-team V2)."""
     cut_flat = eg.flatten(rec["cuts"], tol)
-    cut_lines = unary_union([LineString(p + ([p[0]] if closed else [])) for p, closed in cut_flat if len(p) > 1])
     rings = sorted((Polygon(p).buffer(0) for p, closed in cut_flat if closed and len(p) > 2), key=lambda r: -r.area)
     material = rings[0]
     for h in rings[1:]:
         material = material.difference(h)
+    burnt = material.buffer(-burn, quad_segs=16) if burn else material
+    edge = burnt.boundary
     flat = eg.flatten(rec["fills"], tol)
     ink_rings = [Polygon(p).buffer(0) for p, _ in flat if len(p) > 2]
     ink = unary_union([p for p, _ in eg.ink_components(ink_rings)]) if ink_rings else Polygon()
     for sub in rec["strokes"]:
         ink = ink.union(LineString([q for pts, _ in eg.flatten([sub], tol) for q in pts]))
-    return {"distance": cut_lines.distance(ink) if not ink.is_empty else np.inf,
-            "outside": ink.difference(material).area,
-            "crosses": cut_lines.intersects(ink) if not ink.is_empty else False,
+    return {"distance": edge.distance(ink) if not ink.is_empty else np.inf,
+            "outside": ink.difference(burnt).area,
+            "crosses": edge.intersects(ink) if not ink.is_empty else False,
             "ink_area": ink.area}
 
 
@@ -440,13 +442,13 @@ def test_flipped_outlines_are_symmetric_under_the_turn_over(plates):
 MIN_CLEAR = cs.CLEARANCE_MIN
 
 
-def _check_set(out: Path, parts: Path | None = None):
+def _check_set(out: Path, parts: Path | None = None, burn: float = 0.0):
     files = sorted(out.glob("*_engrave.svg")) + (sorted((parts / "faces").glob("*.svg")) if parts else [])
     for f in files:
         for rec in parse_sheet(f):
             if not rec["fills"] and not rec["strokes"]:
                 continue
-            r = written_clearance(rec)
+            r = written_clearance(rec, burn if f.parent.name != "faces" else 0.0)
             where = (f.name, rec["part"], rec["attrs"].get("data-engrave"))
             assert not r["crosses"], where
             assert r["outside"] < 1e-3, (where, r["outside"])
@@ -456,7 +458,7 @@ def _check_set(out: Path, parts: Path | None = None):
 def test_no_engrave_crosses_a_cut_and_all_stay_clear(built, parts_built):
     out, info = built
     pout, pinfo = parts_built
-    _check_set(out, pout)
+    _check_set(out, pout, info["burn"])
     clear = pinfo["min_clearance_mm"]
     # every art variant is checked: count them from the art manifest (17 since
     # red-team pass 2 added front/outline and right/outline)
@@ -473,7 +475,7 @@ def test_art_is_substantial_after_clearance_trim(parts_built):
         art = eg.load_art(face, var)
         rings = [Polygon(p).buffer(0) for ap in art for p, _ in eg.flatten(ap.subs, 0.01) if len(p) > 2]
         ink = sum(p.area for p, _ in eg.ink_components(rings))
-        got = written_clearance(rec)["ink_area"]
+        got = written_clearance(rec, 0.0)["ink_area"]
         assert abs(got - ink) / ink < 0.01, (f.name, got, ink)
 
 
@@ -488,8 +490,8 @@ def test_clearance_holds_at_both_ends_of_the_stock_range(t, tmp_path):
     r = subprocess.run([sys.executable, "-c", code, str(tmp_path / "s"), str(tmp_path / "p")], env=env,
                        capture_output=True, text=True, cwd=ROOT)
     assert r.returncode == 0, r.stderr[-2000:]
-    _check_set(tmp_path / "s", tmp_path / "p")
     info = json.loads((tmp_path / "s" / "set.json").read_text())
+    _check_set(tmp_path / "s", tmp_path / "p", info["burn"])
     assert info["wall_id"]["left_divider_holes"] == info["wall_id"]["right_divider_holes"] + 1
 
 
@@ -805,7 +807,7 @@ for it in items:
     if subs:
         labelled.add(it.letter)
 missing = {k: sorted(v - got.get(k, set())) for k, v in want.items() if v - got.get(k, set())}
-nolabel = sorted({it.letter for it in items if it.plate} - labelled)
+nolabel = sorted({it.letter for it in items if it.plate} - labelled - {"J"})   # the 3 mm wide guide ribs have no room for text
 print(json.dumps([missing, nolabel]))
 """
 
@@ -838,7 +840,7 @@ def test_coupon_guide_data_is_complete():
     ids = {f["id"]: f for f in g["features"]}
     assert "orientation" in g and "clipped corner" in g["orientation"]
     k = ids["kerf_square"]
-    assert "SMALLER" in k["then"] and "0.01" in k["then"]
+    assert "finger pairs decide" in k["then"] and "measured kerf" in k["then"]
     t = ids["thickness_slots"]
     assert "- 0.05" in t["formula"] and "0.1 mm" in t["rounding"] and "tighter" in t["reading"]
     j = ids["finger_joints"]
@@ -855,4 +857,171 @@ def test_coupon_ticks_clear_the_magnet_holes(tmp_path):
     subs = [s_ for sp in cut for s_ in eg.parse_subpaths(sp.d)]
     _, cut_lines = cs.cut_geometry(subs)
     ticks = unary_union([LineString(p) for sp in red for p, _ in eg.flatten(eg.parse_subpaths(sp.d), 0.01)])
-    assert len(red) == 36 and cut_lines.distance(ticks) >= 2.5, cut_lines.distance(ticks)
+    assert len(red) == 55 and cut_lines.distance(ticks) >= 2.5, cut_lines.distance(ticks)
+
+
+# --- pass 3: registration, burnt-edge clearance, DXF colours, guide rules (V1-V6) ---------------------
+
+@pytest.fixture(scope="module")
+def kerf_sets(tmp_path_factory):
+    """The diode and CO2 sets (the engrave beds of every kerf; the Ponoko kerf is the `built` set)."""
+    out = {}
+    for k in (0.12, 0.18):
+        d = tmp_path_factory.mktemp(f"kerf{k}")
+        out[k] = (d, cs.build_set(d, k))
+    return out
+
+
+@pytest.mark.parametrize("kerf", [0.0, 0.12, 0.18, 0.20])
+def test_art_registration_matches_the_outline_at_every_kerf(kerf, tmp_path):
+    """V1: the registration affine maps the zero-kerf outline onto the real piece outline (grown by the
+    burn) at every kerf, including kerf 0 where finger-slot breakouts poke 0.05 mm past the edge and used
+    to enlarge the piece's bounding box and shift the art by 0.05 mm."""
+    from shapely.affinity import affine_transform
+    items = cs.generate_items(tmp_path, kerf)
+    for it in items:
+        if not it.face:
+            continue
+        cuts, _ = cs.bed_subpaths(it, None, "engrave")
+        mat, _ = cs.cut_geometry(cuts)
+        g = a3.pg.load_part(it.src)
+        m = eg.compose(eg.bed_flip(it.piece, it.face), eg.local_to_piece(it.piece, it.src, it.burn))
+        outer = affine_transform(g.outer, [m[0], m[2], m[1], m[3], m[4], m[5]])
+        grown = outer.buffer(it.burn, quad_segs=16) if it.burn else outer
+        mb, gb = mat.bounds, grown.bounds
+        # the notches merged into the outline never move its bounding box
+        assert all(abs(x - y) < 0.005 for x, y in zip(mb, gb)), (kerf, it.face, mb, gb)
+
+
+def _start_points(rec):
+    return np.array([sub[0][1] for sub in rec["fills"]])
+
+
+def test_sheet_art_and_face_file_art_are_the_same_per_part(built, parts_built):
+    """V1: for every art part, the art in the sheet and in the per-face file coincide (to 0.005 mm) once
+    both are expressed relative to the part's nominal corner."""
+    from shapely.strtree import STRtree
+    from shapely.geometry import Point
+    out, info = built
+    pout, _ = parts_built
+    burn = info["burn"]
+    faces = {}
+    for f in (pout / "faces").glob("*__*.svg"):
+        rec = parse_sheet(f)[0]
+        faces[rec["attrs"]["data-engrave"]] = rec
+    n = 0
+    for bed, b in info["beds"].items():
+        if not info["engrave_files"][bed]:
+            continue
+        for i in range(1, b["sheets"] + 1):
+            for rec in parse_sheet(out / f"{bed}_sheet_{i}_engrave.svg"):
+                key = rec["attrs"].get("data-engrave")
+                if not key:
+                    continue
+                ref = faces[key]
+                def origin(r, bn):
+                    rings = sorted((Polygon(p).buffer(0) for p, cl in eg.flatten(r["cuts"], 0.005) if cl), key=lambda q: -q.area)
+                    x0, y0 = rings[0].bounds[:2]
+                    return np.array([x0 + bn, y0 + bn])
+                A = _start_points(rec) - origin(rec, burn)
+                B = _start_points(ref) - origin(ref, 0.0)
+                tree = STRtree([Point(p) for p in B])
+                d = np.array([Point(p).distance(Point(B[tree.nearest(Point(p))])) for p in A[::7]])
+                kept = d[d < 0.5]                       # the points the clearance trim left alone
+                assert len(kept) > 20, (key, len(kept))
+                assert np.percentile(kept, 90) <= 0.005, (bed, i, key, float(np.percentile(kept, 90)))
+                n += 1
+    assert n >= 11
+
+
+def test_every_sheet_clears_every_cut_by_0_35_mm_of_burnt_edge_at_every_kerf(built, kerf_sets):
+    """V2: engraving is at least 0.35 mm from the BURNT edge (cut path moved in by kerf / 2), at the Ponoko,
+    CO2 and diode kerfs, on every engrave bed."""
+    out, info = built
+    _check_set(out, None, info["burn"])
+    for k, (d, kinfo) in kerf_sets.items():
+        assert any(kinfo["engrave_files"].values())
+        _check_set(d, None, kinfo["burn"])
+
+
+def test_the_clearance_the_old_way_would_have_failed():
+    """The point of V2, as arithmetic: 0.35 mm from the drawn path is 0.35 - k / 2 from the burnt edge,
+    i.e. 0.25 mm at k = 0.20."""
+    for k in cs.KERFS.values():
+        assert cs.CLEARANCE_MIN - k / 2 < cs.CLEARANCE_MIN
+    assert cs.KEEPOUT >= cs.CLEARANCE_MIN + 0.04
+
+
+def test_dxf_layer_colours(built):
+    """V3: CUT blue (5), ENGRAVE gray (8, the art), LABELS red (1, the marks)."""
+    out, _ = built
+    dxf = (out / "ponoko_sheet_1_engrave.dxf").read_text().split("\n")
+    colours = {}
+    for i, line in enumerate(dxf):
+        if line == "AcDbLayerTableRecord":
+            name = dxf[i + 2]
+            colours[name] = dxf[dxf.index("62", i) + 1]
+    assert colours == {"CUT": "5", "ENGRAVE": "8", "LABELS": "1"}
+
+
+def test_guide_rules_dry_runs_pick_sets_that_fit():
+    """V4: follow the coupon guide's rules for real plywood and kerf, then check the box joints fit.
+    Through the thickness the clearance (set + play - plywood) must be 0 to 0.15 mm for the two review
+    cases, and 0 to 0.2 mm over the whole range; along the fingers 0.02 to 0.2 mm."""
+    play = c.FINGER_PLAY
+    def run(k, t):
+        w = next(w for w in cs.GAUGE_WIDTHS if w + k >= t - 1e-9)              # narrowest slot it enters
+        tset = cs.choose_thickness_set(w, k)
+        kset = cs.choose_kerf_set(k)
+        return tset + play - t, cs.pair_gap(k, cs.KERFS[kset])
+    for k, t in ((0.15, 3.05), (0.10, 3.40)):
+        thru, along = run(k, t)
+        assert 0.0 <= thru <= 0.15 + 1e-9, (k, t, thru)
+        assert 0.02 <= along <= 0.2, (k, t, along)
+    worst = 0.0
+    for k in np.arange(0.10, 0.2201, 0.005):
+        for t in np.arange(2.80, 3.5001, 0.01):
+            thru, along = run(round(float(k), 3), round(float(t), 3))
+            assert -1e-9 <= thru <= 0.2 + 1e-9, (k, t, thru)
+            assert 0.02 - 1e-9 <= along <= 0.2 + 1e-9, (k, t, along)
+            worst = max(worst, thru)
+    assert worst <= 0.2 + 1e-9
+    g = cs.coupon_guide()
+    assert "MEASURED" in g["kerf_means"] and g["rules"]["thickness_set"].endswith("(3.35 goes to 3.4)")
+    txt = json.dumps(g)
+    assert "stand proud less than flush" not in txt
+    assert "same finger width, play" in txt
+
+
+def test_coupon_pair_is_the_same_joint_as_the_box(tmp_path, plates):
+    """V4: finger width, hole width and through-thickness hole size of the coupon pair equal the box's
+    (compensating for the kerf the pair was drawn for)."""
+    r = a3.pg.load_part("right")
+    s = a3.pg.load_part("shelf")
+    from shapely.geometry import box as sbox
+    zmid = c.SHELF_Z0 + T / 2
+    box_hw = max(h.bounds[2] - h.bounds[0] for h in r.holes if abs((h.bounds[1] + h.bounds[3]) / 2 - zmid) < 0.2 and h.bounds[3] - h.bounds[1] < 4)
+    box_short = min(min(h.bounds[2] - h.bounds[0], h.bounds[3] - h.bounds[1]) for h in r.holes
+                    if abs((h.bounds[1] + h.bounds[3]) / 2 - zmid) < 0.2 and h.bounds[3] - h.bounds[1] < 4)
+    tabs = s.outer.difference(sbox(0, 0, s.width, s.height))
+    box_fw = max(t.bounds[3] - t.bounds[1] for t in getattr(tabs, "geoms", [tabs]) if t.area > 5)
+    for kid, k in cs.KERFS.items():
+        assert _finger_fit(k, k, tmp_path) == pytest.approx(box_hw - box_fw, abs=0.005)
+    items = cs.coupon_items(tmp_path)
+    holes = next(i for i in items if "kerf 0.18" in i.name and "hole piece" in i.name)
+    mat, _ = cs.cut_geometry(cs.bed_subpaths(holes, None, "cut")[0])
+    # drawn hole = physical - kerf (it shrinks by the burn on each side): add it back
+    hw = sorted(Polygon(rg).bounds[2] - Polygon(rg).bounds[0] for rg in mat.interiors)
+    assert box_hw - box_short == pytest.approx(box_hw - (T + c.FINGER_PLAY), abs=0.01)
+    assert (T + c.FINGER_PLAY) == pytest.approx(box_short, abs=0.01)
+
+
+def test_manifest_version_texts_are_clean_and_readmes_say_the_right_things():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("exp", ROOT / "scripts" / "export_cutfiles.py")
+    exp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(exp)
+    src = (ROOT / "scripts" / "export_cutfiles.py").read_text()
+    assert "gray part letters" not in src and "splitlines()[1]" not in src
+    assert "coupon_marked" in cs.README_KINDS["cut"] and "red tick" in cs.README_KINDS["cut"]
+    assert "except where the mate is a part" in cs.README_KINDS["engrave"]

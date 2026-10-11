@@ -16,7 +16,8 @@ the downloads cover 2.8 to 3.5 mm in 0.1 mm steps, each with finger holes
 T + 0.1 wide, and the coupon's thickness slots say which set to use.
 This makes edge-adjacent hole rows
 break through their part edge by ≤ play/2, which is sub-kerf and hidden
-inside joints — **except the top-panel hole row, see part #7 below.**
+inside joints — **except the walls' top-panel hole row, whose slots open through
+the visible top edge of the side and rear walls (see part #7 below).**
 
 **Contents fit:** the SPEC envelope and compartment dimensions come from
 Ben's fully functional cardboard prototype of this exact box (confirmed
@@ -65,11 +66,11 @@ Unglued assembly therefore cannot go together wrong.
 
 **Assembly order (verified in 3D, `faxbox.assembly3d.ASSEMBLY_STEPS`).**
 Drawers first: back and front stand up, left side slides in (+Y), right side
-(−Y), bottom from below (+Z), faceplate glued on. Box: top panel + shelf +
+(−Y), bottom from below (+Z), faceplate glued on. Box: top panel + shelf (carrying its two upper drawer guides) +
 divider as one unit (the divider moves +X into the top panel and shelf);
-right wall with its two drawer guides already glued on (moves −Y); rear wall (−X);
-left wall with its two guides already glued on (+Y); front wall (+X);
-bottom panel from below (+Z); lid from the front (+X); drawers
+right wall (moves −Y); rear wall (−X);
+left wall (+Y); front wall (+X);
+bottom panel from below (+Z), carrying its two lower drawer guides; lid from the front (+X); drawers
 in from the rear (−X). Bottom-panel-first and "all captive parts into one
 wall" orders are not possible. The order depends on the 0.05 mm
 finger-hole breakouts at the part edges, which stay open. In the cut files each
@@ -145,7 +146,7 @@ Geometry changes in this round:
 test-fit coupon, for every thickness 2.8 to 3.5 mm and kerf 0.12 / 0.18 / 0.20 mm.
 Engraving is not kerf-offset and stays at least 0.35 mm from every cut. Joints are
 numbered for assembly: 25 joints, each named by the lower part letter and a number
-(for example C3) and engraved on both parts. The wall with one more hole in its
+(for example C3) and engraved on both parts, except that parts with art carry no marks: a joint between a marked part and an art part is marked only on the marked part (match those by the part letter and the edge, or use the cut + labels files). The wall with one more hole in its
 divider-hole column is the left wall (left/right counts 9/8 at 2.8 to 2.9 mm, 8/7 at
 3.0 to 3.2, 7/6 at 3.3 to 3.5). Every flat part can be turned over, so a box built with
 both side walls swapped and the divider turned left for right is a valid mirror-image
@@ -411,18 +412,26 @@ Faceplate (6th piece), glued to the body front:
 
 ### 10. Drawer guides — 4× (part J)
 
-- Four plywood strips, **40 mm long × 10 mm high × T thick** (`DRAWER_GUIDE`), plain
-  edges, glued flat against the inside faces of the left and right walls at the divider
-  end, two per drawer slot: the lower pair stand on the bay floor, the upper pair on the
-  shelf.
-- Each guide's rear end is flush with the divider's rear face (X = 82.55, the rear edge
-  of the divider-hole column in the wall). Its bottom edge sits on the top edge of the
-  bottom-panel hole row (lower pair) or of the shelf hole row (upper pair).
-- Glue them to the wall while the wall lies flat, before the wall goes on (assembly step:
-  right wall and left wall, each with its two guides already glued on).
-- They narrow the channel to `INTERIOR_WIDTH − 2T` (152.4 mm at T = 3.175, the same as
+- Four flat plywood ribs, each **T wide × T high × 40 mm long** (`DRAWER_GUIDE`: length
+  40, taper 30 degrees, tip width 0.8 mm). They lie flat on the bottom panel (lower pair)
+  or on the shelf (upper pair), against the side edge of that panel (the edge that meets
+  the wall's inner face), two per drawer slot.
+- Each rib's rear end is flush with the line where the divider's rear face stands: for the
+  shelf that is the shelf's own front edge (X = 82.55, ignoring the tabs); for the bottom
+  panel it is the rear edge of the row of divider slots.
+- The end that faces the rear opening (the leading end, at the rear of the box) is cut at
+  30 degrees in plan down to a 0.8 mm tip, so a drawer corner that arrives slightly yawed
+  is funnelled in instead of butting the end face. Flat laser parts can taper in plan; an
+  upright strip could not.
+- Glue the two upper ribs to the shelf before the frame step (top panel + shelf +
+  divider), and the two lower ribs to the bottom panel before the bottom-panel step (the
+  bottom panel goes in from below carrying its two ribs). The wall steps do not involve
+  guides.
+- Each rib is only T wide, so it has no room for a part label; it is the only part
+  without one.
+- The channel between the ribs is `INTERIOR_WIDTH − 2T` (152.4 mm at T = 3.175, the same as
   the rear-wall opening), so a drawer (149.0 mm wide) floats at most 1.7 mm each way at
-  its far end. Without the guides it floated 4.9 mm each way ((158.75 − 149.0) / 2), and
+  its far end. Without the ribs it floated 4.9 mm each way ((158.75 − 149.0) / 2), and
   the magnet pull is zero or negative beyond 4.5 mm. With N52 6 × 2 mm discs the pull at
   1.7 to 2.0 mm lateral offset is above 3 N.
 - Widening the drawer is not an option: the drawer must pass the rear-wall opening,
@@ -492,11 +501,16 @@ the drawer closed.
   mirrored on both parts, would leave a pole-to-pole air gap across the joint that
   collapses the pull. The pull figures quoted for N35 discs in earlier revisions
   (0.5–0.7 kg flush, roughly 0.1–0.17 kg recessed) do not apply to N52 and have not been
-  re-measured.
+  re-measured. N52 6 × 2 mm is the grade the pull figures are for; weaker grades hold less.
+- **Assembly cautions.** Before the glue sets, slide each drawer in and check that it pulls
+  shut against the divider (the magnets attract). If a drawer is pushed away, a magnet is
+  the wrong way round; turn it over while the glue is still wet. Support the drawer with
+  your other hand when you pull it out past halfway. There is no stop, and a drawer pulled
+  out further than about 110 mm tips and drops.
 - **Lateral float at the magnet end.** The magnet sits on the drawer's Back (leading)
   wall, at the far end of the drawer from the faceplate. The faceplate seated in its
   rear-wall opening holds its own end to ±0.75 mm, and the drawer is 218.6 mm long, so
-  the Back end can still swing sideways. The drawer guides (part #10) narrow the channel
+  the Back end can still swing sideways. The drawer guides (part #10, flat ribs) narrow the channel
   at the divider end to 152.4 mm, so the drawer (149.0 mm wide) floats at most 1.7 mm each
   way there. Without the guides the float was 4.9 mm each way
   ((158.75 − 149.0) / 2), and the magnet pull is zero or negative beyond 4.5 mm. With N52
@@ -526,34 +540,41 @@ removed. Nothing in the current geometry depends on either design.
 
 `coupon.svg` / `coupon.dxf` and `coupon_marked.svg` / `coupon_marked.dxf`, built by
 `coupon_items()` in `cutset.py` for every thickness. The marked coupon is the one with
-engraved ticks 1 to 8 between the thickness slots and the magnet holes (they used to touch
+engraved ticks 1 to 10 between the thickness slots and the magnet holes (they used to touch
 the holes) and red line-engrave marks. The coupon is in every zip type (loose per kerf
 under `coupon/`, and on a sheet of each bed layout where there was room). All parts are
-measured with calipers; read them in this order: kerf square, pick the kerf set, then
-thickness, then try the joints.
+measured with calipers; read them in this order: kerf square, thickness, then the kerf set
+from the finger pairs. In every formula, k is the kerf MEASURED from the kerf square
+(k = 10.00 − measured width), never the kerf of a file set.
 
-- **K**, a 10 mm square piece drawn with no kerf compensation: kerf = 10.00 − measured
+- **K**, a 10 mm square piece drawn with no kerf compensation: k = 10.00 − measured
   width. Measure two directions and average. Kerf varies along the bed, so measure where
-  the box will be cut. The sets are 0.12, 0.18 and 0.20 mm. Between two sets take the
-  SMALLER kerf unless the reading is within 0.01 mm of the larger: a smaller assumed kerf
-  leaves joints loose by 2 × the difference, and a larger one leaves them tight and can
-  jam. About 0.15 means the 0.12 set. The 0.18 and 0.20 sets are close, and either works
-  on a CO2 laser.
-- **Q**, a panel with a clipped top-left corner as an orientation mark, eight thickness
-  slots running from the narrowest (2.8 mm drawn) to the widest (3.5 mm) from left to
-  right in 0.1 mm steps, and four magnet holes (drawn 5.3, 5.4, 5.5, 5.6 mm; cut hole =
-  drawn + kerf; the box wants 5.65 mm for a 6.0 mm magnet). Find the narrowest slot the
-  plywood enters without force; thickness = drawn width + kerf − 0.05, and pick the
-  thickness set (0.1 mm steps) nearest. If it falls between two slots, take the tighter
-  one.
+  the box will be cut. The sets are 0.12, 0.18 and 0.20 mm; the set nearest to k is only
+  the first guess, and the finger pairs decide.
+- **Q**, a panel with a clipped top-left corner as an orientation mark, ten thickness
+  slots (`GAUGE_WIDTHS`) running from the narrowest (2.5 mm drawn) to the widest (3.4 mm)
+  from left to right in 0.1 mm steps, and four magnet holes (drawn 5.3, 5.4, 5.5, 5.6 mm;
+  cut hole = drawn + kerf; the box wants 5.65 mm for a 6.0 mm magnet). The cut slot is the
+  drawn width plus k, so plywood from 2.8 to 3.5 mm shows up at any kerf from 0.10 to
+  0.22 mm. Find the narrowest slot the plywood slides into without force (between two,
+  take the tighter one). With W the drawn width of that slot, estimate = W + k − 0.05;
+  round to 0.1 mm, half up (3.35 goes to 3.4); that is the thickness set. Examples: k =
+  0.15 and W = 2.9 give 3.00, set 3.0; k = 0.10 and W = 3.3 give 3.35, set 3.4. If the
+  plywood enters the first slot with room to spare, use the 2.8 set.
 - **R**, three pairs of three-finger corners (finger piece + hole piece) that differ in
   size: the smallest is compensated for the diode kerf (0.12, 1 tick), the middle for CO2
-  (0.18, 2 ticks) and the largest for Ponoko (0.20, 3 ticks). The pair that goes together
-  with firm hand pressure and no gap is your kerf. The fit has two separate directions.
-  Along the length of the fingers it depends on kerf: tight means use the next smaller
-  kerf set; loose or rattling means the next larger kerf set. Through the plywood
-  thickness it depends on the thickness: tight means the plywood is thicker, so use the
-  next thicker thickness set; loose means thinner, so the next thinner set.
+  (0.18, 2 ticks) and the largest for Ponoko (0.20, 3 ticks). They have the same finger
+  width, play (0.1 mm) and kerf compensation as the box joints. Take the pair that goes
+  together with firm hand pressure and no rattle. If two pairs do, take the tighter one as
+  long as it still goes together by hand without a tool. If none goes together by hand,
+  take the smallest set and file the fingers. A pair made for kerf s on a laser with
+  measured kerf k has 0.1 + 2 × (k − s) mm of clearance along the fingers: k = 0.15 picks
+  the CO2 0.18 set (0.04 mm), and k = 0.10 picks the diode 0.12 set (0.06 mm). Joint
+  looseness has two independent directions. Along the fingers it depends on kerf, as
+  above. Through the thickness, tight means the plywood will not slide through the slot and
+  the fingers end below the surface (plywood thicker than the set: next thicker set);
+  loose means it rattles and the fingers stand proud of the surface (thinner: next thinner
+  set).
 - **S**, a lid slot block and strip, cut for the kerf of the set the coupon came from.
 
 Choosing a kerf file set replaces the earlier practice of tuning `BURN` by editing
@@ -569,7 +590,7 @@ config constants. The older `calibration.py` coupons (`kerf_coupon.svg`,
 | Drawer body ↔ slot height | 5.24 | ≥ 1.5 |
 | Drawer body ↔ bay length | 0.475 | > 0 (not a sliding fit) |
 | Lid width ↔ slot span | 1.5 total | ≥ 1.5 |
-| Drawer lateral float at the divider end (with guides) | 1.7 each way | magnet pull above 3 N (zero beyond 4.5 mm) |
+| Drawer lateral float at the divider end (with guide ribs) | 1.7 each way | magnet pull above 3 N (zero beyond 4.5 mm) |
 | Lid thickness ↔ slot height | 1.2 | = 1.2 (documented deviation, v2) |
 | Faceplate ↔ opening | 0.75/side | reveal 0.5–1.0 |
 | Webs and posts in rear wall | 3.175 / 3.7375 (≥ 3.0 at every thickness; posts beside the openings are at least 3.0 wide) | ≥ 3.0 (`MIN_WEB`) |

@@ -10,8 +10,8 @@ For every thickness T (2.8 ... 3.5 mm, 0.1 steps) and laser kerf (diode 0.12, CO
 | file | contents |
 | --- | --- |
 | `fax-machine-box_T<T>_k<kerf>_cut.zip` | cut-only SVG + DXF sheets, one set per bed, plus the coupon files. Blue lines only, so a service that cuts every line cuts exactly the parts |
-| `fax-machine-box_T<T>_k<kerf>_labels.zip` | cut + labels for your own laser: parts lie inside face up, gray part letters and joint numbers (layer LABELS), red faceplate glue-up lines |
-| `fax-machine-box_T<T>_k<kerf>_engrave_<bed>.zip` | cut + engrave for one bed: art on the outside of the parts that carry it (mirrored outlines where needed), gray joint labels on the inside of the rest |
+| `fax-machine-box_T<T>_k<kerf>_labels.zip` | cut + labels for your own laser: parts lie inside face up, red part letters and joint numbers (layer LABELS), red faceplate glue-up lines |
+| `fax-machine-box_T<T>_k<kerf>_engrave_<bed>.zip` | cut + engrave for one bed: art on the outside of the parts that carry it (mirrored outlines where needed), red joint numbers on the inside of the rest |
 | `fax-machine-box_T<T>_parts.zip` | zero-kerf single-part files (service applies its own kerf) and `faces/`: the 11 art parts, 15 variants |
 | `coupon/T<T>_coupon[_marked].svg\|dxf` | the test-fit coupon, loose (also inside every cut zip) |
 
