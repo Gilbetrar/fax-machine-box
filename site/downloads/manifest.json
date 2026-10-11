@@ -18,15 +18,15 @@
  "versions": {
   "cut_only": {
    "label": "Cut only",
-   "text": "Blue hairline (#0000FF) is the only line colour: cut through. Nothing is engraved, so a"
+   "text": "Blue cut lines and nothing else: a service that cuts every line cuts exactly the parts."
   },
   "cut_labels": {
    "label": "Cut + labels",
-   "text": "For your own laser: gray part letters and joint numbers on the inside face."
+   "text": "For your own laser: red part letters and joint numbers to engrave on the inside face, plus the faceplate glue-up lines."
   },
   "cut_engrave": {
    "label": "Cut + engrave",
-   "text": "Art on the outside of the art parts; joint labels inside the rest."
+   "text": "Art on the outside of the parts that carry it, red joint numbers on the inside of the rest."
   }
  },
  "beds": {
@@ -302,14 +302,14 @@
       "label": "Solid letters",
       "default": true,
       "notes": "Solid black drip lettering, as on the original cardboard box.",
-      "ink_pct": 23.9
+      "ink_pct": 24.0
      },
      {
       "id": "outline",
       "label": "Outlined letters",
       "default": false,
       "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 14.1
+      "ink_pct": 14.2
      }
     ]
    },
@@ -324,21 +324,21 @@
       "label": "With 'Fun For'",
       "default": false,
       "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
-      "ink_pct": 24.6
+      "ink_pct": 23.7
      },
      {
       "id": "outline",
       "label": "Outlined title",
       "default": false,
       "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 20.7
+      "ink_pct": 20.2
      },
      {
       "id": "nofunfor",
       "label": "Without 'Fun For'",
       "default": true,
       "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
-      "ink_pct": 24.4
+      "ink_pct": 23.5
      }
     ]
    },
@@ -375,14 +375,14 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 19.8
+      "ink_pct": 19.6
      },
      {
       "id": "c",
       "label": "Whole cat",
       "default": false,
       "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
-      "ink_pct": 19.8
+      "ink_pct": 19.7
      }
     ]
    },
@@ -397,14 +397,14 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 21.6
+      "ink_pct": 21.5
      },
      {
       "id": "c",
       "label": "Whole cat",
       "default": false,
       "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
-      "ink_pct": 20.0
+      "ink_pct": 19.9
      }
     ]
    },
@@ -449,7 +449,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 17.4
+      "ink_pct": 17.3
      }
     ]
    },
@@ -464,7 +464,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 15.1
+      "ink_pct": 15.0
      }
     ]
    },
@@ -494,7 +494,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 28.3
+      "ink_pct": 28.2
      }
     ]
    }
@@ -554,7 +554,7 @@
       "dxf_marked": "coupon/T2.8_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -703,7 +703,7 @@
       "dxf_marked": "coupon/T2.8_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -840,7 +840,7 @@
       "dxf_marked": "coupon/T2.8_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -1651,20 +1651,20 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.378,
-     "right/outline": 0.378,
-     "right/nofunfor": 0.378,
-     "left/solid": 0.383,
-     "left/outline": 0.383,
-     "front/outline": 1.385,
-     "front/traced": 1.385,
-     "top/a": 0.384,
-     "top/c": 0.383,
-     "B_left/traced": 0.538,
-     "B_right/traced": 0.543,
+     "right/funfor": 0.381,
+     "right/outline": 0.381,
+     "right/nofunfor": 0.381,
+     "left/solid": 0.381,
+     "left/outline": 0.381,
+     "front/outline": 1.335,
+     "front/traced": 1.335,
+     "top/a": 0.383,
+     "top/c": 0.386,
+     "B_left/traced": 0.635,
+     "B_right/traced": 0.633,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.535,
-     "T_right/traced": 0.53,
+     "T_left/traced": 0.632,
+     "T_right/traced": 0.63,
      "T_face/traced": 4.041,
      "lid/a": 0.4,
      "lid/c": 0.4
@@ -1725,7 +1725,7 @@
       "dxf_marked": "coupon/T2.9_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -1874,7 +1874,7 @@
       "dxf_marked": "coupon/T2.9_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -2011,7 +2011,7 @@
       "dxf_marked": "coupon/T2.9_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -2823,22 +2823,22 @@
     ],
     "min_clearance_mm": {
      "right/funfor": 0.383,
-     "right/outline": 0.382,
+     "right/outline": 0.383,
      "right/nofunfor": 0.383,
-     "left/solid": 0.381,
-     "left/outline": 0.381,
-     "front/outline": 1.285,
-     "front/traced": 1.285,
+     "left/solid": 0.382,
+     "left/outline": 0.382,
+     "front/outline": 1.235,
+     "front/traced": 1.235,
      "top/a": 0.4,
-     "top/c": 0.383,
-     "B_left/traced": 0.54,
-     "B_right/traced": 0.541,
+     "top/c": 0.388,
+     "B_left/traced": 0.643,
+     "B_right/traced": 0.637,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.54,
-     "T_right/traced": 0.538,
+     "T_left/traced": 0.624,
+     "T_right/traced": 0.629,
      "T_face/traced": 4.041,
-     "lid/a": 0.4,
-     "lid/c": 0.4
+     "lid/a": 0.37,
+     "lid/c": 0.37
     }
    },
    "stock_12x24_sheets": 3
@@ -2896,7 +2896,7 @@
       "dxf_marked": "coupon/T3.0_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -3045,7 +3045,7 @@
       "dxf_marked": "coupon/T3.0_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -3182,7 +3182,7 @@
       "dxf_marked": "coupon/T3.0_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -3993,23 +3993,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.382,
-     "right/outline": 0.382,
-     "right/nofunfor": 0.382,
+     "right/funfor": 0.383,
+     "right/outline": 0.383,
+     "right/nofunfor": 0.383,
      "left/solid": 0.383,
      "left/outline": 0.383,
-     "front/outline": 1.185,
-     "front/traced": 1.185,
+     "front/outline": 1.135,
+     "front/traced": 1.135,
      "top/a": 0.4,
-     "top/c": 0.385,
-     "B_left/traced": 0.54,
-     "B_right/traced": 0.541,
+     "top/c": 0.381,
+     "B_left/traced": 0.641,
+     "B_right/traced": 0.637,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.54,
-     "T_right/traced": 0.53,
+     "T_left/traced": 0.633,
+     "T_right/traced": 0.631,
      "T_face/traced": 4.041,
-     "lid/a": 0.37,
-     "lid/c": 0.372
+     "lid/a": 0.441,
+     "lid/c": 0.426
     }
    },
    "stock_12x24_sheets": 3
@@ -4067,7 +4067,7 @@
       "dxf_marked": "coupon/T3.1_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -4216,7 +4216,7 @@
       "dxf_marked": "coupon/T3.1_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -4315,7 +4315,7 @@
       "coupon_on_sheet": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 3,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4353,7 +4353,7 @@
       "dxf_marked": "coupon/T3.1_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -5164,23 +5164,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.381,
-     "right/outline": 0.381,
-     "right/nofunfor": 0.381,
-     "left/solid": 0.385,
-     "left/outline": 0.385,
-     "front/outline": 1.085,
-     "front/traced": 1.085,
-     "top/a": 0.391,
-     "top/c": 0.381,
-     "B_left/traced": 0.541,
-     "B_right/traced": 0.541,
+     "right/funfor": 0.383,
+     "right/outline": 0.383,
+     "right/nofunfor": 0.383,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
+     "front/outline": 1.035,
+     "front/traced": 1.035,
+     "top/a": 0.388,
+     "top/c": 0.385,
+     "B_left/traced": 0.641,
+     "B_right/traced": 0.637,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.54,
-     "T_right/traced": 0.538,
+     "T_left/traced": 0.624,
+     "T_right/traced": 0.629,
      "T_face/traced": 4.041,
-     "lid/a": 0.435,
-     "lid/c": 0.424
+     "lid/a": 0.541,
+     "lid/c": 0.526
     }
    },
    "stock_12x24_sheets": 3
@@ -5238,7 +5238,7 @@
       "dxf_marked": "coupon/T3.2_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -5387,7 +5387,7 @@
       "dxf_marked": "coupon/T3.2_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -5486,7 +5486,7 @@
       "coupon_on_sheet": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 3,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5524,7 +5524,7 @@
       "dxf_marked": "coupon/T3.2_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -6338,20 +6338,20 @@
      "right/funfor": 0.381,
      "right/outline": 0.381,
      "right/nofunfor": 0.381,
-     "left/solid": 0.383,
-     "left/outline": 0.383,
-     "front/outline": 0.985,
-     "front/traced": 0.985,
+     "left/solid": 0.381,
+     "left/outline": 0.381,
+     "front/outline": 0.935,
+     "front/traced": 0.935,
      "top/a": 0.4,
      "top/c": 0.4,
-     "B_left/traced": 0.407,
-     "B_right/traced": 0.419,
+     "B_left/traced": 0.511,
+     "B_right/traced": 0.519,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.416,
-     "T_right/traced": 0.425,
+     "T_left/traced": 0.523,
+     "T_right/traced": 0.514,
      "T_face/traced": 4.041,
-     "lid/a": 0.515,
-     "lid/c": 0.5
+     "lid/a": 0.614,
+     "lid/c": 0.6
     }
    },
    "stock_12x24_sheets": 3
@@ -6372,7 +6372,7 @@
       },
       "coupon_on_sheet": {
        "xtool_s1": 4,
-       "xtool_p2": 3,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6409,7 +6409,7 @@
       "dxf_marked": "coupon/T3.3_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -6506,7 +6506,7 @@
       },
       "coupon_on_sheet": {
        "xtool_s1": 4,
-       "xtool_p2": 3,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6532,7 +6532,7 @@
        "xtool_p2": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_xtool_p2.zip",
         "sheets": 3,
-        "coupon_on_sheet": 3
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_glowforge_pro.zip",
@@ -6558,7 +6558,7 @@
       "dxf_marked": "coupon/T3.3_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -6566,73 +6566,73 @@
         "rotated": false
        },
        {
-        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
         "x_mm": 126.5,
         "y_mm": 5.0,
-        "width_mm": 22.18,
-        "height_mm": 70.18,
-        "rotated": true
-       },
-       {
-        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-        "x_mm": 152.18,
-        "y_mm": 5.0,
-        "width_mm": 29.5,
-        "height_mm": 47.39,
-        "rotated": true
+        "width_mm": 47.39,
+        "height_mm": 29.5,
+        "rotated": false
        },
        {
         "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-        "x_mm": 152.18,
-        "y_mm": 55.89,
-        "width_mm": 26.2,
-        "height_mm": 47.39,
-        "rotated": true
+        "x_mm": 126.5,
+        "y_mm": 38.0,
+        "width_mm": 47.39,
+        "height_mm": 26.2,
+        "rotated": false
        },
        {
         "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
         "x_mm": 5.0,
-        "y_mm": 78.68,
-        "width_mm": 47.37,
-        "height_mm": 25.48,
+        "y_mm": 67.7,
+        "width_mm": 25.48,
+        "height_mm": 47.37,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 33.98,
+        "y_mm": 54.5,
+        "width_mm": 70.18,
+        "height_mm": 22.18,
         "rotated": false
        },
        {
         "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-        "x_mm": 55.87,
-        "y_mm": 54.5,
+        "x_mm": 107.66,
+        "y_mm": 67.7,
         "width_mm": 22.18,
         "height_mm": 47.37,
         "rotated": true
        },
        {
         "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-        "x_mm": 81.55,
-        "y_mm": 54.5,
-        "width_mm": 21.42,
-        "height_mm": 47.31,
-        "rotated": true
+        "x_mm": 133.34,
+        "y_mm": 67.7,
+        "width_mm": 47.31,
+        "height_mm": 21.42,
+        "rotated": false
        },
        {
         "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-        "x_mm": 5.0,
-        "y_mm": 54.5,
+        "x_mm": 133.34,
+        "y_mm": 92.62,
         "width_mm": 47.31,
         "height_mm": 18.12,
         "rotated": false
        },
        {
         "part": "S Coupon: lid strip",
-        "x_mm": 55.87,
-        "y_mm": 105.37,
+        "x_mm": 33.98,
+        "y_mm": 80.18,
         "width_mm": 60.18,
         "height_mm": 14.18,
         "rotated": false
        },
        {
         "part": "K Coupon: kerf square, 10 mm piece",
-        "x_mm": 5.0,
-        "y_mm": 107.66,
+        "x_mm": 33.98,
+        "y_mm": 97.86,
         "width_mm": 10.0,
         "height_mm": 10.0,
         "rotated": false
@@ -6695,7 +6695,7 @@
       "dxf_marked": "coupon/T3.3_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -7506,23 +7506,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.383,
-     "right/outline": 0.383,
-     "right/nofunfor": 0.383,
-     "left/solid": 0.383,
-     "left/outline": 0.383,
-     "front/outline": 0.885,
-     "front/traced": 0.885,
-     "top/a": 0.383,
-     "top/c": 0.38,
-     "B_left/traced": 0.394,
-     "B_right/traced": 0.394,
+     "right/funfor": 0.38,
+     "right/outline": 0.38,
+     "right/nofunfor": 0.38,
+     "left/solid": 0.38,
+     "left/outline": 0.38,
+     "front/outline": 0.835,
+     "front/traced": 0.835,
+     "top/a": 0.388,
+     "top/c": 0.388,
+     "B_left/traced": 0.389,
+     "B_right/traced": 0.392,
      "B_face/traced": 2.756,
      "T_left/traced": 0.4,
-     "T_right/traced": 0.392,
+     "T_right/traced": 0.383,
      "T_face/traced": 4.041,
-     "lid/a": 0.515,
-     "lid/c": 0.5
+     "lid/a": 0.614,
+     "lid/c": 0.6
     }
    },
    "stock_12x24_sheets": 3
@@ -7580,7 +7580,7 @@
       "dxf_marked": "coupon/T3.4_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -7729,7 +7729,7 @@
       "dxf_marked": "coupon/T3.4_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -7866,7 +7866,7 @@
       "dxf_marked": "coupon/T3.4_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -8677,23 +8677,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.375,
-     "right/outline": 0.375,
-     "right/nofunfor": 0.375,
-     "left/solid": 0.383,
-     "left/outline": 0.383,
-     "front/outline": 0.785,
-     "front/traced": 0.785,
-     "top/a": 0.38,
-     "top/c": 0.381,
+     "right/funfor": 0.381,
+     "right/outline": 0.381,
+     "right/nofunfor": 0.381,
+     "left/solid": 0.385,
+     "left/outline": 0.381,
+     "front/outline": 0.735,
+     "front/traced": 0.735,
+     "top/a": 0.382,
+     "top/c": 0.382,
      "B_left/traced": 0.383,
-     "B_right/traced": 0.394,
+     "B_right/traced": 0.396,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.396,
-     "T_right/traced": 0.381,
+     "T_left/traced": 0.4,
+     "T_right/traced": 0.386,
      "T_face/traced": 4.041,
-     "lid/a": 0.515,
-     "lid/c": 0.5
+     "lid/a": 0.614,
+     "lid/c": 0.6
     }
    },
    "stock_12x24_sheets": 3
@@ -8751,7 +8751,7 @@
       "dxf_marked": "coupon/T3.5_k0.12_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -8900,7 +8900,7 @@
       "dxf_marked": "coupon/T3.5_k0.18_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -9037,7 +9037,7 @@
       "dxf_marked": "coupon/T3.5_k0.20_coupon_marked.dxf",
       "layout": [
        {
-        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "part": "Q Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
         "x_mm": 5.0,
         "y_mm": 5.0,
         "width_mm": 118.0,
@@ -9848,23 +9848,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.38,
-     "right/outline": 0.38,
-     "right/nofunfor": 0.38,
-     "left/solid": 0.382,
+     "right/funfor": 0.376,
+     "right/outline": 0.376,
+     "right/nofunfor": 0.376,
+     "left/solid": 0.383,
      "left/outline": 0.382,
-     "front/outline": 0.685,
-     "front/traced": 0.685,
-     "top/a": 0.381,
+     "front/outline": 0.635,
+     "front/traced": 0.635,
+     "top/a": 0.383,
      "top/c": 0.38,
-     "B_left/traced": 0.384,
+     "B_left/traced": 0.39,
      "B_right/traced": 0.4,
      "B_face/traced": 2.756,
      "T_left/traced": 0.385,
      "T_right/traced": 0.386,
      "T_face/traced": 4.041,
-     "lid/a": 0.515,
-     "lid/c": 0.5
+     "lid/a": 0.614,
+     "lid/c": 0.6
     }
    },
    "stock_12x24_sheets": 3
@@ -9873,20 +9873,27 @@
  "coupon_guide": {
   "order": [
    "Cut the coupon first, on a scrap of your real plywood.",
-   "Measure the kerf square and pick the kerf file set.",
-   "Pick the thickness set from the slot gauge or your calipers.",
-   "Try the finger joints of your kerf, and the magnets.",
+   "Measure the kerf square (this gives your measured kerf, k) and the thickness slots.",
+   "Pick the thickness set, then try the finger pairs: the pairs decide the kerf set.",
+   "Try the magnets.",
    "Cut the box."
   ],
-  "orientation": "Hold the coupon with the clipped corner at the top left. The thickness slots run from the narrowest (2.8 mm drawn) at the left to the widest (3.5 mm) at the right. In the marked file the ticks sit between the slots and the magnet holes (below the slots as the file is drawn).",
+  "orientation": "Hold the coupon with the clipped corner at the top left. The thickness slots run from the narrowest (2.5 mm drawn) at the left to the widest (3.4 mm) at the right. In the marked file the ticks sit between the slots and the magnet holes (below the slots as the file is drawn).",
   "marks": "In the marked coupon (and the cut + labels sets) every engraved mark is a red hairline.",
+  "kerf_means": "k is always the kerf you MEASURED from the kerf square, never the kerf of a file set.",
+  "rules": {
+   "thickness_estimate": "narrowest slot drawn width + k - 0.05",
+   "thickness_set": "the estimate rounded to 0.1 mm, half up (3.35 goes to 3.4)",
+   "kerf_set": "the set whose finger pair goes together with firm hand pressure and no rattle (the tighter one if two do)",
+   "pair_clearance_along_fingers": "0.1 + 2 x (k - set kerf), in mm"
+  },
   "features": [
    {
     "id": "kerf_square",
     "part": "K",
     "drawn_mm": 10.0,
     "measure": "outside width of the cut square, with calipers; measure it in two directions and average",
-    "formula": "kerf = 10.00 - measured width",
+    "formula": "k = 10.00 - measured width",
     "choose": [
      {
       "kerf_mm": 0.12,
@@ -9901,27 +9908,41 @@
       "set": "ponoko"
      }
     ],
-    "then": "Use the file set whose kerf is nearest. Between two sets: take the SMALLER kerf unless you measured within 0.01 mm of the larger one. A smaller assumed kerf leaves the joints a little loose (by 2 x the difference); a larger one leaves them tight and can jam. Kerf varies along the bed and with the plywood: cut and measure the square where the box will be cut, and if it reads differently in two places average them.",
-    "note": "The sets are 0.12, 0.18 and 0.20 mm. The gap 0.12 to 0.18 is wide; 0.18 and 0.20 are close and either works for a CO2 laser. If you measure about 0.15, use the 0.12 set."
+    "then": "k is your measured kerf. The nearest set is your first guess; the finger pairs decide (see finger_joints). Kerf varies along the bed and with the plywood: cut and measure the square where the box will be cut, and average two readings if they differ."
    },
    {
     "id": "thickness_slots",
     "part": "Q",
-    "count": 8,
+    "count": 10,
     "drawn_widths_mm": [
+     2.5,
+     2.6,
+     2.7,
      2.8,
      2.9,
      3.0,
      3.1,
      3.2,
      3.3,
-     3.4,
-     3.5
+     3.4
     ],
     "reading": "the narrowest slot your plywood slides into without force; if it is between two slots (tight in one, loose in the next) take the tighter, narrower one",
-    "formula": "slot width = drawn width + kerf, so thickness = drawn width + kerf - 0.05 for the narrowest slot it enters",
-    "rounding": "the thickness sets are 0.1 mm apart: pick the set nearest the value you compute",
-    "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = 2.8 mm)"
+    "formula": "thickness = W + k - 0.05, where W is that slot's drawn width and k is the measured kerf",
+    "rounding": "round to the nearest 0.1 mm thickness set, half up: a result of exactly x.x5 goes to the thicker set",
+    "examples": [
+     {
+      "k": 0.15,
+      "W": 2.9,
+      "thickness_set": 3.0
+     },
+     {
+      "k": 0.1,
+      "W": 3.3,
+      "thickness_set": 3.4
+     }
+    ],
+    "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = the narrowest)",
+    "range": "the cut slots are 2.5 + k ... 3.4 + k mm wide, so every plywood from 2.8 to 3.5 mm shows up at any kerf from 0.10 to 0.22 mm; if it enters the first slot with room to spare, use the 2.8 set"
    },
    {
     "id": "magnet_holes",
@@ -9932,7 +9953,7 @@
      5.5,
      5.6
     ],
-    "formula": "cut hole = drawn diameter + kerf; the box wants a 5.65 mm hole for a 6.0 mm magnet",
+    "formula": "cut hole = drawn diameter + k; the box wants a 5.65 mm hole for a 6.0 mm magnet",
     "reading": "the hole a 6 x 2 mm magnet pushes into with firm finger pressure and stays in",
     "then": "If the smallest hole is already loose, the box holes will be loose too: add a drop of glue. If even the largest is tight, ream the 4 magnet holes lightly."
    },
@@ -9957,18 +9978,32 @@
      }
     ],
     "identify": "the pairs differ in size: the smallest pair is the diode set, the middle one CO2, the largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces",
+    "same_as_the_box": "the pairs have the same finger width, play (0.1 mm) and kerf compensation as the box joints: a pair that fits here fits the box",
     "reading": "press each finger piece into the hole piece of the same size",
-    "right": "goes together with firm hand pressure, no gap, no rattle",
+    "decision": "take the pair that goes together with firm hand pressure and no rattle; that is the kerf set to cut. If two pairs do, take the tighter one, as long as it still goes together by hand without a tool. If none goes together by hand take the smallest set and file the fingers.",
+    "clearance_by_pair": "a pair made for kerf s on a laser with measured kerf k has 0.1 + 2 x (k - s) mm of clearance along the fingers",
     "along_the_fingers": {
      "what": "the fit along the length of the fingers depends on the KERF, not on the thickness",
-     "tight": "the fingers will not go in sideways, or stick: your kerf is smaller than the set assumes: use the next smaller kerf set",
-     "loose": "the fingers rattle sideways in their slots: your kerf is larger: use the next larger kerf set"
+     "tight": "the pair will not go together by hand: it was made for a larger kerf than yours: take the next smaller kerf set",
+     "loose": "the fingers rattle sideways in their slots: it was made for a smaller kerf than yours: take the next larger kerf set and test that pair"
     },
     "through_the_thickness": {
      "what": "the fit through the plywood thickness depends on the THICKNESS, not on the kerf",
-     "tight": "the plywood will not slide through the slot, or the fingers stand proud less than flush: your plywood is thicker than the set: use the next thicker thickness set",
-     "loose": "the plywood rattles through the slot or the fingers sit below the surface: your plywood is thinner: use the next thinner thickness set"
-    }
+     "tight": "the plywood will not slide through the slot and the fingers end below the surface: your plywood is thicker than the set: use the next thicker thickness set",
+     "loose": "the plywood rattles through the slot and the fingers stand proud of the surface: your plywood is thinner: use the next thinner thickness set"
+    },
+    "examples": [
+     {
+      "k": 0.15,
+      "kerf_set": "co2",
+      "clearance_mm": 0.04
+     },
+     {
+      "k": 0.1,
+      "kerf_set": "diode",
+      "clearance_mm": 0.06
+     }
+    ]
    },
    {
     "id": "lid_slot",

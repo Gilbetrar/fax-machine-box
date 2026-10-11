@@ -246,7 +246,27 @@ def _clean_piece(p: Piece) -> Piece:
         subs = eg.drop_degenerate_loops(eg.parse_subpaths(sp.d))
         new.append(SourcePath(sp.attrib, eg.emit(subs)))
     p.svg_paths = new
-    return _merge_edge_holes(_make_rings_valid(p))
+    return _refit_bbox(_merge_edge_holes(_make_rings_valid(p)))
+
+
+def _refit_bbox(p: Piece) -> Piece:
+    """The piece's bounding box is that of its OUTLINE (largest cut contour).
+    The kerf-0 files have finger slots whose breakouts poke 0.05 mm past the
+    edge, which grew the bbox by 0.05 mm on those sides and shifted the art
+    registration (red-team V1)."""
+    best = None
+    for sp in p.svg_paths:
+        if sp.attrib.get("stroke") == ENGRAVE:
+            continue
+        for pts, closed in eg.flatten(eg.parse_subpaths(sp.d), 0.002):
+            if closed and len(pts) >= 3:
+                poly = Polygon(pts)
+                if best is None or poly.area > best.area:
+                    best = poly
+    if best is not None:
+        x0, y0, x1, y1 = best.bounds
+        p.xmin, p.ymin, p.width, p.height = x0, y0, x1 - x0, y1 - y0
+    return p
 
 
 def generate_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
@@ -288,7 +308,9 @@ def generate_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
 
 # --- test-fit coupon ----------------------------------------------------------------------
 
-GAUGE_WIDTHS = [round(2.8 + 0.1 * i, 1) for i in range(8)]
+# drawn widths; the cut slot is this + the kerf, so 2.5 ... 3.4 mm drawn reads plywood of 2.8 ... 3.5 mm
+# at every kerf from 0.10 to 0.22 mm
+GAUGE_WIDTHS = [round(2.5 + 0.1 * i, 1) for i in range(10)]
 MAGNET_DRAWN = (5.3, 5.4, 5.5, 5.6)
 JOINT_TESTS = (("diode", 18.0), ("co2", 22.0), ("ponoko", 26.0))     # kerf id, piece height (mm)
 
@@ -352,13 +374,13 @@ def coupon_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
     for i, w in enumerate(GAUGE_WIDTHS):
         panel = panel.difference(sbox(x, 6, x + w, 6 + 14))             # drawn exactly w wide
         for k in range(i + 1):               # i+1 engraved ticks = nth gauge (2.8 = 1)
-            ticks.append((x + w / 2 - 2.0, 23.0 + 1.1 * k, x + w / 2 + 2.0, 23.0 + 1.1 * k))
+            ticks.append((x + w / 2 - 2.0, 23.0 + 1.0 * k, x + w / 2 + 2.0, 23.0 + 1.0 * k))
         x += w + 2.2
     gx = 10.0
     for d in MAGNET_DRAWN:
         panel = panel.difference(_circle(gx + d / 2, 38, d))
         gx += d + 7.0
-    items.append(Item("Q", "Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+    items.append(Item("Q", "Coupon: thickness slots 2.5-3.4 drawn (1-10 ticks), magnet holes 5.3-5.6",
                       _piece_from([panel], ticks)))
 
     # R. three-finger corners, one pair per kerf variant ------------------------------------
@@ -411,42 +433,75 @@ def coupon_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
     return items
 
 
+def choose_thickness_set(first_slot_drawn_w: float, measured_kerf: float) -> float:
+    """The guide's thickness rule: estimate = drawn width of the narrowest slot the plywood enters
+    + the MEASURED kerf - 0.05; the thickness set is the estimate rounded to 0.1 mm, half up
+    (a reading of x.x5 goes to the thicker set)."""
+    est = first_slot_drawn_w + measured_kerf - 0.05
+    return math.floor(est * 10 + 0.5 + 1e-9) / 10
+
+
+def pair_gap(real_kerf: float, set_kerf: float) -> float:
+    """Clearance along the fingers of the box joint (and the coupon pair) cut with a file set made for
+    `set_kerf` on a laser whose real kerf is `real_kerf`."""
+    return c.FINGER_PLAY + 2 * (real_kerf - set_kerf)
+
+
+def choose_kerf_set(real_kerf: float, min_gap: float = 0.02) -> str:
+    """The guide's joint rule: of the pairs that go together by hand (clearance of at least `min_gap`),
+    take the one closest to the box's designed 0.1 mm of clearance, and on a tie the larger kerf (the
+    tighter fit); if none goes together, the smallest set."""
+    fits = [k for k, v in KERFS.items() if pair_gap(real_kerf, v) >= min_gap - 1e-12]
+    if not fits:
+        return min(KERFS, key=lambda k: KERFS[k])
+    return min(fits, key=lambda k: (round(abs(pair_gap(real_kerf, KERFS[k]) - c.FINGER_PLAY), 6), -KERFS[k]))
+
+
 def coupon_guide() -> dict:
     """How to read the coupon, as data the site can draw."""
     kerf_ids = [{"kerf_mm": v, "set": k} for k, v in KERFS.items()]
     return {
         "order": ["Cut the coupon first, on a scrap of your real plywood.",
-                  "Measure the kerf square and pick the kerf file set.",
-                  "Pick the thickness set from the slot gauge or your calipers.",
-                  "Try the finger joints of your kerf, and the magnets.",
+                  "Measure the kerf square (this gives your measured kerf, k) and the thickness slots.",
+                  "Pick the thickness set, then try the finger pairs: the pairs decide the kerf set.",
+                  "Try the magnets.",
                   "Cut the box."],
         "orientation": "Hold the coupon with the clipped corner at the top left. The thickness slots run from "
-                       "the narrowest (2.8 mm drawn) at the left to the widest (3.5 mm) at the right. In the "
+                       "the narrowest (2.5 mm drawn) at the left to the widest (3.4 mm) at the right. In the "
                        "marked file the ticks sit between the slots and the magnet holes (below the slots as "
                        "the file is drawn).",
         "marks": "In the marked coupon (and the cut + labels sets) every engraved mark is a red hairline.",
+        "kerf_means": "k is always the kerf you MEASURED from the kerf square, never the kerf of a file set.",
+        "rules": {
+            "thickness_estimate": "narrowest slot drawn width + k - 0.05",
+            "thickness_set": "the estimate rounded to 0.1 mm, half up (3.35 goes to 3.4)",
+            "kerf_set": "the set whose finger pair goes together with firm hand pressure and no rattle (the tighter one if two do)",
+            "pair_clearance_along_fingers": "0.1 + 2 x (k - set kerf), in mm",
+        },
         "features": [
             {"id": "kerf_square", "part": "K", "drawn_mm": 10.0,
              "measure": "outside width of the cut square, with calipers; measure it in two directions and "
                         "average",
-             "formula": "kerf = 10.00 - measured width",
+             "formula": "k = 10.00 - measured width",
              "choose": kerf_ids,
-             "then": "Use the file set whose kerf is nearest. Between two sets: take the SMALLER kerf unless "
-                     "you measured within 0.01 mm of the larger one. A smaller assumed kerf leaves the joints "
-                     "a little loose (by 2 x the difference); a larger one leaves them tight and can jam. "
-                     "Kerf varies along the bed and with the plywood: cut and measure the square where the "
-                     "box will be cut, and if it reads differently in two places average them.",
-             "note": "The sets are 0.12, 0.18 and 0.20 mm. The gap 0.12 to 0.18 is wide; 0.18 and 0.20 are "
-                     "close and either works for a CO2 laser. If you measure about 0.15, use the 0.12 set."},
+             "then": "k is your measured kerf. The nearest set is your first guess; the finger pairs decide "
+                     "(see finger_joints). Kerf varies along the bed and with the plywood: cut and measure "
+                     "the square where the box will be cut, and average two readings if they differ."},
             {"id": "thickness_slots", "part": "Q", "count": len(GAUGE_WIDTHS), "drawn_widths_mm": GAUGE_WIDTHS,
              "reading": "the narrowest slot your plywood slides into without force; if it is between two "
                         "slots (tight in one, loose in the next) take the tighter, narrower one",
-             "formula": "slot width = drawn width + kerf, so thickness = drawn width + kerf - 0.05 for the "
-                        "narrowest slot it enters",
-             "rounding": "the thickness sets are 0.1 mm apart: pick the set nearest the value you compute",
-             "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = 2.8 mm)"},
+             "formula": "thickness = W + k - 0.05, where W is that slot's drawn width and k is the measured "
+                        "kerf",
+             "rounding": "round to the nearest 0.1 mm thickness set, half up: a result of exactly x.x5 "
+                         "goes to the thicker set",
+             "examples": [{"k": 0.15, "W": 2.9, "thickness_set": choose_thickness_set(2.9, 0.15)},
+                          {"k": 0.10, "W": 3.3, "thickness_set": choose_thickness_set(3.3, 0.10)}],
+             "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = the narrowest)",
+             "range": "the cut slots are 2.5 + k ... 3.4 + k mm wide, so every plywood from 2.8 to 3.5 mm "
+                      "shows up at any kerf from 0.10 to 0.22 mm; if it enters the first slot with room to "
+                      "spare, use the 2.8 set"},
             {"id": "magnet_holes", "part": "Q", "drawn_diameters_mm": list(MAGNET_DRAWN),
-             "formula": "cut hole = drawn diameter + kerf; the box wants a 5.65 mm hole for a 6.0 mm magnet",
+             "formula": "cut hole = drawn diameter + k; the box wants a 5.65 mm hole for a 6.0 mm magnet",
              "reading": "the hole a 6 x 2 mm magnet pushes into with firm finger pressure and stays in",
              "then": "If the smallest hole is already loose, the box holes will be loose too: add a drop of "
                      "glue. If even the largest is tight, ream the 4 magnet holes lightly."},
@@ -454,20 +509,31 @@ def coupon_guide() -> dict:
                                                            for k, h in JOINT_TESTS],
              "identify": "the pairs differ in size: the smallest pair is the diode set, the middle one CO2, the "
                          "largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces",
+             "same_as_the_box": "the pairs have the same finger width, play (0.1 mm) and kerf compensation as "
+                                "the box joints: a pair that fits here fits the box",
              "reading": "press each finger piece into the hole piece of the same size",
-             "right": "goes together with firm hand pressure, no gap, no rattle",
+             "decision": "take the pair that goes together with firm hand pressure and no rattle; that is the "
+                         "kerf set to cut. If two pairs do, take the tighter one, as long as it still goes "
+                         "together by hand without a tool. If none goes together by hand take the smallest set "
+                         "and file the fingers.",
+             "clearance_by_pair": "a pair made for kerf s on a laser with measured kerf k has 0.1 + 2 x (k - s) mm "
+                                  "of clearance along the fingers",
              "along_the_fingers": {
                  "what": "the fit along the length of the fingers depends on the KERF, not on the thickness",
-                 "tight": "the fingers will not go in sideways, or stick: your kerf is smaller than the "
-                          "set assumes: use the next smaller kerf set",
-                 "loose": "the fingers rattle sideways in their slots: your kerf is larger: use the next "
-                          "larger kerf set"},
+                 "tight": "the pair will not go together by hand: it was made for a larger kerf than yours: "
+                          "take the next smaller kerf set",
+                 "loose": "the fingers rattle sideways in their slots: it was made for a smaller kerf than "
+                          "yours: take the next larger kerf set and test that pair"},
              "through_the_thickness": {
                  "what": "the fit through the plywood thickness depends on the THICKNESS, not on the kerf",
-                 "tight": "the plywood will not slide through the slot, or the fingers stand proud less than "
-                          "flush: your plywood is thicker than the set: use the next thicker thickness set",
-                 "loose": "the plywood rattles through the slot or the fingers sit below the surface: your "
-                          "plywood is thinner: use the next thinner thickness set"}},
+                 "tight": "the plywood will not slide through the slot and the fingers end below the surface: "
+                          "your plywood is thicker than the set: use the next thicker thickness set",
+                 "loose": "the plywood rattles through the slot and the fingers stand proud of the surface: "
+                          "your plywood is thinner: use the next thinner thickness set"},
+             "examples": [{"k": 0.15, "kerf_set": choose_kerf_set(0.15),
+                           "clearance_mm": round(pair_gap(0.15, KERFS[choose_kerf_set(0.15)]), 3)},
+                          {"k": 0.10, "kerf_set": choose_kerf_set(0.10),
+                           "clearance_mm": round(pair_gap(0.10, KERFS[choose_kerf_set(0.10)]), 3)}]},
             {"id": "lid_slot", "part": "S",
              "reading": "slide the lid strip into the slot block (cut for this set's kerf)",
              "right": "slides freely with a little vertical play (about 1.2 mm total)"},
@@ -608,26 +674,37 @@ def cut_geometry(cuts):
     return material, unary_union(lines)
 
 
-def _keep_clear(cuts, fills):
+def burnt_edge(cuts, burn: float):
+    """(burnt material, its edge): what is left after the laser has removed
+    `burn` (= kerf / 2) on each side of every cut line.  The cut paths are drawn
+    `burn` away from the part, so engraving must be measured from this edge,
+    not from the drawn path (red-team V2)."""
+    material, _ = cut_geometry(cuts)
+    burnt = material.buffer(-burn, quad_segs=16) if burn else material
+    return burnt, burnt.boundary
+
+
+def _keep_clear(cuts, fills, burn: float = 0.0):
     """Art subpaths -> art subpaths with every ink component that comes
-    closer than CLEARANCE_MIN to a cut line (or leaves the material) trimmed
-    back to KEEPOUT.  The art is drawn for one stock thickness; at other
-    thicknesses finger slots and the lid slot move by a fraction of a mm, so
-    the trim is only ever a sliver and most sets need none."""
+    closer than CLEARANCE_MIN to the BURNT edge of a cut (or leaves the
+    material) trimmed back to KEEPOUT.  The art is drawn for one stock
+    thickness; at other thicknesses finger slots and the lid slot move by a
+    fraction of a mm, so the trim is only ever a sliver and most sets need
+    none."""
     from shapely.prepared import prep
-    material, cut_geom = cut_geometry(cuts)
+    burnt, edge = burnt_edge(cuts, burn)
     flat = [eg.flatten([sp], 0.005)[0] for sp in fills]
     rings = [Polygon(pts).buffer(0) for pts, _ in flat]
     comps = eg.ink_components(rings)
-    keepout = cut_geom.buffer(KEEPOUT)
-    pm, pc = prep(material), prep(cut_geom.buffer(CLEARANCE_MIN + 0.02))
+    keepout = edge.buffer(KEEPOUT)
+    pm, pc = prep(burnt), prep(edge.buffer(CLEARANCE_MIN + 0.02))
     kept, trimmed, n_trim = [], [], 0
     for poly, idx in comps:
         if pm.contains(poly) and not pc.intersects(poly):
             kept.extend(fills[i] for i in idx)
         else:
             n_trim += 1
-            trimmed.extend(eg.polygon_subpaths(poly.intersection(material).difference(keepout).simplify(0.02)))
+            trimmed.extend(eg.polygon_subpaths(poly.intersection(burnt).difference(keepout).simplify(0.02)))
     return kept + trimmed, n_trim
 
 
@@ -741,7 +818,7 @@ def bed_subpaths(item: Item, variant: str | None = None, mode: str = "engrave"):
             else:
                 engrave.append(("stroke", placed))
         if fills:
-            fills, _ = _keep_clear(cuts, fills)
+            fills, _ = _keep_clear(cuts, fills, item.burn)
             engrave.insert(0, ("fill", fills))
     elif mode == "labels" or (mode == "engrave" and not item.face):
         # parts without art lie inside face up and carry the labels; parts with art
@@ -761,11 +838,12 @@ def default_variants() -> dict[str, str]:
 
 def clearance(item: Item, variant: str) -> dict:
     """Engrave-to-cut geometry of the part as exported: minimum distance from
-    any inked area (or engraved line) to any cut line, how much ink lies
-    outside the part's material, and ink area."""
+    any inked area (or engraved line) to the BURNT edge of the cuts (the drawn
+    path moved in by kerf / 2), how much ink lies outside the burnt material,
+    and ink area."""
     from shapely.ops import unary_union
     cuts, engrave = bed_subpaths(item, variant, "engrave")
-    material, cut_geom = cut_geometry(cuts)
+    burnt, edge = burnt_edge(cuts, item.burn)
     polys, lines = [], []
     for kind, subs in engrave:
         flat = eg.flatten(subs, 0.005)
@@ -776,10 +854,10 @@ def clearance(item: Item, variant: str) -> dict:
             lines += [LineString(pts) for pts, _ in flat if len(pts) > 1]
     ink = unary_union(polys + lines)
     return {
-        "min_distance": float(cut_geom.distance(ink)) if not ink.is_empty else math.inf,
-        "outside_material": float(ink.difference(material).area),
+        "min_distance": float(edge.distance(ink)) if not ink.is_empty else math.inf,
+        "outside_material": float(ink.difference(burnt).area),
         "ink_area": float(unary_union(polys).area) if polys else 0.0,
-        "material": material, "ink": ink, "cuts": cut_geom,
+        "material": burnt, "ink": ink, "cuts": edge,
     }
 
 
@@ -804,9 +882,9 @@ def _sheet_affine(it: Item, x: float, y: float, rot: bool) -> eg.Affine:
 def dxf_text(items, height: float) -> str:
     """R2000 ASCII DXF, units millimetres ($INSUNITS 4).  items: (layer,
     points, closed) in SVG coordinates (y down); y is flipped so the drawing is
-    upright.  One LWPOLYLINE per contour; layers CUT (blue), ENGRAVE (red),
-    LABELS (gray)."""
-    layers = [("CUT", 5), ("ENGRAVE", 1), ("LABELS", 8)]
+    upright.  One LWPOLYLINE per contour; layers CUT (blue), ENGRAVE (gray, the
+    art), LABELS (red, every mark)."""
+    layers = [("CUT", 5), ("ENGRAVE", 8), ("LABELS", 1)]      # blue, gray (the art), red (the marks)
     h = [0x10]
 
     def hd() -> str:
@@ -930,7 +1008,9 @@ README_KINDS = {
     "cut": """CUT ONLY
 Blue hairline (#0000FF) is the only line colour: cut through. Nothing is engraved, so a
 service that cuts every line cuts exactly the parts. Parts lie as drawn. Where a sheet had room, the
-coupon is on it (the small pieces labelled coupon in the file).
+coupon is on it (the small pieces labelled coupon in the file). coupon.svg|dxf is blue only;
+coupon_marked.svg|dxf has the same cuts plus red tick marks (engrave) above the thickness slots and on
+the joint pairs: cut it on your own laser only.
 """,
     "labels": """CUT + LABELS
 For your own laser. Blue = cut. Red hairlines (DXF layer LABELS) are marks you can engrave on the INSIDE
@@ -949,8 +1029,9 @@ outside face is up; the art is not mirrored. Do not flip any part in the laser s
 parts are the same physical parts turned over, so the finger joints mate as usual.
 Only cuts carry the kerf offset. Engraving stays at least 0.35 mm away from every cut.
 Parts without art lie INSIDE face up and carry red marks (layer LABELS): the part letter and a number next
-to each joint; the matching edge of the mating part carries the same number. Engrave them or leave the layer
-off. The faceplate glue-up lines are in the cut + labels files only: with the faceplate engraved outside up,
+to each joint; the matching edge of the mating part carries the same number, except where the mate is a part
+with art, which carries no marks (match those joints by the labelled edge and the part letter, or use the
+cut + labels files). Engrave the marks or leave the layer off. The faceplate glue-up lines are in the cut + labels files only: with the faceplate engraved outside up,
 align its grip slot with the body's and keep the plate 0.75 mm above the body's bottom edge, 0.95 mm in
 from each side. The coupon is in this zip (and on a sheet where there was room). Alternate art: the parts
 zip holds one file per art variant.

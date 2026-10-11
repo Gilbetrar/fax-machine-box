@@ -22,6 +22,7 @@ potentially extending a part's blank -- consistent with the tolerance bands
 in tests/test_svg_geometry.py.
 """
 
+import math
 from pathlib import Path
 
 from boxes import Boxes
@@ -221,10 +222,20 @@ class DrawerBox(Boxes):
         )
 
     def _build_guide(self, label: str = "Drawer Guide") -> None:
-        """Drawer guide strip: DRAWER_GUIDE length x height, plain edges (glued
-        to a bay wall at the divider end; red-team H1)."""
-        self.rectangularWall(DRAWER_GUIDE["length"], DRAWER_GUIDE["height"], "eeee",
-                             move="right", label=label)
+        """Drawer guide rib: DRAWER_GUIDE length x T wide in plan, the leading end
+        tapered (red-team H1, V5).  Local x runs along the box X (the tapered end
+        at x = length), local y away from the wall (y = 0 is the wall side)."""
+        L = DRAWER_GUIDE["length"]
+        wt = DRAWER_GUIDE["tip_width"]
+        run = (T - wt) / math.tan(math.radians(DRAWER_GUIDE["taper_deg"]))
+        hyp = math.hypot(run, T - wt)
+        a2 = math.degrees(math.atan2(T - wt, -run))            # heading of the chamfer
+        if self.move(L, T, "right", before=True):
+            return
+        self.moveTo(0, 0, 0)
+        self.polyline(L, 90, wt, a2 - 90, hyp, 180 - a2, L - run, 90, T, 90)
+        self.ctx.stroke()
+        self.move(L, T, "right", label=label)
 
     def render(self) -> None:
         """Render all 6 pieces, laid out in a single row (move='right'

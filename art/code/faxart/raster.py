@@ -22,7 +22,12 @@ PPM = 20.0
 MIN_LINE_MM = 0.25
 MIN_GAP_MM = 0.30
 SPECK_MM2 = 0.09
-KEEPOUT_MM = 0.55   # art stays >= 0.45 mm from every cut after curve fitting
+# Art keep-out from every cut PATH (holes, slots, finger notches and their
+# corners; the erosion is isotropic so corners get the full distance). The
+# laser's burnt edge sits up to half a kerf (<= 0.10 mm) outside the path, so
+# 0.65 here leaves the traced art >= 0.55 mm from the path and >= 0.35 mm
+# from the burnt edge at every kerf we ship (pass 3, W3).
+KEEPOUT_MM = 0.65
 
 
 def px(mm: float) -> int:

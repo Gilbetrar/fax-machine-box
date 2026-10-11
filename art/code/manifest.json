@@ -41,11 +41,11 @@
           "default": true,
           "notes": "Solid black drip lettering, as on the original cardboard box.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
-          "ink_pct": 23.9,
-          "paths": 43,
+          "ink_pct": 24.0,
+          "paths": 37,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 141
+          "svg_kb": 142
         },
         {
           "id": "outline",
@@ -55,8 +55,8 @@
           "default": false,
           "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
           "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
-          "ink_pct": 14.1,
-          "paths": 388,
+          "ink_pct": 14.2,
+          "paths": 376,
           "thin": 0,
           "gap": 0,
           "svg_kb": 232
@@ -104,11 +104,11 @@
           "default": false,
           "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
-          "ink_pct": 24.6,
-          "paths": 387,
+          "ink_pct": 23.7,
+          "paths": 397,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 259
+          "svg_kb": 257
         },
         {
           "id": "outline",
@@ -118,11 +118,11 @@
           "default": false,
           "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
-          "ink_pct": 20.7,
-          "paths": 512,
+          "ink_pct": 20.2,
+          "paths": 496,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 299
+          "svg_kb": 293
         },
         {
           "id": "nofunfor",
@@ -132,11 +132,11 @@
           "default": true,
           "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
           "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
-          "ink_pct": 24.4,
-          "paths": 385,
+          "ink_pct": 23.5,
+          "paths": 395,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 257
+          "svg_kb": 256
         }
       ]
     },
@@ -244,11 +244,11 @@
           "default": true,
           "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 19.8,
-          "paths": 166,
+          "ink_pct": 19.6,
+          "paths": 167,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 203
+          "svg_kb": 201
         },
         {
           "id": "c",
@@ -258,11 +258,11 @@
           "default": false,
           "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 19.8,
-          "paths": 211,
+          "ink_pct": 19.7,
+          "paths": 212,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 225
+          "svg_kb": 224
         }
       ]
     },
@@ -307,8 +307,8 @@
           "default": true,
           "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 21.6,
-          "paths": 68,
+          "ink_pct": 21.5,
+          "paths": 67,
           "thin": 0,
           "gap": 0,
           "svg_kb": 93
@@ -321,8 +321,8 @@
           "default": false,
           "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
           "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-          "ink_pct": 20.0,
-          "paths": 57,
+          "ink_pct": 19.9,
+          "paths": 58,
           "thin": 0,
           "gap": 0,
           "svg_kb": 75
@@ -468,11 +468,11 @@
           "default": true,
           "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
           "source": "art/trimmed/IMG_4233.jpeg",
-          "ink_pct": 17.4,
-          "paths": 145,
+          "ink_pct": 17.3,
+          "paths": 144,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 102
+          "svg_kb": 101
         }
       ]
     },
@@ -517,8 +517,8 @@
           "default": true,
           "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
           "source": "art/trimmed/IMG_4235.jpeg",
-          "ink_pct": 15.1,
-          "paths": 116,
+          "ink_pct": 15.0,
+          "paths": 118,
           "thin": 0,
           "gap": 0,
           "svg_kb": 83
@@ -615,17 +615,17 @@
           "default": true,
           "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
           "source": "art/trimmed/IMG_4239.jpeg",
-          "ink_pct": 28.3,
-          "paths": 185,
+          "ink_pct": 28.2,
+          "paths": 184,
           "thin": 0,
           "gap": 0,
-          "svg_kb": 185
+          "svg_kb": 184
         }
       ]
     }
   },
   "style": {
     "name": "traced-line + coded hatch",
-    "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.4 mm clear of every cut."
+    "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.35 mm from the laser's burnt edge (0.55 mm from every cut path)."
   }
 }

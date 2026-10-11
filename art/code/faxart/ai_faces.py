@@ -92,6 +92,14 @@ def clear_above_lid_slot(ink: np.ndarray, x0_mm: float, x1_mm: float) -> np.ndar
     return out
 
 
+# Parrot placement (red-team pass 3, W1): chosen by tools/place_search.py, which
+# scores every (dx, dy) by how much traced ink the shelf hole row removes,
+# weighting the eyes, beak, vest pins and spray can 5x. Raising it 11.5 mm
+# (pass 2) put the row through the vest pins and the can; 4.5 mm right and
+# 0.5 mm up puts the holes between the gorget feathers and past the drool.
+PARROT_DX, PARROT_UP = 4.5, 0.5
+
+
 def relayout_fax_machine(ink: np.ndarray) -> np.ndarray:
     """Move the drawn letters (and the parrot) so the through-cuts miss them.
 
@@ -100,8 +108,7 @@ def relayout_fax_machine(ink: np.ndarray) -> np.ndarray:
     MACHINE: every letter at 90 % width and 92 % height (about v 124, so the
     tops clear the shelf hole row at v 61.9-65.1), laid out with SIX EQUAL
     4.6 mm gaps; the H-I gap is the one the divider column runs down.
-    Parrot (with its can and spray cloud): up 11.5 mm so the drooping beak
-    tip ends above the shelf hole row instead of being punched by it."""
+    Parrot (with its can and spray cloud): PARROT_DX right, PARROT_UP up."""
     lab, comps = E.components(ink)
     F = E.find(comps, 141.7, 25.6)
     A = E.find(comps, 173.6, 31.8)
@@ -114,7 +121,7 @@ def relayout_fax_machine(ink: np.ndarray) -> np.ndarray:
     parrot = (np.arange(ink.shape[1])[None, :] < E.P(126.0)) & ink & ~np.isin(lab, list(letters))
     parrot |= lab == mist["i"]
     moves = [(lab == F["i"], E.translate(-4.5)), (lab == A["i"], E.translate(-5.5)),
-             (lab == X["i"], E.translate(-12.5)), (parrot, E.translate(0.0, -11.5))]
+             (lab == X["i"], E.translate(-12.5)), (parrot, E.translate(PARROT_DX, -PARROT_UP))]
     SX, SY, GAP, H_RIGHT = 0.90, 0.92, 4.6, 218.2
     widths = [SX * (c["u1"] - c["u0"]) for c in word]
     left = H_RIGHT - sum(widths[:4]) - 3 * GAP
@@ -132,25 +139,55 @@ def relayout_fax_machine(ink: np.ndarray) -> np.ndarray:
 
 
 def relayout_writer(ink: np.ndarray) -> np.ndarray:
-    """Right wall: move the seated writer (with the CAP sign behind him)
-    5 mm left so the divider hole column (u 76.2-79.4) runs down his wig
-    curl instead of his face. The destination is clipped at u 45.5 so it
+    """Right wall: move and shrink the seated writer (with the CAP sign
+    behind him) so the divider hole column (u 76.2-79.4) runs through the
+    empty space right of him. The destination is clipped at u 45.5 so it
     never touches the NEW PLAY poster."""
     sel = ink & E.rect(ink.shape, 48.5, 36.0, 88.0, 96.0)
-    out = E.affine_paste(ink & ~sel, sel, E.translate(-5.0))
+    # 5 mm left, then 83 % about his lower-left corner (u 45.5, desk line
+    # v 96): his right edge (wig curl and shoulder, u 82) ends at 75.5, left
+    # of the divider hole column's keep-out (pass 3, W2)
+    M = E.scale_about(0.83, 0.83, 45.5, 96.0) @ np.vstack([E.translate(-5.0), [0, 0, 1]])
+    out = E.affine_paste(ink & ~sel, sel, M)
     poster_side = E.rect(ink.shape, 0, 36.0, 45.5, 96.0)
     return np.where(poster_side, ink, out)
 
 
+def move_block(ink: np.ndarray, src_box, dx: float, dy: float, keep=None) -> np.ndarray:
+    """Translate everything inside src_box by (dx, dy); the moved block
+    replaces what is under its new footprint, the strip it vacates keeps the
+    old content (here that is always background hatching/rain). Pixels in
+    `keep` are never overwritten or moved."""
+    src = E.rect(ink.shape, *src_box) & ink
+    if keep is not None:
+        src &= ~keep
+    u0, v0, u1, v1 = src_box
+    dst = E.rect(ink.shape, u0 + dx, v0 + dy, u1 + dx, v1 + dy)
+    if keep is not None:
+        dst &= ~keep
+    moved = E.affine_paste(np.zeros_like(ink), src, E.translate(dx, dy))
+    return np.where(dst, moved, ink)
+
+
 def relayout_painter(ink: np.ndarray) -> np.ndarray:
     """Right wall: the shelf hole row (v 61.9-65.1) ran through the painter's
-    eye. Slide the painter's head and hat (u 252-298, v 38-82) down 4.5 mm so
-    the row crosses the hat brim instead. The moved block replaces what was
-    under it; the 4.5 mm strip it vacates keeps the rain streaks."""
-    src = E.rect(ink.shape, 252.0, 52.5, 298.45, 82.0)   # below the end of 'Artists'
-    dst = E.rect(ink.shape, 252.0, 57.0, 298.45, 86.5)
-    moved = E.affine_paste(np.zeros_like(ink), ink & src, E.translate(0.0, 4.5))
-    return np.where(dst, moved, ink)
+    eye. Slide his head and hat down 4.5 mm so the row crosses the hat brim.
+    The block starts above the hat's crown (v 46) so the crown moves whole;
+    the 'Artists' letters are excluded from the move."""
+    return move_block(ink, (252.0, 46.0, 298.45, 82.0), 0.0, 4.5, keep=title_solids(ink, 60.0, RIGHT_NOT_TITLE))
+
+
+def relayout_gallery(ink: np.ndarray) -> np.ndarray:
+    """Right wall, shelf hole row (holes u 90.5 + 12.7 k, v 61.9-65.1):
+    - balloon-dog picture down 2.5 mm, so the row passes above its frame;
+    - easel canvas 1 mm left, so both side frames fall between holes;
+    - the stick figure inside it 3.5 mm right net, so its neck sits in the
+      gap at u 211.1-217.5 (its hair tips and raised arm still cross holes)."""
+    keep = title_solids(ink, 60.0, RIGHT_NOT_TITLE)
+    ink = move_block(ink, (196.0, 50.0, 224.0, 90.0), 4.5, 0.0, keep)       # figure +4.5 ...
+    ink = move_block(ink, (186.5, 43.0, 234.0, 121.0), -1.0, 0.0, keep)     # ... then canvas -1
+    ink = move_block(ink, (150.0, 61.0, 187.5, 93.5), 0.0, 2.5, keep)
+    return ink
 
 
 def relocate_fun_for(ink: np.ndarray, funfor: np.ndarray) -> np.ndarray:
@@ -201,6 +238,50 @@ DIGITS_BOX = (47.0, 95.5, 53.5, 108.8)   # measured on the build's front canvas
 DIGITS_RAISE_MM = 1.5
 
 
+SPINE_TITLES = [   # u0, v0, u1, v1 (mm): the lettering of Ben's joke titles
+    (11.0, 101.0, 39.0, 108.5),    # BARR TWAIN
+    (29.0, 108.5, 54.0, 117.5),    # CARPER BEE
+    (87.0, 110.0, 108.5, 117.5),   # B.S. SMELLIOT
+    (110.0, 108.0, 127.5, 118.0),  # ROW BLABBARY
+    (112.0, 116.5, 137.0, 123.0),  # BIERTRUDE
+]
+SPINE_SCALE = 1.18
+
+
+def enlarge_spine_titles(ink: np.ndarray) -> np.ndarray:
+    """Scale the traced lettering of the clearest joke titles up by
+    SPINE_SCALE about its own centre (a pure scale of Ben's traced letters),
+    clipped 0.4 mm inside the white spine it sits on so it never runs into
+    the spine outline."""
+    out = ink.copy()
+    n, lab, st, _ = cv2.connectedComponentsWithStats(R.u8(ink), connectivity=8)
+    for u0, v0, u1, v1 in SPINE_TITLES:
+        x0, y0, x1, y1 = E.P(u0), E.P(v0), E.P(u1), E.P(v1)
+        letters = np.zeros_like(ink)
+        for i in np.unique(lab[y0:y1, x0:x1]):
+            if i == 0:
+                continue
+            x, y, w, h = st[i, :4]
+            if x >= x0 and y >= y0 and x + w <= x1 and y + h <= y1 and h < E.P(5.5):
+                letters |= lab == i
+        if not letters.any():
+            continue
+        # the white spine = the biggest paper region inside the box once the
+        # letters are filled in
+        paper = ~(ink & ~letters)
+        pn, plab, pst, _ = cv2.connectedComponentsWithStats(R.u8(paper[y0:y1, x0:x1]), connectivity=4)
+        k = 1 + int(np.argmax(pst[1:, cv2.CC_STAT_AREA]))
+        spine = np.zeros_like(ink)
+        spine[y0:y1, x0:x1] = plab == k
+        spine = cv2.erode(R.u8(spine), R.disk(2 * E.P(0.4) + 1)).astype(bool)
+        ys, xs = np.nonzero(letters)
+        cu, cv_ = xs.mean() / R.PPM, ys.mean() / R.PPM
+        big = E.affine_paste(np.zeros_like(ink), letters,
+                             E.scale_about(SPINE_SCALE, SPINE_SCALE, cu, cv_))
+        out = (out & ~letters) | (big & spine)
+    return out
+
+
 def front_dots(ink: np.ndarray) -> np.ndarray:
     """Ben's photo (IMG_4229) has '1 ●  2 ●  3 ●  4 ●': digit + filled dot.
     The AI redraw turned the dots into 0s and a second 4 ('10 20 30 44').
@@ -230,11 +311,19 @@ def front_dots(ink: np.ndarray) -> np.ndarray:
     return (out & ~halo) | labels
 
 
-def title_solids(ink: np.ndarray, top_mm: float = 60.0) -> np.ndarray:
-    """Solid display letters in the upper part of a face (the title)."""
+def title_solids(ink: np.ndarray, top_mm: float = 60.0, exclude=()) -> np.ndarray:
+    """Solid display letters in the upper part of a face (the title), minus
+    `exclude` boxes (u0, v0, u1, v1 mm) that hold solid non-letter art."""
     m = solid_regions(ink, 1.6)
     m[E.P(top_mm):, :] = False
+    for b in exclude:
+        m &= ~E.rect(ink.shape, *b)
     return grow(m, 1.0) & ink
+
+
+# right wall: the stamp portrait's hair and the writer's black CAP poster are
+# solid art, not title lettering (pass 3, W4)
+RIGHT_NOT_TITLE = [(0.0, 0.0, 30.0, 45.0), (40.0, 30.0, 70.0, 100.0)]
 
 
 def left_wall(face_id):
@@ -289,8 +378,12 @@ def right_wall(face_id):
     funfor = np.isin(lab, hit[hit > 0]) | grow(erased, 0.4)
     ink = relayout_writer(ink)
     ink = relayout_painter(ink)
+    ink = relayout_gallery(ink)
     ink_ff = clear_above_lid_slot(relocate_fun_for(ink, funfor), 0.0, 76.7)
     ink = clear_above_lid_slot(ink & ~funfor, 0.0, 76.7)
+    # enlarge_spine_titles() is NOT applied: Ben's traced titles already fill
+    # their spines edge to edge, so any enlargement clips the end letters
+    # (tried at 1.18x, pass 3 W6: "BARR TWAIN" -> "RR TWAN")
     ink = blank_invented_spines(ink)
     ink_ff = blank_invented_spines(ink_ff)
     # book-pile titles: keep the knock-out channels off the lettering
@@ -300,7 +393,7 @@ def right_wall(face_id):
         Variant("funfor", "With 'Fun For'", finish(face_id, ink_ff, protect=lettering), source=src,
                 notes="The full title, with 'Fun For' moved down beside 'Terrible' so the lid "
                       "slot doesn't cut it."),
-        Variant("outline", "Outlined title", finish(face_id, outline_fill(ink, title_solids(ink))),
+        Variant("outline", "Outlined title", finish(face_id, outline_fill(ink, title_solids(ink, 60.0, RIGHT_NOT_TITLE))),
                 source=src,
                 notes="The title as outlined letters with light hatching inside. Faster to "
                       "engrave and less likely to scorch."),
@@ -320,6 +413,11 @@ def front_wall(face_id):
     # the AI drawing's second row of buttons runs off its bottom edge and
     # reads as stubs sitting on the base line: erase them, keep the line
     ink &= ~E.rect(ink.shape, 66.5, 107.2, 114.5, 109.3)
+    # tick remnants of those stubs left on the base line (pass 3, W5)
+    lab, comps = E.components(ink & E.rect(ink.shape, 66.0, 106.0, 116.0, 111.0), min_mm2=0.0)
+    for c in comps:
+        if (c["u1"] - c["u0"]) < 2.5 and (c["v1"] - c["v0"]) < 2.5:
+            ink &= ~(lab == c["i"])
     lettering = grow(solid_regions(ink), 1.0) & ink
     outlined = Variant("outline", "Outlined letters",
                        finish(face_id, outline_fill(ink, title_solids(ink, 80.0))),

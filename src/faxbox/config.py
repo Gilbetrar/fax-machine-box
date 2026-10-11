@@ -132,12 +132,16 @@ DRAWER_BODY = {   # external
     "height": 53.5,    # Z
 }
 
-# Drawer guides (red-team H1): four plywood strips glued to the bay walls at the
-# divider end, two per drawer slot, standing on the bay floor (lower) or the
-# shelf (upper).  They narrow the channel to INTERIOR_WIDTH - 2T, which is the
-# rear-wall opening width at T >= 3.0, so the far end of a drawer can float no
-# further than its front end can (about 1.7 mm each way) instead of 4.9 mm.
-DRAWER_GUIDE = {"length": 40.0, "height": 10.0}        # X along the wall, Z; thickness T
+# Drawer guides (red-team H1, V5): four plywood ribs, two per drawer slot, lying
+# flat on the bottom panel (lower) or the shelf (upper) against the side walls at
+# the divider end, flush with the panel's side edge.  They narrow the channel to
+# INTERIOR_WIDTH - 2T, which is the rear-wall opening width at T >= 3.0, so the
+# far end of a drawer can float no further than its front end can (about 1.7 mm
+# each way) instead of 4.9 mm.  Each rib is T wide and T high; its leading end (the
+# end facing the rear opening) is tapered 30 degrees in plan, which a flat laser
+# part can do and an upright strip could not, so a yawed drawer corner is funnelled
+# in instead of butting the end face.
+DRAWER_GUIDE = {"length": 40.0, "taper_deg": 30.0, "tip_width": 0.8}      # width and height = T
 
 FACEPLATE = {
     "width": OPENING_WIDTH - 2 * FACEPLATE_REVEAL,    # 150.9
