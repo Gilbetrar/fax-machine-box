@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fax Machine</title>
+<meta name="description" content="Fax Machine is a laser-cut plywood box for a drawing-and-guessing party game. Rotate the 3D model, learn the game, follow the step-by-step build guide and download the cut files.">
+<meta name="theme-color" content="#f6d33c">
+<link rel="canonical" href="https://bjblabs.com/fax-machine/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fax Machine">
+<meta property="og:title" content="Fax Machine">
+<meta property="og:description" content="A laser-cut plywood box for a drawing-and-guessing party game: free cut files, a 3D model and an IKEA-style build guide.">
+<meta property="og:url" content="https://bjblabs.com/fax-machine/">
+<meta property="og:image" content="https://bjblabs.com/fax-machine/img/og.jpg?v=ab1c88048e">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Fax Machine box in engraved birch plywood, next to its rainbow title">
+<meta name="twitter:image:alt" content="The Fax Machine box in engraved birch plywood">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fax Machine">
+<meta name="twitter:description" content="A laser-cut plywood box for a drawing-and-guessing party game.">
+<meta name="twitter:image" content="https://bjblabs.com/fax-machine/img/og.jpg?v=ab1c88048e">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=8f7c11e8bc">
+<script type="importmap">
+{
+ "imports": {
+  "three": "./vendor/three/build/three.module.min.js",
+  "three/addons/": "./vendor/three/examples/jsm/",
+  "./js/art2d.js": "./js/art2d.js?v=8f7c11e8bc",
+  "./js/box3d.js": "./js/box3d.js?v=8f7c11e8bc",
+  "./js/guide.js": "./js/guide.js?v=8f7c11e8bc",
+  "./js/laser.js": "./js/laser.js?v=8f7c11e8bc",
+  "./js/page.js": "./js/page.js?v=8f7c11e8bc",
+  "./js/render3d.js": "./js/render3d.js?v=8f7c11e8bc",
+  "./js/rules.js": "./js/rules.js?v=8f7c11e8bc",
+  "./js/version.js": "./js/version.js?v=8f7c11e8bc"
+ }
+}
+</script>
+<script type="module" src="js/page.js?v=8f7c11e8bc"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar" id="topbar">
+  <a class="brand" href="./" aria-label="Fax Machine home">
+    <img src="img/favicon.svg" alt="" width="28" height="28"><span>Fax Machine</span>
+  </a>
+  <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="nav">Menu</button>
+  <nav id="nav" aria-label="Sections">
+    <a href="#play">Play</a>
+    <a href="#how">How it works</a>
+    <a href="#build">Build</a>
+    <a href="#engraving">Engraving</a>
+    <a href="#files">Cut files</a>
+    <a href="#materials">Materials</a>
+    <a href="#cutting">Get it cut</a>
+    <a href="#maker">Maker notes</a>
+  </nav>
+</header>
+
+<main id="main">
+<!-- 1. HERO -->
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <h1 class="rainbow" aria-label="Fax Machine"><span class="w">FAX</span> <span class="w">MACHINE</span></h1>
+    <p class="lede">A plywood box for a drawing-and-guessing party game. It holds a stack of paper up front, colored pencils and pens in two drawers, and closes with a sliding lid.</p>
+    <div class="cta">
+      <a class="btn btn-ink" href="#build">Build guide</a>
+      <a class="btn btn-yellow" href="#files">Download cut files</a>
+      <a class="btn btn-line" href="#play">How to play</a>
+    </div>
+    <ul class="facts">
+      <li><b>12 × 6.5 × 5 in</b><span>305 × 165 × 127 mm</span></li>
+      <li><b id="fact-parts">25 parts</b><span>1/8 in birch plywood</span></li>
+      <li><b>Finger joints</b><span>held with wood glue</span></li>
+    </ul>
+  </div>
+  <div class="stage" id="hero-stage">
+    <canvas id="hero-canvas" aria-label="Interactive 3D model of the box. Drag to rotate, tap a part to see its name."></canvas>
+    <div class="stage-loading" id="hero-loading">Loading the 3D box…</div>
+    <div class="partcard" id="partcard" hidden aria-live="polite">
+      <span class="letter" id="pc-letter">A</span>
+      <div><b id="pc-name">Part</b><small id="pc-hint"></small></div>
+    </div>
+    <div class="stage-hint" id="stage-hint">Drag to turn · click a drawer or the lid</div>
+    <div class="controls">
+      <label class="slider">Explode
+        <input type="range" id="explode" min="0" max="1" step="0.01" value="0" aria-label="Explode the box into parts">
+      </label>
+      <button class="chip" data-act="drawer_upper" aria-pressed="false">Lines drawer</button>
+      <button class="chip" data-act="drawer_lower" aria-pressed="false">COLORS drawer</button>
+      <button class="chip" data-act="lid" aria-pressed="false">Lid</button>
+      <button class="chip" data-act="home" aria-label="Reset view">Reset</button>
+    </div>
+  </div>
+</section>
+
+<!-- 2. PLAY -->
+<section class="band band-paper" id="play">
+  <div class="wrap">
+    <p class="kicker">How to play</p>
+    <h2>The telephone game, played with pictures</h2>
+    <p class="intro">Fax Machine is the telephone game played on paper. A phrase becomes a drawing, the drawing becomes a new phrase, and the reveal at the end shows how far each one drifted. You need at least three players, and there is no upper limit.</p>
+    <ol class="rules" id="rules"></ol>
+    <div class="rules-after">
+      <div class="reveal">
+        <h3>Repeat until every page is full, then reveal</h3>
+        <p>After step 8, go back to step 4 with the stack you are handed: draw the words on top, fold them back, pass, and so on. Each page gets one phrase and one drawing, so a stack of four pages makes eight hops. When all the pages are full, unfold each stack and read it from page 1, one step at a time. Always pass in the same direction. Each player uses four pages however many people play; the game has worked with twenty.</p>
+      </div>
+      <figure class="sample">
+        <div class="sheet" aria-hidden="true">
+          <div class="sheet-band"><span>A duck with a cool hat.</span><i>1</i></div>
+          <svg viewBox="0 0 200 220" class="duck"><use href="#duck-art"/></svg>
+        </div>
+        <figcaption>Page 1 from a real game, redrawn: the phrase on top and the next player's drawing underneath.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 3. HOW IT WORKS -->
+<section class="band band-yellow" id="how">
+  <div class="wrap">
+    <p class="kicker">How the box works</p>
+    <h2>What each part does</h2>
+    <div class="how-grid" id="how-grid"></div>
+  </div>
+</section>
+
+<!-- 4. BUILD -->
+<section class="band band-paper" id="build">
+  <div class="wrap">
+    <p class="kicker">Assembly guide</p>
+    <h2>Build it</h2>
+    <p class="intro">Plan on an afternoon, then 24 hours for the glue to cure before you load the box. Lay the parts out by letter before you start. The pictures follow the order the parts have to go together in, so stick to it.</p>
+
+    <h3 class="sub">Parts</h3>
+    <div class="inventory" id="inventory"></div>
+    <h3 class="sub">Hardware</h3>
+    <div class="hardware" id="hardware"></div>
+    <h3 class="sub">Tools and supplies</h3>
+    <ul class="tools" id="tools"></ul>
+
+    <div class="joints-wrap">
+    <h3 class="sub">Match the numbers</h3>
+    <p class="intro">Every joint is numbered on the inside faces: the two edges with the same number go together. The numbers are optional to engrave, and the cut + labels files include them.</p>
+    <div id="joints"></div>
+    </div>
+
+    <h3 class="sub">Steps</h3>
+    <nav class="stepnav" id="stepnav" aria-label="Jump to step"></nav>
+    <ol class="steps" id="steps"></ol>
+  </div>
+</section>
+
+<!-- 5. ENGRAVING -->
+<section class="band band-kraft" id="engraving">
+  <div class="wrap">
+    <p class="kicker">Engraving preview</p>
+    <h2>The art is burned into the wood</h2>
+    <p class="intro">The artwork comes from the original cardboard box, redrawn as line art a laser can engrave. Pick a face, compare the versions, and see each one on the box. The burn view shows roughly how it will look as darkened wood on birch.</p>
+    <div class="originals-wrap"><div class="originals" aria-label="Photos of the original cardboard box" tabindex="0">
+      <figure style="--r:-2.5deg"><img src="img/original/img_4229.jpg" alt="Front of the original cardboard box: FAX MACHINE in rainbow letters over a drawn control panel" loading="lazy"><figcaption>front</figcaption></figure>
+      <figure style="--r:1.5deg"><img src="img/original/img_4228.jpg" alt="Left side of the original box: a parrot spray-painting FAX MACHINE" loading="lazy"><figcaption>left side</figcaption></figure>
+      <figure style="--r:-1deg"><img src="img/original/img_4230.jpg" alt="Right side of the original box: Fun for Terrible Writers and Artists of All Ages" loading="lazy"><figcaption>right side</figcaption></figure>
+      <figure style="--r:2deg"><img src="img/original/img_4231.jpg" alt="Lid of the original box: a cat, a hose and a mosaic sea serpent" loading="lazy"><figcaption>lid</figcaption></figure>
+      <figure style="--r:-2deg"><img src="img/original/img_4236.jpg" alt="Drawer label reading COLORS in rainbow letters" loading="lazy"><figcaption>drawer</figcaption></figure>
+      <figure style="--r:1deg"><img src="img/original/img_4238.jpg" alt="Drawer label reading Lines in rainbow letters" loading="lazy"><figcaption>drawer</figcaption></figure>
+    </div>
+    </div>
+    <p class="orig-note">The original: cardboard, marker and colored pencil.</p>
+    <div class="engrave">
+      <div class="engrave-stage">
+        <canvas id="art-canvas" aria-label="3D box showing the selected engraving"></canvas>
+        <div class="art-still" id="art-still" aria-hidden="true"></div>
+        <p class="art-stage-note" id="art-stage-note" hidden>3D preview needs WebGL; showing the burned-wood preview of the selected art.</p>
+        <div class="seg" role="group" aria-label="Preview style">
+          <button type="button" class="segbtn on" data-mode="burn" aria-pressed="true">Burned wood</button>
+          <button type="button" class="segbtn" data-mode="ink" aria-pressed="false">Ink on paper</button>
+        </div>
+      </div>
+      <div class="engrave-side">
+        <div class="facetabs" id="facetabs" role="group" aria-label="Choose a face of the box"></div>
+        <div class="variants" id="variants"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. FILES -->
+<section class="band band-paper" id="files">
+  <div class="wrap">
+    <p class="kicker">Cut files</p>
+    <h2>Download the cut files</h2>
+    <div class="files-grid">
+      <div class="card measure">
+        <h3>1. Measure your plywood</h3>
+        <p>Plywood sold as 1/8 inch or 3 mm is often anywhere from 2.8 to 3.5 mm. The finger joints only fit if the files match your sheet, so measure it with calipers in three or four spots away from the edges, average the readings, and pick the closest thickness below. Calipers are fine for the thickness; for the kerf, trust the coupon's finger-joint pairs, since telling a 0.18 mm kerf from 0.20 mm needs calipers good to 0.01 mm.</p>
+        <div class="thick" id="thick" role="radiogroup" aria-label="Plywood thickness"></div>
+        <p class="thick-read" id="thick-read"></p>
+        <p class="small wall-id" id="wall-id"></p>
+      </div>
+      <div class="card">
+        <h3>2. Cut the test coupon first</h3>
+        <p>The coupon is a small test piece cut from the same sheet as the box. It shows how tight the finger joints come out and how firmly the magnets press in, so you can pick the right files before cutting the whole box. It costs a few cents of wood and can save a sheet.</p>
+        <div id="coupon-dl"></div>
+      </div>
+      <div class="card wide">
+        <h3>Reading the coupon</h3>
+        <div class="coupon-guide" id="coupon-guide"></div>
+      </div>
+      <div class="card wide">
+        <h3>3. Download the box</h3>
+        <div id="kerf"></div>
+        <div id="box-dl"></div>
+        <div id="beds"></div>
+      </div>
+      <div class="card wide laser">
+        <h3>Laser starting points</h3>
+        <p>Published settings for about 3 mm plywood. They are only starting points: every machine, lens and batch of plywood differs, so test on your coupon first and adjust. Each machine uses its own speed and power scale, so do not compare rows.</p>
+        <div class="tbl-wrap" id="laser"></div>
+        <p class="small">Sources checked Oct 2026.</p>
+      </div>
+      <div class="card wide colors">
+        <h3>Color code</h3>
+        <ul class="legend" id="legend">
+          <li><span class="sw" style="--c:#0000ff"></span><span><b>Blue is cut.</b> Hairline vector lines that go through the sheet.</span></li>
+          <li><span class="sw" style="--c:#ff0000"></span><span><b>Red is engrave.</b> Raster or score the surface; never cut through.</span></li>
+          <li id="legend-labels" hidden><span class="sw" style="--c:#FF0000"></span><span><b>Red lines are labels.</b> Part letters and joint numbers, engraved lightly; turn this layer off if you do not want them.</span></li>
+        </ul>
+        <p class="small" id="dxf-note"></p>
+        <p class="small">Order the cut so small inner holes go first and outer outlines last, which most laser software does by default. If your service does not engrave, the box still works plain.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. MATERIALS -->
+<section class="band band-yellow" id="materials">
+  <div class="wrap">
+    <p class="kicker">Materials and parts</p>
+    <h2>What to buy</h2>
+    <p class="intro" id="mat-intro">Everything besides the laser cutting. Links go to the exact listings we checked.</p>
+    <div class="cost" id="cost"></div>
+    <div id="materials-list"></div>
+    <h3 class="sub" id="kit">Drawing kit: pens and pencils</h3>
+    <p class="intro" id="kit-intro">Every pencil and pen here fits the COLORS and Lines drawers.</p>
+    <div class="kit" id="kit-tiers"></div>
+  </div>
+</section>
+
+<!-- 8. CUTTING -->
+<section class="band band-paper" id="cutting">
+  <div class="wrap">
+    <p class="kicker">Where to get it cut</p>
+    <h2>Four ways to get the parts</h2>
+    <p class="intro">The job is about 19 m of cutting and about 0.43 m² of parts, plus engraving on eleven faces. The cut files list how many sheets each laser bed needs. Prices checked Oct 2026.</p>
+    <div class="options" id="options"></div>
+    <p class="tip"><b>Whichever route you take,</b> cut the test coupon on the same sheet first. Plywood thickness varies from batch to batch, and the coupon tells you which file to use.</p>
+  </div>
+</section>
+
+<!-- 9. MAKER -->
+<section class="band band-ink" id="maker">
+  <div class="wrap maker">
+    <div>
+      <p class="kicker">Maker notes</p>
+      <h2>How the files are made</h2>
+      <p>Every part is generated by a parametric Python program built on <a href="https://www.festi.info/boxes.py/">boxes.py</a>. You change a few numbers and it redraws all the parts, joints and holes to match.</p>
+      <p>The two numbers that matter most are the plywood <b>thickness</b>, which sets the depth of every finger and slot, and the <b>kerf</b> (the width of material the laser burns away), which the generator adds back so joints come out snug. Finger play, the clearances around the drawers and lid, and the magnet press fit are separate settings, and the coupon checks each of them.</p>
+      <p>Everything is open: the generator, tests, art and these files.</p>
+      <div class="cta"><a class="btn btn-yellow" href="https://github.com/Gilbetrar/fax-machine-box/tree/v2-site">View on GitHub</a><a class="btn btn-line" href="https://github.com/Gilbetrar/fax-machine-box/issues">Report a problem</a></div>
+    </div>
+    <dl class="params" id="params"></dl>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <p>Fax Machine · design v2, October 2026 · made in Brooklyn</p>
+  <p><a href="https://github.com/Gilbetrar/fax-machine-box/tree/v2-site">Source</a> · <a href="https://github.com/Gilbetrar/fax-machine-box/issues">Questions and problems</a> · <span id="license">License: to be announced</span> · three.js is MIT licensed</p>
+</footer>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="duck-art" viewBox="0 0 200 220">
+    <g fill="none" stroke="#1d1b19" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M74 52 C72 34 82 24 96 24 C110 24 116 34 114 46"/>
+      <path d="M70 50 L128 49"/>
+      <path d="M76 56 C70 66 70 80 74 92 C80 112 78 124 66 136 C54 150 58 172 82 182 C108 192 140 186 156 168 C166 156 170 144 176 132 C166 136 158 138 150 136 C134 132 118 128 104 124 C96 110 94 96 96 82 C98 70 96 60 90 54"/>
+      <path d="M74 66 C60 70 46 78 34 88 C50 88 62 86 74 82"/>
+      <path d="M88 64 l1 2 M96 64 l1 2"/>
+      <path d="M90 146 C100 160 124 162 142 150 C132 152 124 146 128 142 C120 142 116 138 120 134"/>
+      <path d="M100 186 L98 206 M86 210 l12 -4 l10 4"/>
+      <path d="M128 184 L128 204 M118 210 l10 -5 l10 5"/>
+    </g>
+  </symbol>
+</svg>
+<noscript><p class="noscript">The 3D model and build pictures need JavaScript. The cut files are on <a href="https://github.com/Gilbetrar/fax-machine-box">GitHub</a>.</p></noscript>
+</body>
+</html>

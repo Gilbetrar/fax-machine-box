@@ -46,8 +46,8 @@ For every thickness T (2.8 ... 3.5 mm, 0.1 steps) and laser kerf (diode 0.12, CO
 | file | contents |
 | --- | --- |
 | `fax-machine-box_T<T>_k<kerf>_cut.zip` | cut-only SVG + DXF sheets, one set per bed, plus the coupon files. Blue lines only, so a service that cuts every line cuts exactly the parts |
-| `fax-machine-box_T<T>_k<kerf>_labels.zip` | cut + labels for your own laser: parts lie inside face up, gray part letters and joint numbers (layer LABELS), red faceplate glue-up lines |
-| `fax-machine-box_T<T>_k<kerf>_engrave_<bed>.zip` | cut + engrave for one bed: art on the outside of the parts that carry it (mirrored outlines where needed), gray joint labels on the inside of the rest |
+| `fax-machine-box_T<T>_k<kerf>_labels.zip` | cut + labels for your own laser: parts lie inside face up, red part letters and joint numbers (layer LABELS), red faceplate glue-up lines |
+| `fax-machine-box_T<T>_k<kerf>_engrave_<bed>.zip` | cut + engrave for one bed: art on the outside of the parts that carry it (mirrored outlines where needed), red joint numbers on the inside of the rest |
 | `fax-machine-box_T<T>_parts.zip` | zero-kerf single-part files (service applies its own kerf) and `faces/`: the 11 art parts, 15 variants |
 | `coupon/T<T>_coupon[_marked].svg\\|dxf` | the test-fit coupon, loose (also inside every cut zip) |
 
@@ -239,9 +239,12 @@ def main() -> None:
         "stock_12x24_sheets_per_box": max(e["stock_12x24_sheets"] for e in entries),
         "kerfs": {k: {"kerf_mm": v, "label": KERF_LABELS[k]} for k, v in KERFS.items()},
         "versions": {
-            "cut_only": {"label": "Cut only", "text": README_KINDS["cut"].strip().splitlines()[1]},
-            "cut_labels": {"label": "Cut + labels", "text": "For your own laser: gray part letters and joint numbers on the inside face."},
-            "cut_engrave": {"label": "Cut + engrave", "text": "Art on the outside of the art parts; joint labels inside the rest."},
+            "cut_only": {"label": "Cut only", "text": "Blue cut lines and nothing else: a service that cuts every line "
+                                                       "cuts exactly the parts."},
+            "cut_labels": {"label": "Cut + labels", "text": "For your own laser: red part letters and joint numbers "
+                                                            "to engrave on the inside face, plus the faceplate glue-up lines."},
+            "cut_engrave": {"label": "Cut + engrave", "text": "Art on the outside of the parts that carry it, red joint "
+                                                              "numbers on the inside of the rest."},
         },
         "beds": {},
         "parts_list": [{"letter": l, "name": n, "qty": q, "plate": p} for l, p, n, q in A.INVENTORY],
@@ -261,7 +264,7 @@ def main() -> None:
     old = out / "manifest.json"
     if a.only and old.exists():                     # keep the other thicknesses of an earlier full run
         prev = json.loads(old.read_text())
-        if prev.get("schema") == 3:
+        if prev.get("schema") == 4:
             prev["thicknesses"].update(manifest["thicknesses"])
             manifest["thicknesses"] = dict(sorted(prev["thicknesses"].items()))
     old.write_text(json.dumps(manifest, indent=1) + "\n")

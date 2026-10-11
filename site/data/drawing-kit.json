@@ -1,0 +1,273 @@
+{
+ "checked": "2026-10-10",
+ "owned": [
+  {
+   "name": "uni-ball Onyx Micro",
+   "identified_as": "uni-ball Onyx Micro 0.5 mm rollerball (correct)"
+  },
+  {
+   "name": "Sakura Pigma Micron 01",
+   "identified_as": "Sakura Pigma Micron 01, 0.25 mm archival pigment fineliner (correct; blue cap)"
+  },
+  {
+   "name": "\"Fine\" water-based pigment pen",
+   "identified_as": "Unconfirmed: a black 'Fine' water-based pigment pen, brand label unreadable; possibly Pentel Sign Pen or a Zig/Kuretake fineliner"
+  },
+  {
+   "name": "Lamy aluminum pen",
+   "identified_as": "Probably a Lamy LX (Ruthenium) rather than AL-star; the faceted hex cap and wire clip point to LX"
+  },
+  {
+   "name": "Tombow ABT 476 dual brush",
+   "identified_as": "Tombow ABT Dual Brush Pen 476 (correct; water-based dye, brush plus fine tip, not for this kit)"
+  },
+  {
+   "name": "Faber-Castell Goldfaber graphite 6-set",
+   "identified_as": "Faber-Castell Goldfaber/Creative Studio 6-pencil graphite set (2H, HB, B, 2B, 4B, 6B) (correct)"
+  },
+  {
+   "name": "Crayola-style 24 colored pencil box",
+   "identified_as": "Crayola Colored Pencils, 24 ct (it is a Crayola box, not just Crayola-style)"
+  },
+  {
+   "name": "Kaweco Sport",
+   "identified_as": "Kaweco Sport clutch pencil, 3.2 mm lead (correct)"
+  },
+  {
+   "name": "PENSTIX No. 3017-F 0.7mm",
+   "identified_as": "Penstix 3017-F 0.7 mm fiber-tip fineliner (correct text; maker not identified)"
+  },
+  {
+   "name": "two Platinum Preppy",
+   "identified_as": "Two Platinum Preppy fountain pens, clear demonstrator (correct)"
+  },
+  {
+   "name": "Zig Mangaka Flexible",
+   "identified_as": "Kuretake ZIG Cartoonist Mangaka Flexible, black (correct)"
+  },
+  {
+   "name": "Staedtler Lumocolor permanent S",
+   "identified_as": "Staedtler Lumocolor permanent S 0.4 mm (correct; alcohol-based, can bleed)"
+  },
+  {
+   "name": "Kuretake",
+   "identified_as": "Silver-barrel Kuretake (probably Zig) pen; model label not legible"
+  },
+  {
+   "name": "Faber-Castell PITT artist pen B",
+   "identified_as": "Faber-Castell PITT Artist Pen size B (Brush on current line; older labels used B for Bold 2.5 mm); can't tell which from the photo"
+  }
+ ],
+ "tiers": [
+  {
+   "id": "starter",
+   "name": "Starter",
+   "summary": "Erasable Crayola colors, 12 Onyx rollerballs, 12 HB pencils, tub sharpener and 3 Mono erasers.",
+   "upgrade_note": "",
+   "items": [
+    {
+     "name": "Crayola Erasable Colored Pencils, 24 ct",
+     "role": "color",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B000PCWKBA",
+     "price_usd": 5.88,
+     "length_mm": 178,
+     "why": "Cheapest way to get 24 colors, and they erase."
+    },
+    {
+     "name": "uni-ball Onyx Rollerball Pens, Micro Point 0.5mm, Black (12 ct)",
+     "role": "line",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00006IE87",
+     "price_usd": 8.39,
+     "length_mm": 145,
+     "why": "Fast-drying archival rollerball ink; 12 pens covers an 8-player group with spares."
+    },
+    {
+     "name": "Ticonderoga Wood-Cased Pencils, #2 HB, 12 ct",
+     "role": "graphite",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B002EEYT34",
+     "price_usd": 2.99,
+     "length_mm": 190,
+     "why": "Erasable first-draft pencil, unsharpened so each pencil starts with its full length."
+    },
+    {
+     "name": "STAEDTLER Double-Hole Tub Pencil Sharpener",
+     "role": "sharpener",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B005D5ZOH6",
+     "price_usd": 5.27,
+     "length_mm": 50,
+     "why": "Tub catches the shavings; the second hole takes the thicker colored pencils."
+    },
+    {
+     "name": "Tombow MONO Eraser, White, Medium (3-pack)",
+     "role": "eraser",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B074PH2FY2",
+     "price_usd": 4.95,
+     "length_mm": 42,
+     "why": "Cleans graphite and erasable colored pencil without smearing; three keeps one per player cluster."
+    }
+   ],
+   "fit": {
+    "colors_drawer": "24 Crayola pencils (~178 mm, ~7.4 mm hex) lie lengthwise with ~34 mm to spare. Two layers of 12 use about 14 mm of the 50.3 mm height and ~90 mm of the 142.65 mm width. Drawer capacity at this diameter is roughly 19 per layer by 7 layers (~130).",
+    "lines_drawer": "12 Onyx (~145 mm, ~11 mm dia) in 2 rows of 6 plus 12 Ticonderoga (~190 mm) in one layer fit in two layers (~30 mm high). Sharpener (~50 mm) and erasers sit in the ~65 mm free at the pen ends. Fits without crowding."
+   },
+   "total_usd": 27.48
+  },
+  {
+   "id": "good",
+   "name": "Good",
+   "summary": "Prismacolor Premier 24, Ben's two favorites (Zig Mangaka Flexible and Onyx), graphite set, sharpener and eraser.",
+   "upgrade_note": "Over Starter: soft-core Prismacolor Premier colors (richer, blend better, but break more if dropped), Ben's favorite Mangaka Flexible brush-feel pen, and a graded graphite set.",
+   "items": [
+    {
+     "name": "Prismacolor Premier Colored Pencils, Soft Core, 24 ct",
+     "role": "color",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00006IEEU",
+     "price_usd": 24.99,
+     "length_mm": 178,
+     "why": "Rich, saturated color from a soft wax core; the popular step up from school pencils."
+    },
+    {
+     "name": "Kuretake ZIG Cartoonist Mangaka Flexible, Fine, Black (CNMF-010)",
+     "role": "line",
+     "qty": 2,
+     "url": "https://www.amazon.com/dp/B007X476T4",
+     "price_usd": 4.99,
+     "length_mm": 150,
+     "why": "Ben's favorite: flexible tip gives thick-thin lines on a water-based pigment ink that dries quickly."
+    },
+    {
+     "name": "uni-ball Onyx Rollerball Pens, Micro Point 0.5mm, Black (12 ct)",
+     "role": "line",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00006IE87",
+     "price_usd": 8.39,
+     "length_mm": 145,
+     "why": "Ben's other favorite; dependable fast-drying fine line, plenty for the whole table."
+    },
+    {
+     "name": "Faber-Castell Graphite Sketch Pencil Set, 6 pencils (2H, HB, B, 2B, 4B, 6B)",
+     "role": "graphite",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00OQJYNW2",
+     "price_usd": 8.45,
+     "length_mm": 175,
+     "why": "Graded set; players can pick a dark soft pencil for sketching."
+    },
+    {
+     "name": "STAEDTLER Double-Hole Tub Pencil Sharpener",
+     "role": "sharpener",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B005D5ZOH6",
+     "price_usd": 5.27,
+     "length_mm": 50,
+     "why": "Tub catches the shavings; the second hole takes the thicker colored pencils."
+    },
+    {
+     "name": "Tombow MONO Eraser, White, Medium (3-pack)",
+     "role": "eraser",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B074PH2FY2",
+     "price_usd": 4.95,
+     "length_mm": 42,
+     "why": "Cleans graphite and erasable colored pencil without smearing; three keeps one per player cluster."
+    }
+   ],
+   "fit": {
+    "colors_drawer": "24 Prismacolor (~178 mm, ~7.5 mm) lie lengthwise with ~34 mm to spare, 12 per layer in two layers (~14 mm high). Roughly 19 per layer by 7 layers (~130) fits, so there is room to add a second set later.",
+    "lines_drawer": "12 Onyx and 2 Zig (~150 mm) fit in one pen layer (~11-12 mm), 6 graphite (~175 mm) in a layer beside them; stack height ~25 mm of 50.3. Sharpener and erasers go in the ~60 mm free at the pen ends."
+   },
+   "total_usd": 62.03
+  },
+  {
+   "id": "deluxe",
+   "name": "Deluxe",
+   "summary": "Polychromos 36 tin, Zig and Onyx plus Pigma Micron 01, graphite set, KUM sharpener and two eraser types.",
+   "upgrade_note": "Over Good: Faber-Castell Polychromos (oil-based, hard core, holds a point and rarely smears, 36 colors), a Pigma Micron 01 six-pack for fine detail, a metal KUM sharpener, and a second eraser type (Staedtler Mars plastic).",
+   "items": [
+    {
+     "name": "Faber-Castell Polychromos Artists' Color Pencils, Tin of 36",
+     "role": "color",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B0007OECKI",
+     "price_usd": 63.85,
+     "length_mm": 175,
+     "why": "Artist-grade oil-based leads hold a point and don't smear when sheets are folded."
+    },
+    {
+     "name": "Kuretake ZIG Cartoonist Mangaka Flexible, Fine, Black (CNMF-010)",
+     "role": "line",
+     "qty": 2,
+     "url": "https://www.amazon.com/dp/B007X476T4",
+     "price_usd": 4.99,
+     "length_mm": 150,
+     "why": "Ben's favorite flexible pen."
+    },
+    {
+     "name": "uni-ball Onyx Rollerball Pens, Micro Point 0.5mm, Black (12 ct)",
+     "role": "line",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00006IE87",
+     "price_usd": 8.39,
+     "length_mm": 145,
+     "why": "Ben's other favorite."
+    },
+    {
+     "name": "SAKURA Pigma Micron Fineliner Pens, Black, 01 (0.25 mm), 6 Pack",
+     "role": "line",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00K3KRJK6",
+     "price_usd": 13.49,
+     "length_mm": 135,
+     "why": "Archival pigment fineliner with a very fine line for detail drawing."
+    },
+    {
+     "name": "Faber-Castell Graphite Sketch Pencil Set, 6 pencils (2H, HB, B, 2B, 4B, 6B)",
+     "role": "graphite",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00OQJYNW2",
+     "price_usd": 8.45,
+     "length_mm": 175,
+     "why": "Graded set; players can pick a dark soft pencil for sketching."
+    },
+    {
+     "name": "KUM 103.28.31 Magnesium Alloy 2-Hole Barrel Pencil Sharpener with Waste Container",
+     "role": "sharpener",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B002TDXYC2",
+     "price_usd": 7.45,
+     "length_mm": 50,
+     "why": "Metal body, sharp steel blades and a screw-on waste container for shavings; colors vary."
+    },
+    {
+     "name": "Tombow MONO Eraser, White, Medium (3-pack)",
+     "role": "eraser",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B074PH2FY2",
+     "price_usd": 4.95,
+     "length_mm": 42,
+     "why": "Cleans graphite and erasable colored pencil without smearing; three keeps one per player cluster."
+    },
+    {
+     "name": "STAEDTLER Mars Plastic Vinyl Erasers (4-Pack)",
+     "role": "eraser",
+     "qty": 1,
+     "url": "https://www.amazon.com/dp/B00006IFAN",
+     "price_usd": 6.49,
+     "length_mm": 65,
+     "why": "Leaves the least residue on printer paper; good for cleaning up pencil lines."
+    }
+   ],
+   "fit": {
+    "colors_drawer": "Tin dimensions not verified, so the plan is to loose-pack the pencils: 36 x ~175 mm (~7.5 mm) lie lengthwise with ~37 mm to spare, 3 layers of 12 about 20 mm high, ~30 mm headroom.",
+    "lines_drawer": "12 Onyx, 2 Zig, 6 Micron, 6 graphite (~175 mm) in two layers (~25 mm high of 50.3). KUM sharpener and the two eraser packs fit in the ~60 mm free at the pen ends. Lines drawer is about half full."
+   },
+   "total_usd": 123.05
+  }
+ ]
+}

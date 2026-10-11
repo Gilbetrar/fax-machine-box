@@ -1,0 +1,648 @@
+{
+ "faces": {
+  "left": {
+   "part_id": "left",
+   "title": "Left wall (parrot, FAX MACHINE)",
+   "size_mm": [
+    298.45,
+    127.0
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "+",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -1.0,
+     127.0
+    ]
+   ],
+   "art_right": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": false,
+   "variants": [
+    {
+     "id": "solid",
+     "label": "Solid letters",
+     "svg": "out/left__solid.svg",
+     "png": "out/left__solid.png",
+     "default": true,
+     "notes": "Solid black drip lettering, as on the original cardboard box.",
+     "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
+     "ink_pct": 23.9,
+     "paths": 43,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 141,
+     "png_sm": "art/sm/left__solid.png"
+    },
+    {
+     "id": "outline",
+     "label": "Outlined letters",
+     "svg": "out/left__outline.svg",
+     "png": "out/left__outline.png",
+     "default": false,
+     "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
+     "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
+     "ink_pct": 14.1,
+     "paths": 388,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 232,
+     "png_sm": "art/sm/left__outline.png"
+    }
+   ]
+  },
+  "right": {
+   "part_id": "right",
+   "title": "Right wall (Terrible Writers & Artists)",
+   "size_mm": [
+    298.45,
+    127.0
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "+",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -1.0,
+     127.0
+    ]
+   ],
+   "art_right": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": false,
+   "variants": [
+    {
+     "id": "funfor",
+     "label": "With 'Fun For'",
+     "svg": "out/right__funfor.svg",
+     "png": "out/right__funfor.png",
+     "default": false,
+     "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
+     "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+     "ink_pct": 24.6,
+     "paths": 387,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 259,
+     "png_sm": "art/sm/right__funfor.png"
+    },
+    {
+     "id": "outline",
+     "label": "Outlined title",
+     "svg": "out/right__outline.svg",
+     "png": "out/right__outline.png",
+     "default": false,
+     "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+     "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+     "ink_pct": 20.7,
+     "paths": 512,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 299,
+     "png_sm": "art/sm/right__outline.png"
+    },
+    {
+     "id": "nofunfor",
+     "label": "Without 'Fun For'",
+     "svg": "out/right__nofunfor.svg",
+     "png": "out/right__nofunfor.png",
+     "default": true,
+     "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
+     "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+     "ink_pct": 24.4,
+     "paths": 385,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 257,
+     "png_sm": "art/sm/right__nofunfor.png"
+    }
+   ]
+  },
+  "front": {
+   "part_id": "front",
+   "title": "Front wall (fax machine panel)",
+   "size_mm": [
+    158.75,
+    115.125
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "+",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -1.0,
+     115.125
+    ]
+   ],
+   "art_right": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": false,
+   "variants": [
+    {
+     "id": "outline",
+     "label": "Outlined letters",
+     "svg": "out/front__outline.svg",
+     "png": "out/front__outline.png",
+     "default": false,
+     "notes": "FAX MACHINE as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+     "source": "art/ai-versions/final/IMG_4229_ai_vH1.png",
+     "ink_pct": 19.8,
+     "paths": 218,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 157,
+     "png_sm": "art/sm/front__outline.png"
+    },
+    {
+     "id": "traced",
+     "label": "Fax machine",
+     "svg": "out/front__traced.svg",
+     "png": "out/front__traced.png",
+     "default": true,
+     "notes": "The fax machine from the front of the original box, with its WRITE and DRAW buttons.",
+     "source": "art/ai-versions/final/IMG_4229_ai_vH1.png",
+     "ink_pct": 25.5,
+     "paths": 83,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 126,
+     "png_sm": "art/sm/front__traced.png"
+    }
+   ]
+  },
+  "top": {
+   "part_id": "top",
+   "title": "Top panel (fixed, behind the lid)",
+   "size_mm": [
+    222.25,
+    158.75
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     0.0
+    ]
+   ],
+   "art_right": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "a",
+     "label": "Snake head",
+     "svg": "out/top__a.svg",
+     "png": "out/top__a.png",
+     "default": true,
+     "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
+     "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+     "ink_pct": 19.8,
+     "paths": 166,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 203,
+     "png_sm": "art/sm/top__a.png"
+    },
+    {
+     "id": "c",
+     "label": "Whole cat",
+     "svg": "out/top__c.svg",
+     "png": "out/top__c.png",
+     "default": false,
+     "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
+     "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+     "ink_pct": 19.8,
+     "paths": 211,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 225,
+     "png_sm": "art/sm/top__c.png"
+    }
+   ]
+  },
+  "lid": {
+   "part_id": "lid",
+   "title": "Sliding lid",
+   "size_mm": [
+    78.0,
+    163.6
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     1.0,
+     0.0
+    ]
+   ],
+   "art_right": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "a",
+     "label": "Snake head",
+     "svg": "out/lid__a.svg",
+     "png": "out/lid__a.png",
+     "default": true,
+     "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
+     "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+     "ink_pct": 21.6,
+     "paths": 68,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 93,
+     "png_sm": "art/sm/lid__a.png"
+    },
+    {
+     "id": "c",
+     "label": "Whole cat",
+     "svg": "out/lid__c.svg",
+     "png": "out/lid__c.png",
+     "default": false,
+     "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
+     "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
+     "ink_pct": 20.0,
+     "paths": 57,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 75,
+     "png_sm": "art/sm/lid__c.png"
+    }
+   ]
+  },
+  "B_face": {
+   "part_id": "B_face",
+   "title": "Lower drawer faceplate: COLORS",
+   "size_mm": [
+    150.9,
+    53.5
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     -1.0,
+     0.0,
+     150.9
+    ],
+    [
+     0.0,
+     -1.0,
+     53.5
+    ]
+   ],
+   "art_right": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Patterned letters",
+     "svg": "out/B_face__traced.svg",
+     "png": "out/B_face__traced.png",
+     "default": true,
+     "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
+     "source": "art/ai-versions/final/IMG_4236_ai_vH3.png",
+     "ink_pct": 8.8,
+     "paths": 65,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 43,
+     "png_sm": "art/sm/B_face__traced.png"
+    }
+   ]
+  },
+  "T_face": {
+   "part_id": "T_face",
+   "title": "Upper drawer faceplate: Lines",
+   "size_mm": [
+    150.9,
+    53.5
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     -1.0,
+     0.0,
+     150.9
+    ],
+    [
+     0.0,
+     -1.0,
+     53.5
+    ]
+   ],
+   "art_right": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Patterned letters",
+     "svg": "out/T_face__traced.svg",
+     "png": "out/T_face__traced.png",
+     "default": true,
+     "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
+     "source": "art/ai-versions/final/IMG_4238_ai_vH2.png",
+     "ink_pct": 6.0,
+     "paths": 22,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 36,
+     "png_sm": "art/sm/T_face__traced.png"
+    }
+   ]
+  },
+  "B_left": {
+   "part_id": "B_left",
+   "title": "Lower drawer, left side (turkeys)",
+   "size_mm": [
+    212.25,
+    50.325
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     -1.0,
+     0.0,
+     212.25
+    ],
+    [
+     0.0,
+     -1.0,
+     50.325
+    ]
+   ],
+   "art_right": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Hand-drawn scene",
+     "svg": "out/B_left__traced.svg",
+     "png": "out/B_left__traced.png",
+     "default": true,
+     "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+     "source": "art/trimmed/IMG_4233.jpeg",
+     "ink_pct": 17.4,
+     "paths": 145,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 102,
+     "png_sm": "art/sm/B_left__traced.png"
+    }
+   ]
+  },
+  "B_right": {
+   "part_id": "B_right",
+   "title": "Lower drawer, right side (alligator and seagull)",
+   "size_mm": [
+    212.25,
+    50.325
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "+",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -1.0,
+     50.325
+    ]
+   ],
+   "art_right": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": false,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Hand-drawn scene",
+     "svg": "out/B_right__traced.svg",
+     "png": "out/B_right__traced.png",
+     "default": true,
+     "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+     "source": "art/trimmed/IMG_4235.jpeg",
+     "ink_pct": 15.1,
+     "paths": 116,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 83,
+     "png_sm": "art/sm/B_right__traced.png"
+    }
+   ]
+  },
+  "T_left": {
+   "part_id": "T_left",
+   "title": "Upper drawer, left side (gallery)",
+   "size_mm": [
+    212.25,
+    50.325
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "-",
+   "art_to_local": [
+    [
+     -1.0,
+     0.0,
+     212.25
+    ],
+    [
+     0.0,
+     -1.0,
+     50.325
+    ]
+   ],
+   "art_right": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": true,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Hand-drawn scene",
+     "svg": "out/T_left__traced.svg",
+     "png": "out/T_left__traced.png",
+     "default": true,
+     "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+     "source": "art/trimmed/IMG_4237.jpeg",
+     "ink_pct": 26.6,
+     "paths": 217,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 177,
+     "png_sm": "art/sm/T_left__traced.png"
+    }
+   ]
+  },
+  "T_right": {
+   "part_id": "T_right",
+   "title": "Upper drawer, right side (bookshelf)",
+   "size_mm": [
+    212.25,
+    50.325
+   ],
+   "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
+   "exterior_face": "+",
+   "art_to_local": [
+    [
+     1.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     -1.0,
+     50.325
+    ]
+   ],
+   "art_right": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "art_up": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "engrave_part_flipped": false,
+   "variants": [
+    {
+     "id": "traced",
+     "label": "Hand-drawn scene",
+     "svg": "out/T_right__traced.svg",
+     "png": "out/T_right__traced.png",
+     "default": true,
+     "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
+     "source": "art/trimmed/IMG_4239.jpeg",
+     "ink_pct": 28.3,
+     "paths": 185,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 185,
+     "png_sm": "art/sm/T_right__traced.png"
+    }
+   ]
+  }
+ },
+ "style": {
+  "name": "traced-line + coded hatch",
+  "description": "Ben's hand-drawn linework traced to smooth vector fills, keeping the marker's stroke-weight variation. Shading is redrawn in code as hand-style hatching (per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. Large solids get gap channels unless they are display lettering. Rules: every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.4 mm clear of every cut."
+ }
+}

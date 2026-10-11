@@ -165,7 +165,7 @@ def transform_subpaths(subs, m: Affine):
                 new.append(s)
             else:
                 new.append((s[0],) + tuple(apply(m, *p) for p in s[1:]))
-        out.append(new)
+        out.append(_snap_closure(new))
     return out
 
 
@@ -174,12 +174,28 @@ def _fmt(v: float) -> str:
     return "0" if s in ("-0", "") else s
 
 
+def _snap_closure(sp, tol: float = 0.01):
+    """A subpath that ends with Z and whose last point is within `tol` of its start gets that last point
+    set to the start exactly, so rounding the coordinates never leaves a 0.001 mm closing edge that
+    overshoots the start (a self-touching contour, red-team H10)."""
+    if not sp or sp[-1][0] != "Z" or len(sp) < 3:
+        return sp
+    start = sp[0][1]
+    last = sp[-2]
+    end = last[-1]
+    if (end[0] != start[0] or end[1] != start[1]) and abs(end[0] - start[0]) < tol and abs(end[1] - start[1]) < tol:
+        sp = list(sp)
+        sp[-2] = last[:-1] + (start,)
+    return sp
+
+
 def emit(subs, prec_fix: bool = True) -> str:
     """SVG path data.  The first point of every subpath is absolute, the rest
     are written relative to the previous ROUNDED point so rounding never
     accumulates."""
     parts = []
     for sp in subs:
+        sp = _snap_closure(sp)
         prev = None
         for s in sp:
             k = s[0]

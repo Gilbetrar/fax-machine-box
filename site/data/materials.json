@@ -1,0 +1,116 @@
+{
+  "checked": "2026-10-10",
+  "items": [
+    {
+      "category": "Hardware",
+      "name": "Neodymium disc magnets, 6 × 2 mm",
+      "spec": "6 mm diameter × 2 mm thick, N52, 50-pack",
+      "qty": 4,
+      "url": "https://www.amazon.com/dp/B0F4KS6KV3",
+      "price_usd": 13.75,
+      "note": "The box uses 4 (one pair per drawer); the pack leaves spares for the coupon and for a dropped magnet. The pull figures are for N52; weaker grades hold the drawers less firmly."
+    },
+    {
+      "category": "Wood",
+      "name": "Baltic birch plywood, 1/8 in, 12 × 24 in, box of 12",
+      "spec": "Woodpeckers, B/BB grade; true size 11-7/8 × 23-7/8 in (301.6 × 606.4 mm)",
+      "qty": 4,
+      "url": "https://www.amazon.com/dp/B01N7G342D",
+      "price_usd": 54.38,
+      "note": "The 12 × 24 in layout uses {SHEETS_12x24} of these sheets per box, so a box of 12 covers two boxes with spares for the coupon. Measure the thickness before you pick a cut file."
+    },
+    {
+      "category": "Wood",
+      "name": "Baltic birch plywood, 1/8 in, 5 × 5 ft sheet",
+      "spec": "Toledo Plywood, BB/BB grade, 3-ply",
+      "qty": 1,
+      "url": "https://www.toledoplywood.com/product/1-8-5-x-5-g2s-baltic-birch-3-ply-bb-bb/",
+      "price_usd": 15.95,
+      "alternative": true,
+      "note": "Much cheaper per box if you can collect it: Toledo Plywood says its trucks deliver within 80 miles of Toledo, Ohio. In New York, lumber yards and plywood suppliers that stock Baltic birch will often cut a sheet down to fit a laser bed for a small fee; call ahead and ask for 1/8 in (3 mm) Baltic birch."
+    },
+    {
+      "category": "Glue & finish",
+      "name": "Wood glue",
+      "spec": "Titebond III Ultimate Wood Glue, 8 oz",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B0001YS16U",
+      "price_usd": 6.59,
+      "note": "About 10 minutes of working time, so glue the box in short sessions. Use it sparingly, on the finger joints only."
+    },
+    {
+      "category": "Glue & finish",
+      "name": "CA glue, gel",
+      "spec": "Loctite Super Glue Ultra Gel Control, 0.14 fl oz",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B00ELV2D0Y",
+      "price_usd": 4.49,
+      "note": "A drop holds a magnet in its hole if the press fit is loose."
+    },
+    {
+      "category": "Glue & finish",
+      "name": "Sandpaper",
+      "spec": "Dura-Gold wet/dry 5.5 × 9 in assortment (includes 150 and 220)",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B07DTLDYZM",
+      "price_usd": 8.99,
+      "note": "You need 150 grit for scorched edges and 220 for a final pass. Any 150 and 220 sheets will do."
+    },
+    {
+      "category": "Glue & finish",
+      "name": "Paraffin wax",
+      "spec": "Beesworks refined paraffin, 1 lb block",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B0C6RCRLL3",
+      "price_usd": 9.99,
+      "note": "Rub it on the drawer sides and the lid edges so they glide. A plain candle stub works too."
+    },
+    {
+      "category": "Glue & finish",
+      "name": "Clear finish, water-based",
+      "spec": "Minwax Polycrylic, clear satin, 1/2 pint",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B000C02AO2",
+      "price_usd": 11.9,
+      "optional": true,
+      "note": "Optional. One or two thin coats on the outside only, after assembly. Keep it off the sliding faces and the inside of the drawer bay. Water clean-up, low odor."
+    },
+    {
+      "category": "Tools",
+      "name": "Digital calipers",
+      "spec": "Stainless steel, 0–150 mm (6 in)",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B09MG9RCYJ",
+      "price_usd": 13.99,
+      "note": "To measure the plywood before you pick a cut file, and to check the coupon."
+    },
+    {
+      "category": "Tools",
+      "name": "Painter's tape",
+      "spec": "FrogTape Delicate Surface, 1.88 in × 60 yd",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B004QAO9V6",
+      "price_usd": 9.48,
+      "note": "Holds the joints closed while the glue sets; clamps are optional."
+    },
+    {
+      "category": "Tools",
+      "name": "Paper trimmer",
+      "spec": "Swingline ClassicCut Lite, 12 in cut",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B016LDV41S",
+      "price_usd": 36.87,
+      "optional": true,
+      "note": "Optional. Cuts letter paper into quarter sheets (4.25 × 5.5 in) quickly. Scissors and a ruler also work."
+    },
+    {
+      "category": "Game supplies",
+      "name": "Letter paper",
+      "spec": "Hammermill Fore Multipurpose 20 lb, 8.5 × 11 in, 500 sheets",
+      "qty": 1,
+      "url": "https://www.amazon.com/dp/B000FH3CV2",
+      "price_usd": 11.18,
+      "note": "Cut each sheet into four quarter sheets (4.25 × 5.5 in): 500 sheets make 2,000 pages."
+    }
+  ]
+}

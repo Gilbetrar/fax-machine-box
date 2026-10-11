@@ -1,0 +1,31 @@
+// Published starting points for about 3 mm (1/8 in) plywood, re-checked against each source Oct 2026.
+// Each machine uses its own speed/power scale, so rows are not comparable to each other.
+export const LASER = {
+  checked: 'Oct 2026',
+  rows: [
+    { machine: 'Epilog Fusion, 60 W CO2', kind: 'CO2',
+      cut: 'Speed 10, power 100, frequency 10; air assist on',
+      engrave: '300 DPI, speed 50, power 100',
+      source: 'Epilog Fusion suggested settings (wood, 1/8 in)', url: 'https://makerspace.aapld.org/wp-content/uploads/2024/06/fusion-material-settings-50-watt.pdf' },
+    { machine: 'NYC Resistor Epilog, 60 W CO2', kind: 'CO2',
+      cut: 'Speed 13, power 100, frequency 50 (speed 15 with the 2 in lens)',
+      engrave: 'Speed 100, power 40',
+      source: 'NYC Resistor laser power wiki (birch, 1/8 in)', url: 'https://wiki.nycresistor.com/wiki/Laser_Power' },
+    { machine: 'Glowforge Pro, CO2', kind: 'CO2',
+      cut: 'Speed 200 to 220, full power, 1 pass (owner reports)',
+      engrave: 'Speed 600, power 80, 225 LPI',
+      source: 'Glowforge community thread on 3 mm Baltic birch', url: 'https://community.glowforge.com/t/3mm-1-8-baltic-birch-settings/79487' },
+    { machine: 'xTool P2, 55 W CO2', kind: 'CO2',
+      cut: 'Use the built-in preset for 3 mm basswood plywood in xTool Studio; xTool does not publish the numbers on the web',
+      engrave: '1000 mm/s, power 70%, 500 DPI',
+      source: 'Atomm Materials Lab, user entry for 3 mm basswood plywood', url: 'https://www.atomm.com/materials-lab/community/4959-basswood-plywood' },
+    { machine: 'xTool S1, 40 W diode', kind: 'diode',
+      cut: 'Use the built-in preset for 3 mm basswood plywood in xTool Studio; xTool does not publish the numbers on the web',
+      engrave: '1000 mm/s, power 70%, 500 DPI',
+      source: 'Atomm Materials Lab, user entry for 3 mm basswood plywood', url: 'https://www.atomm.com/materials-lab/community/4363-1-8-3mm-basswood-plywood' },
+    { machine: 'xTool D1 Pro, 20 W diode', kind: 'diode',
+      cut: 'Power 100%, 6 mm/s, 1 pass (3 mm basswood plywood)',
+      engrave: 'Power 60%, 100 mm/s',
+      source: 'xTool material settings table (now in the Atomm Materials Lab)', url: 'https://www.atomm.com/materials-lab/official' },
+  ],
+};
