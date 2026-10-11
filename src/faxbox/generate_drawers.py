@@ -31,6 +31,7 @@ from faxbox import config
 from faxbox.config import (
     FINGER_PLAY_RELATIVE,
     DRAWER_BODY,
+    DRAWER_GUIDE,
     DRAWER_GRIP_SLOT,
     FACEPLATE,
     FACEPLATE_SLOT_TOP_BELOW_EDGE,
@@ -219,6 +220,12 @@ class DrawerBox(Boxes):
             move="right", label="Faceplate",
         )
 
+    def _build_guide(self, label: str = "Drawer Guide") -> None:
+        """Drawer guide strip: DRAWER_GUIDE length x height, plain edges (glued
+        to a bay wall at the divider end; red-team H1)."""
+        self.rectangularWall(DRAWER_GUIDE["length"], DRAWER_GUIDE["height"], "eeee",
+                             move="right", label=label)
+
     def render(self) -> None:
         """Render all 6 pieces, laid out in a single row (move='right'
         throughout) so bounding boxes never overlap."""
@@ -230,6 +237,33 @@ class DrawerBox(Boxes):
         self._build_side("Right Side")
         self._build_bottom()
         self._build_faceplate()
+
+
+def generate_guides(provider: str | None = None, burn: float | None = None) -> Path:
+    """The four drawer guide strips (two per drawer) in output/guides.svg."""
+    name = config.resolve_provider(provider)
+    provider_cfg = config.PROVIDERS[name]
+    output_path = Path(provider_cfg["output_dir"])
+    output_path.mkdir(parents=True, exist_ok=True)
+    output_file = output_path / "guides.svg"
+    g = DrawerBox(provider=name)
+    g.parseArgs([
+        "--output", str(output_file),
+        "--thickness", str(MATERIAL_THICKNESS),
+        "--burn", str(provider_cfg["burn"] if burn is None else burn),
+        "--reference", "0",
+        "--FingerJoint_play", str(FINGER_PLAY_RELATIVE),
+    ])
+    g.open()
+    g.set_source_color(g.cut_color)
+    for i in range(4):
+        g._build_guide(f"Drawer Guide {i + 1}")
+    data = g.close()
+    with open(output_file, "wb") as f:
+        f.write(data.getvalue())
+    enforce_reference_labels(output_file)
+    print(f"Generated drawer guides SVG: {output_file.absolute()}")
+    return output_file
 
 
 def generate_drawer(provider: str | None = None, burn: float | None = None) -> Path:

@@ -413,9 +413,9 @@ def flip_for(pid: str | None, up: str) -> str | None:
 
 # --- degenerate corner loops ---------------------------------------------------------------------
 
-def drop_degenerate_loops(subs, tol: float = 0.3):
-    """Remove zero-length self-looping cubic segments (start == end, control
-    points within `tol`).  Boxes.py writes one at every inner corner when the
+def drop_degenerate_loops(subs, tol: float = 0.3, close: float = 0.01):
+    """Remove self-looping cubic segments (start within `close` mm of the end,
+    control points within `tol`: the loop is under 0.1 mm across).  Boxes.py writes one at every inner corner when the
     kerf offset is non-zero (`L 10.15,24.95 C 10.15,24.85 10.05,24.95 10.15,24.95`):
     a 0.1 mm self-intersecting loop the laser would dwell on.  The path is
     continuous without it, so the corner is just the clean intersection."""
@@ -426,7 +426,7 @@ def drop_degenerate_loops(subs, tol: float = 0.3):
         for s in sp:
             if s[0] == "C":
                 p0, (c1, c2, p3) = cur, s[1:]
-                if (abs(p3[0] - p0[0]) < 1e-6 and abs(p3[1] - p0[1]) < 1e-6
+                if (abs(p3[0] - p0[0]) < close and abs(p3[1] - p0[1]) < close
                         and max(abs(c1[0] - p0[0]), abs(c1[1] - p0[1]), abs(c2[0] - p0[0]), abs(c2[1] - p0[1])) < tol):
                     continue
             if s[0] != "Z":

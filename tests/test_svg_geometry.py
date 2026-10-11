@@ -854,7 +854,7 @@ def test_edge_polarity_literals_present():
     # Drawer side walls: front/back-mating edges finger, bottom fingers, top open.
     assert '"ffef"' in drawer_src
     # Drawer Bottom AND Faceplate: plain all around.
-    assert drawer_src.count('"eeee"') == 2, "expected drawer Bottom + Faceplate both using \"eeee\""
+    assert drawer_src.count('"eeee"') == 3, "expected drawer Bottom + Faceplate + the plain guide strip using \"eeee\""
 
 
 # --- v2: slot end vs divider face, divider rows clear of the slot ---------------------

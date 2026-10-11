@@ -117,7 +117,7 @@ def main():
     for vid in ("a", "c"):
         lid = rasterize_svg(HERE / f"out/lid__{vid}.svg", PPM)
         top = rasterize_svg(HERE / f"out/top__{vid}.svg", PPM)
-        pad = int(round((163.6 - 158.75) / 2 * PPM))
+        pad = int(round((size_mm('lid')[1] - 158.75) / 2 * PPM))
         lid = lid[pad:pad + top.shape[0], :]
         gap = int(2 * PPM)
         both = np.full((top.shape[0], lid.shape[1] + gap + top.shape[1]), 255, np.uint8)

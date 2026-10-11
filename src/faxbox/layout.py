@@ -507,6 +507,8 @@ def generate_layout(
     pieces += _load_pieces(drawer_svg, "Drawer 1")
     pieces += _load_pieces(drawer_svg, "Drawer 2")
     pieces += _load_pieces(lids_svg, "Lid")
+    from faxbox import generate_drawers
+    pieces += _load_pieces(generate_drawers.generate_guides(), "Guides")
 
     sheets = _pack_pieces(
         pieces,
@@ -540,7 +542,7 @@ def generate_layout(
     print(f"Generated {len(sheets)} sheet(s) in {output_path.absolute()}:")
     for path, (w, h) in zip(sheet_paths, sheet_dims):
         print(f"  {path.name}: {w:.1f}mm x {h:.1f}mm ({w / 25.4:.1f}in x {h / 25.4:.1f}in)")
-    print(f"Total parts placed: {total_parts} (expected 21: 8 shell + 12 drawer + 1 lid)")
+    print(f"Total parts placed: {total_parts} (expected 25: 8 shell + 12 drawer + 1 lid + 4 drawer guides)")
     print(
         f"Bed limit used for packing: {resolved_width:.1f}mm x {resolved_height:.1f}mm "
         f"(conservative fallback -- see docs/service-comparison.md -- unless overridden "
@@ -555,9 +557,9 @@ def generate_layout(
 
 # --- Ponoko export mode (additive; never touches the NYCR path above) --------
 
-# 21 parts (8 shell + 12 drawer + 1 lid): every laser-cut piece the box
-# needs, so a single Ponoko order carries all of them.
-PONOKO_EXPECTED_PARTS = 21
+# 25 parts (8 shell + 12 drawer + 1 lid + 4 drawer guides): every laser-cut
+# piece the box needs, so a single Ponoko order carries all of them.
+PONOKO_EXPECTED_PARTS = 25
 # The combined kerf-square + magnet-gauge-row self-calibration coupon
 # (faxbox.calibration.generate_ponoko_coupon) -- see README "Ordering from
 # Ponoko" for why Ponoko orders need this nested onto the real sheet rather
@@ -632,6 +634,7 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     pieces += _load_pieces(drawer_svg, "Drawer 1", strip_labels=strip)
     pieces += _load_pieces(drawer_svg, "Drawer 2", strip_labels=strip)
     pieces += _load_pieces(lids_svg, "Lid", strip_labels=strip)
+    pieces += _load_pieces(generate_drawers.generate_guides(provider=name), "Guides", strip_labels=strip)
     pieces += _load_pieces(coupon_svg, "Calibration", strip_labels=strip)
 
     sheets = _pack_pieces(
@@ -668,7 +671,7 @@ def generate_ponoko_layout(provider: str | None = None) -> list[Path]:
     print(
         f"Total parts placed: {total_parts} (expected "
         f"{PONOKO_EXPECTED_PARTS + PONOKO_EXPECTED_COUPONS}: {PONOKO_EXPECTED_PARTS} real parts "
-        "[8 shell + 12 drawer + 1 lid] + "
+        "[8 shell + 12 drawer + 1 lid + 4 drawer guides] + "
         f"{PONOKO_EXPECTED_COUPONS} self-calibration coupon)"
     )
     print(

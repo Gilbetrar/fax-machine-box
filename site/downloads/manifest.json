@@ -1,5 +1,6 @@
 {
- "schema": 3,
+ "schema": 4,
+ "stock_12x24_sheets_per_box": 3,
  "kerfs": {
   "diode": {
    "kerf_mm": 0.12,
@@ -59,7 +60,7 @@
     "width_mm": 498.0,
     "height_mm": 301.6
    },
-   "note": "Layout is 498 x 301.6 mm so one 12 x 24 in sheet cut in two serves two runs.",
+   "note": "Each sheet of this layout is one 12 x 24 in sheet cut to 498 mm long (a 108 mm offcut is left over).",
    "kerfs": [
     "diode",
     "co2",
@@ -74,8 +75,8 @@
    "label": "xTool P2 bed and 12 x 24 in stock (594.9 x 301.6 mm)",
    "width_mm": 594.9,
    "height_mm": 301.6,
-   "margin_mm": 5.0,
-   "spacing_mm": 3.5,
+   "margin_mm": 3.0,
+   "spacing_mm": 3.0,
    "stock": {
     "name": "12 x 24 in sheet (301.6 x 606.4 mm true size)",
     "width_mm": 606.4,
@@ -213,6 +214,12 @@
    "plate": "lid"
   },
   {
+   "letter": "J",
+   "name": "Drawer guide",
+   "qty": 4,
+   "plate": "guide"
+  },
+  {
    "letter": "K",
    "name": "Drawer front",
    "qty": 2,
@@ -252,21 +259,22 @@
  "engrave": {
   "colors": {
    "cut": "#0000FF",
-   "engrave_fill": "#000000",
-   "engrave_line": "#FF0000",
-   "labels": "#808080"
+   "engrave_fill": "#808080",
+   "marks": "#FF0000"
   },
+  "colour_note": "Ponoko recommends blue stroke = cut, red stroke = line engrave, gray fill = area engrave (https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions, checked 2026-10-10); it lets you assign any function to any colour at upload, so check the assignment. The art is the gray fill; every single-line mark (part letters, joint numbers, faceplate glue-up lines, coupon ticks) is a red stroke.",
   "dxf_layers": {
    "cut": "CUT",
    "engrave": "ENGRAVE",
    "labels": "LABELS"
   },
+  "dxf_layer_note": "ENGRAVE holds the art (fill it); LABELS holds every red mark (line engrave).",
   "dxf_note": "DXF has no fill attribute: the engraved art is closed polylines on layer ENGRAVE, so set that layer to fill / raster in the laser software.",
   "conventions": [
    "Cuts are kerf-offset; engraving is not.",
    "Engraving stays at least 0.35 mm from every cut.",
    "Parts with art lie outside face up. Parts flagged 'flipped' are mirrored in the cut + engrave files for this; the art is not mirrored. Never flip a part to engrave a second side.",
-   "Parts without art lie inside face up and carry gray joint labels: the same number on the two edges that meet.",
+   "Parts without art lie inside face up and carry red joint marks: the same number on the two edges that meet.",
    "The drawer faceplate glue-up lines are in the cut + labels files only."
   ],
   "default_variants": {
@@ -294,14 +302,14 @@
       "label": "Solid letters",
       "default": true,
       "notes": "Solid black drip lettering, as on the original cardboard box.",
-      "ink_pct": 24.5
+      "ink_pct": 23.9
      },
      {
       "id": "outline",
       "label": "Outlined letters",
       "default": false,
       "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 14.2
+      "ink_pct": 14.1
      }
     ]
    },
@@ -319,6 +327,13 @@
       "ink_pct": 24.6
      },
      {
+      "id": "outline",
+      "label": "Outlined title",
+      "default": false,
+      "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+      "ink_pct": 20.7
+     },
+     {
       "id": "nofunfor",
       "label": "Without 'Fun For'",
       "default": true,
@@ -334,11 +349,18 @@
     "exterior_face": "+",
     "variants": [
      {
+      "id": "outline",
+      "label": "Outlined letters",
+      "default": false,
+      "notes": "FAX MACHINE as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+      "ink_pct": 19.8
+     },
+     {
       "id": "traced",
       "label": "Fax machine",
       "default": true,
       "notes": "The fax machine from the front of the original box, with its WRITE and DRAW buttons.",
-      "ink_pct": 25.4
+      "ink_pct": 25.5
      }
     ]
    },
@@ -353,7 +375,7 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 21.7
+      "ink_pct": 19.8
      },
      {
       "id": "c",
@@ -375,14 +397,14 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 16.3
+      "ink_pct": 21.6
      },
      {
       "id": "c",
       "label": "Whole cat",
       "default": false,
       "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
-      "ink_pct": 20.2
+      "ink_pct": 20.0
      }
     ]
    },
@@ -397,7 +419,7 @@
       "label": "Patterned letters",
       "default": true,
       "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
-      "ink_pct": 8.7
+      "ink_pct": 8.8
      }
     ]
    },
@@ -412,7 +434,7 @@
       "label": "Patterned letters",
       "default": true,
       "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
-      "ink_pct": 5.9
+      "ink_pct": 6.0
      }
     ]
    },
@@ -427,7 +449,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 16.3
+      "ink_pct": 17.4
      }
     ]
    },
@@ -457,7 +479,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 26.5
+      "ink_pct": 26.6
      }
     ]
    },
@@ -472,7 +494,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 28.1
+      "ink_pct": 28.3
      }
     ]
    }
@@ -488,7 +510,14 @@
       "zip": "fax-machine-box_T2.8_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -498,7 +527,7 @@
       "zip": "fax-machine-box_T2.8_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -508,14 +537,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T2.8_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.8_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.8_k0.12_coupon.svg",
+      "svg_marked": "coupon/T2.8_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T2.8_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T2.8_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.62,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.12,
+        "height_mm": 60.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 22.62,
+        "y_mm": 78.62,
+        "width_mm": 29.0,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 55.12,
+        "y_mm": 78.62,
+        "width_mm": 26.2,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 84.82,
+        "y_mm": 78.62,
+        "width_mm": 24.98,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 113.3,
+        "y_mm": 78.62,
+        "width_mm": 22.18,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 138.98,
+        "y_mm": 78.62,
+        "width_mm": 20.92,
+        "height_mm": 40.16,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.62,
+        "y_mm": 54.5,
+        "width_mm": 40.16,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 66.28,
+        "y_mm": 54.5,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -524,7 +644,14 @@
       "zip": "fax-machine-box_T2.8_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -534,7 +661,7 @@
       "zip": "fax-machine-box_T2.8_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -544,26 +671,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T2.8_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T2.8_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T2.8_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.8_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T2.8_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.8_k0.18_coupon.svg",
+      "svg_marked": "coupon/T2.8_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T2.8_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T2.8_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.68,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.18,
+        "height_mm": 60.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 22.68,
+        "y_mm": 78.68,
+        "width_mm": 29.0,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 55.18,
+        "y_mm": 78.68,
+        "width_mm": 26.2,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 84.88,
+        "y_mm": 78.68,
+        "width_mm": 24.98,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 113.36,
+        "y_mm": 78.68,
+        "width_mm": 22.18,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 139.04,
+        "y_mm": 78.68,
+        "width_mm": 20.92,
+        "height_mm": 40.16,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.68,
+        "y_mm": 54.5,
+        "width_mm": 40.16,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 66.34,
+        "y_mm": 54.5,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -573,7 +794,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -584,7 +813,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -594,14 +823,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T2.8_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.8_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.8_k0.20_coupon.svg",
+      "svg_marked": "coupon/T2.8_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T2.8_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T2.8_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.7,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.2,
+        "height_mm": 60.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 22.7,
+        "y_mm": 78.7,
+        "width_mm": 29.0,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 55.2,
+        "y_mm": 78.7,
+        "width_mm": 26.2,
+        "height_mm": 40.24,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 84.9,
+        "y_mm": 78.7,
+        "width_mm": 24.98,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 113.38,
+        "y_mm": 78.7,
+        "width_mm": 22.18,
+        "height_mm": 40.22,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 139.06,
+        "y_mm": 78.7,
+        "width_mm": 20.92,
+        "height_mm": 40.16,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.7,
+        "y_mm": 54.5,
+        "width_mm": 40.16,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 66.36,
+        "y_mm": 54.5,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -997,7 +1317,7 @@
         "name": "Drawer front",
         "plate": "B_front",
         "edge": "right",
-        "x_mm": 146.3,
+        "x_mm": 145.9,
         "y_mm": 25.35
        },
        {
@@ -1018,7 +1338,7 @@
         "name": "Drawer front",
         "plate": "B_front",
         "edge": "bottom",
-        "x_mm": 72.45,
+        "x_mm": 72.25,
         "y_mm": -1.4
        },
        {
@@ -1027,7 +1347,7 @@
         "plate": "B_bottom",
         "edge": "right",
         "x_mm": 218.32,
-        "y_mm": 75.25
+        "y_mm": 75.05
        }
       ]
      },
@@ -1060,7 +1380,7 @@
         "name": "Drawer back",
         "plate": "B_back",
         "edge": "right",
-        "x_mm": 146.3,
+        "x_mm": 145.9,
         "y_mm": 25.35
        },
        {
@@ -1081,7 +1401,7 @@
         "name": "Drawer back",
         "plate": "B_back",
         "edge": "bottom",
-        "x_mm": 72.45,
+        "x_mm": 72.25,
         "y_mm": -1.4
        },
        {
@@ -1090,7 +1410,7 @@
         "plate": "B_bottom",
         "edge": "left",
         "x_mm": 1.4,
-        "y_mm": 75.25
+        "y_mm": 75.05
        }
       ]
      },
@@ -1132,7 +1452,7 @@
         "plate": "B_bottom",
         "edge": "top",
         "x_mm": 109.86,
-        "y_mm": 149.1
+        "y_mm": 148.7
        }
       ]
      }
@@ -1167,7 +1487,8 @@
      ],
      "E": [
       "B2",
-      "C2"
+      "C2",
+      "E1"
      ],
      "F": [
       "A4",
@@ -1214,6 +1535,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -1227,94 +1549,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T2.8_coupon.svg",
-    "dxf": "coupon/T2.8_coupon.dxf",
-    "svg_marked": "coupon/T2.8_coupon_marked.svg",
-    "dxf_marked": "coupon/T2.8_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 21.68,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.18,
-      "y_mm": 48.5,
-      "width_mm": 14.18,
-      "height_mm": 60.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 40.24,
-      "height_mm": 29.0,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 37.5,
-      "width_mm": 40.24,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 47.86,
-      "y_mm": 67.2,
-      "width_mm": 24.98,
-      "height_mm": 40.22,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 76.34,
-      "y_mm": 48.5,
-      "width_mm": 40.22,
-      "height_mm": 22.18,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 76.34,
-      "y_mm": 74.18,
-      "width_mm": 20.92,
-      "height_mm": 40.16,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 100.76,
-      "y_mm": 74.18,
-      "width_mm": 18.12,
-      "height_mm": 40.16,
-      "rotated": true
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 170.24,
-      "y_mm": 5.0,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T2.8_parts.zip",
@@ -1404,6 +1638,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -1411,23 +1651,26 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.383,
-     "right/nofunfor": 0.383,
+     "right/funfor": 0.378,
+     "right/outline": 0.378,
+     "right/nofunfor": 0.378,
      "left/solid": 0.383,
      "left/outline": 0.383,
-     "front/traced": 1.4,
-     "top/a": 0.388,
+     "front/outline": 1.385,
+     "front/traced": 1.385,
+     "top/a": 0.384,
      "top/c": 0.383,
-     "B_left/traced": 0.415,
-     "B_right/traced": 0.399,
+     "B_left/traced": 0.538,
+     "B_right/traced": 0.543,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.412,
-     "T_right/traced": 0.394,
-     "T_face/traced": 4.034,
+     "T_left/traced": 0.535,
+     "T_right/traced": 0.53,
+     "T_face/traced": 4.041,
      "lid/a": 0.4,
      "lid/c": 0.4
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "2.9": {
    "kerfs": {
@@ -1438,7 +1681,14 @@
       "zip": "fax-machine-box_T2.9_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1448,7 +1698,7 @@
       "zip": "fax-machine-box_T2.9_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1458,14 +1708,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T2.9_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.9_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.9_k0.12_coupon.svg",
+      "svg_marked": "coupon/T2.9_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T2.9_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T2.9_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.72,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.72,
+        "y_mm": 5.0,
+        "width_mm": 29.1,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.72,
+        "y_mm": 50.17,
+        "width_mm": 26.2,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.62,
+        "width_mm": 41.65,
+        "height_mm": 25.08,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 95.34,
+        "width_mm": 41.65,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 95.3,
+        "y_mm": 95.34,
+        "width_mm": 41.59,
+        "height_mm": 21.02,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.12,
+        "height_mm": 14.12,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 72.12,
+        "width_mm": 41.59,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.2,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -1474,7 +1815,14 @@
       "zip": "fax-machine-box_T2.9_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1484,7 +1832,7 @@
       "zip": "fax-machine-box_T2.9_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1494,26 +1842,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T2.9_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T2.9_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T2.9_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.9_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T2.9_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.9_k0.18_coupon.svg",
+      "svg_marked": "coupon/T2.9_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T2.9_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T2.9_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.78,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.78,
+        "y_mm": 5.0,
+        "width_mm": 29.1,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.78,
+        "y_mm": 50.17,
+        "width_mm": 26.2,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.68,
+        "width_mm": 41.65,
+        "height_mm": 25.08,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 95.34,
+        "width_mm": 41.65,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 95.3,
+        "y_mm": 95.34,
+        "width_mm": 41.59,
+        "height_mm": 21.02,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.18,
+        "height_mm": 14.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 72.18,
+        "width_mm": 41.59,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.26,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -1523,7 +1965,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1534,7 +1984,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -1544,14 +1994,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T2.9_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T2.9_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T2.9_k0.20_coupon.svg",
+      "svg_marked": "coupon/T2.9_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T2.9_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T2.9_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.8,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.8,
+        "y_mm": 5.0,
+        "width_mm": 29.1,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.8,
+        "y_mm": 50.17,
+        "width_mm": 26.2,
+        "height_mm": 41.67,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.7,
+        "width_mm": 41.65,
+        "height_mm": 25.08,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 95.34,
+        "width_mm": 41.65,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 95.3,
+        "y_mm": 95.34,
+        "width_mm": 41.59,
+        "height_mm": 21.02,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.2,
+        "height_mm": 14.2,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 50.15,
+        "y_mm": 72.2,
+        "width_mm": 41.59,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.28,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -1947,7 +2488,7 @@
         "name": "Drawer front",
         "plate": "B_front",
         "edge": "right",
-        "x_mm": 145.75,
+        "x_mm": 145.55,
         "y_mm": 25.3
        },
        {
@@ -1968,7 +2509,7 @@
         "name": "Drawer front",
         "plate": "B_front",
         "edge": "bottom",
-        "x_mm": 72.15,
+        "x_mm": 72.05,
         "y_mm": -1.45
        },
        {
@@ -1977,7 +2518,7 @@
         "plate": "B_bottom",
         "edge": "right",
         "x_mm": 217.98,
-        "y_mm": 75.05
+        "y_mm": 74.95
        }
       ]
      },
@@ -2010,7 +2551,7 @@
         "name": "Drawer back",
         "plate": "B_back",
         "edge": "right",
-        "x_mm": 145.75,
+        "x_mm": 145.55,
         "y_mm": 25.3
        },
        {
@@ -2031,7 +2572,7 @@
         "name": "Drawer back",
         "plate": "B_back",
         "edge": "bottom",
-        "x_mm": 72.15,
+        "x_mm": 72.05,
         "y_mm": -1.45
        },
        {
@@ -2040,7 +2581,7 @@
         "plate": "B_bottom",
         "edge": "left",
         "x_mm": 1.45,
-        "y_mm": 75.05
+        "y_mm": 74.95
        }
       ]
      },
@@ -2082,7 +2623,7 @@
         "plate": "B_bottom",
         "edge": "top",
         "x_mm": 109.71,
-        "y_mm": 148.65
+        "y_mm": 148.45
        }
       ]
      }
@@ -2117,7 +2658,8 @@
      ],
      "E": [
       "B2",
-      "C2"
+      "C2",
+      "E1"
      ],
      "F": [
       "A4",
@@ -2164,6 +2706,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -2177,94 +2720,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T2.9_coupon.svg",
-    "dxf": "coupon/T2.9_coupon.dxf",
-    "svg_marked": "coupon/T2.9_coupon_marked.svg",
-    "dxf_marked": "coupon/T2.9_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 21.78,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 41.67,
-      "height_mm": 29.1,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 37.6,
-      "width_mm": 41.67,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.28,
-      "y_mm": 67.3,
-      "width_mm": 25.08,
-      "height_mm": 41.65,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 58.86,
-      "y_mm": 67.3,
-      "width_mm": 22.18,
-      "height_mm": 41.65,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 84.54,
-      "y_mm": 67.3,
-      "width_mm": 21.02,
-      "height_mm": 41.59,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.28,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 109.06,
-      "y_mm": 67.3,
-      "width_mm": 18.12,
-      "height_mm": 41.59,
-      "rotated": true
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 171.67,
-      "y_mm": 5.0,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T2.9_parts.zip",
@@ -2354,6 +2809,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -2362,22 +2823,25 @@
     ],
     "min_clearance_mm": {
      "right/funfor": 0.383,
+     "right/outline": 0.382,
      "right/nofunfor": 0.383,
      "left/solid": 0.381,
      "left/outline": 0.381,
-     "front/traced": 1.3,
-     "top/a": 0.381,
+     "front/outline": 1.285,
+     "front/traced": 1.285,
+     "top/a": 0.4,
      "top/c": 0.383,
-     "B_left/traced": 0.41,
-     "B_right/traced": 0.402,
+     "B_left/traced": 0.54,
+     "B_right/traced": 0.541,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.414,
-     "T_right/traced": 0.394,
-     "T_face/traced": 4.034,
+     "T_left/traced": 0.54,
+     "T_right/traced": 0.538,
+     "T_face/traced": 4.041,
      "lid/a": 0.4,
      "lid/c": 0.4
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.0": {
    "kerfs": {
@@ -2388,7 +2852,14 @@
       "zip": "fax-machine-box_T3.0_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2398,7 +2869,7 @@
       "zip": "fax-machine-box_T3.0_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2408,14 +2879,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.0_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.0_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.0_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.0_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.0_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.0_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.82,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.82,
+        "y_mm": 5.0,
+        "width_mm": 29.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.82,
+        "y_mm": 51.6,
+        "width_mm": 26.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.62,
+        "width_mm": 43.08,
+        "height_mm": 25.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 51.58,
+        "y_mm": 78.62,
+        "width_mm": 43.08,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 98.16,
+        "y_mm": 98.2,
+        "width_mm": 43.02,
+        "height_mm": 21.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.12,
+        "height_mm": 14.12,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 68.62,
+        "y_mm": 54.5,
+        "width_mm": 43.02,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.3,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -2424,7 +2986,14 @@
       "zip": "fax-machine-box_T3.0_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2434,7 +3003,7 @@
       "zip": "fax-machine-box_T3.0_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2444,26 +3013,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.0_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.0_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.0_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.0_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.0_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.0_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.0_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.0_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.0_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.88,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.88,
+        "y_mm": 5.0,
+        "width_mm": 29.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.88,
+        "y_mm": 51.6,
+        "width_mm": 26.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.68,
+        "width_mm": 43.08,
+        "height_mm": 25.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 51.58,
+        "y_mm": 78.68,
+        "width_mm": 43.08,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 98.16,
+        "y_mm": 98.2,
+        "width_mm": 43.02,
+        "height_mm": 21.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.18,
+        "height_mm": 14.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 68.68,
+        "y_mm": 54.5,
+        "width_mm": 43.02,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.36,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -2473,7 +3136,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2484,7 +3155,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -2494,14 +3165,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.0_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.0_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.0_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.0_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.0_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.0_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.9,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.9,
+        "y_mm": 5.0,
+        "width_mm": 29.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.9,
+        "y_mm": 51.6,
+        "width_mm": 26.2,
+        "height_mm": 43.1,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.7,
+        "width_mm": 43.08,
+        "height_mm": 25.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 51.58,
+        "y_mm": 78.7,
+        "width_mm": 43.08,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 98.16,
+        "y_mm": 98.2,
+        "width_mm": 43.02,
+        "height_mm": 21.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 60.2,
+        "height_mm": 14.2,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 68.7,
+        "y_mm": 54.5,
+        "width_mm": 43.02,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.38,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -3067,7 +3829,8 @@
      ],
      "E": [
       "B2",
-      "C2"
+      "C2",
+      "E1"
      ],
      "F": [
       "A4",
@@ -3114,6 +3877,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -3127,94 +3891,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.0_coupon.svg",
-    "dxf": "coupon/T3.0_coupon.dxf",
-    "svg_marked": "coupon/T3.0_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.0_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 21.88,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 43.1,
-      "height_mm": 29.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 37.7,
-      "width_mm": 43.1,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.38,
-      "y_mm": 67.4,
-      "width_mm": 25.18,
-      "height_mm": 43.08,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 59.06,
-      "y_mm": 67.4,
-      "width_mm": 22.18,
-      "height_mm": 43.08,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 84.74,
-      "y_mm": 67.4,
-      "width_mm": 21.12,
-      "height_mm": 43.02,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.38,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 109.36,
-      "y_mm": 67.4,
-      "width_mm": 18.12,
-      "height_mm": 43.02,
-      "rotated": true
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 173.1,
-      "y_mm": 5.0,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.0_parts.zip",
@@ -3304,6 +3980,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -3312,22 +3994,25 @@
     ],
     "min_clearance_mm": {
      "right/funfor": 0.382,
+     "right/outline": 0.382,
      "right/nofunfor": 0.382,
-     "left/solid": 0.387,
-     "left/outline": 0.387,
-     "front/traced": 1.2,
-     "top/a": 0.382,
-     "top/c": 0.38,
-     "B_left/traced": 0.41,
-     "B_right/traced": 0.402,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
+     "front/outline": 1.185,
+     "front/traced": 1.185,
+     "top/a": 0.4,
+     "top/c": 0.385,
+     "B_left/traced": 0.54,
+     "B_right/traced": 0.541,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.412,
-     "T_right/traced": 0.394,
-     "T_face/traced": 4.034,
-     "lid/a": 0.4,
-     "lid/c": 0.4
+     "T_left/traced": 0.54,
+     "T_right/traced": 0.53,
+     "T_face/traced": 4.041,
+     "lid/a": 0.37,
+     "lid/c": 0.372
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.1": {
    "kerfs": {
@@ -3338,7 +4023,14 @@
       "zip": "fax-machine-box_T3.1_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3348,7 +4040,7 @@
       "zip": "fax-machine-box_T3.1_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3358,14 +4050,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.1_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.1_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.1_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.1_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.1_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.1_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.92,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.12,
+        "height_mm": 60.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.92,
+        "y_mm": 5.0,
+        "width_mm": 29.3,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.92,
+        "y_mm": 53.03,
+        "width_mm": 26.2,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.62,
+        "y_mm": 78.62,
+        "width_mm": 44.51,
+        "height_mm": 25.28,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 70.63,
+        "y_mm": 54.5,
+        "width_mm": 44.51,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 70.63,
+        "y_mm": 80.18,
+        "width_mm": 44.45,
+        "height_mm": 21.22,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.62,
+        "y_mm": 54.5,
+        "width_mm": 44.45,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.62,
+        "y_mm": 107.4,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -3374,7 +4157,14 @@
       "zip": "fax-machine-box_T3.1_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3384,7 +4174,7 @@
       "zip": "fax-machine-box_T3.1_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3394,26 +4184,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.1_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.1_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.1_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.1_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.1_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.1_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.1_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.1_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.1_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 21.98,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.18,
+        "height_mm": 60.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 151.98,
+        "y_mm": 5.0,
+        "width_mm": 29.3,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 151.98,
+        "y_mm": 53.03,
+        "width_mm": 26.2,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.68,
+        "y_mm": 78.68,
+        "width_mm": 44.51,
+        "height_mm": 25.28,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 70.69,
+        "y_mm": 54.5,
+        "width_mm": 44.51,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 70.69,
+        "y_mm": 80.18,
+        "width_mm": 44.45,
+        "height_mm": 21.22,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.68,
+        "y_mm": 54.5,
+        "width_mm": 44.45,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.68,
+        "y_mm": 107.46,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -3423,7 +4307,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3434,7 +4326,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -3444,14 +4336,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.1_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.1_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.1_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.1_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.1_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.1_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.0,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.2,
+        "height_mm": 60.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.0,
+        "y_mm": 5.0,
+        "width_mm": 29.3,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.0,
+        "y_mm": 53.03,
+        "width_mm": 26.2,
+        "height_mm": 44.53,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.7,
+        "y_mm": 78.7,
+        "width_mm": 44.51,
+        "height_mm": 25.28,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 70.71,
+        "y_mm": 54.5,
+        "width_mm": 44.51,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 70.71,
+        "y_mm": 80.18,
+        "width_mm": 44.45,
+        "height_mm": 21.22,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.7,
+        "y_mm": 54.5,
+        "width_mm": 44.45,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.7,
+        "y_mm": 107.48,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -4017,7 +5000,8 @@
      ],
      "E": [
       "B2",
-      "C2"
+      "C2",
+      "E1"
      ],
      "F": [
       "A4",
@@ -4064,6 +5048,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -4077,94 +5062,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.1_coupon.svg",
-    "dxf": "coupon/T3.1_coupon.dxf",
-    "svg_marked": "coupon/T3.1_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.1_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 21.98,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 44.53,
-      "height_mm": 29.3,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 37.8,
-      "width_mm": 44.53,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.48,
-      "y_mm": 67.5,
-      "width_mm": 25.28,
-      "height_mm": 44.51,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 59.26,
-      "y_mm": 67.5,
-      "width_mm": 22.18,
-      "height_mm": 44.51,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 84.94,
-      "y_mm": 67.5,
-      "width_mm": 21.22,
-      "height_mm": 44.45,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.48,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 109.66,
-      "y_mm": 67.5,
-      "width_mm": 18.12,
-      "height_mm": 44.45,
-      "rotated": true
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 174.53,
-      "y_mm": 5.0,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.1_parts.zip",
@@ -4254,6 +5151,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -4261,23 +5164,26 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.382,
-     "right/nofunfor": 0.382,
-     "left/solid": 0.383,
-     "left/outline": 0.383,
-     "front/traced": 1.1,
-     "top/a": 0.383,
-     "top/c": 0.383,
-     "B_left/traced": 0.41,
-     "B_right/traced": 0.411,
+     "right/funfor": 0.381,
+     "right/outline": 0.381,
+     "right/nofunfor": 0.381,
+     "left/solid": 0.385,
+     "left/outline": 0.385,
+     "front/outline": 1.085,
+     "front/traced": 1.085,
+     "top/a": 0.391,
+     "top/c": 0.381,
+     "B_left/traced": 0.541,
+     "B_right/traced": 0.541,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.413,
-     "T_right/traced": 0.394,
-     "T_face/traced": 4.034,
-     "lid/a": 0.4,
-     "lid/c": 0.4
+     "T_left/traced": 0.54,
+     "T_right/traced": 0.538,
+     "T_face/traced": 4.041,
+     "lid/a": 0.435,
+     "lid/c": 0.424
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.2": {
    "kerfs": {
@@ -4288,7 +5194,14 @@
       "zip": "fax-machine-box_T3.2_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4298,7 +5211,7 @@
       "zip": "fax-machine-box_T3.2_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4308,14 +5221,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.2_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.2_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.2_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.2_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.2_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.2_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.02,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.12,
+        "height_mm": 60.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.02,
+        "y_mm": 5.0,
+        "width_mm": 29.4,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.02,
+        "y_mm": 54.46,
+        "width_mm": 26.2,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.62,
+        "y_mm": 78.62,
+        "width_mm": 45.94,
+        "height_mm": 25.38,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 72.06,
+        "y_mm": 54.5,
+        "width_mm": 45.94,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 72.06,
+        "y_mm": 80.18,
+        "width_mm": 45.88,
+        "height_mm": 21.32,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.62,
+        "y_mm": 54.5,
+        "width_mm": 45.88,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.62,
+        "y_mm": 107.5,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -4324,7 +5328,14 @@
       "zip": "fax-machine-box_T3.2_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4334,7 +5345,7 @@
       "zip": "fax-machine-box_T3.2_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4344,26 +5355,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.2_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.2_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.2_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.2_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.2_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.2_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.2_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.2_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.2_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.08,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.18,
+        "height_mm": 60.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.08,
+        "y_mm": 5.0,
+        "width_mm": 29.4,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.08,
+        "y_mm": 54.46,
+        "width_mm": 26.2,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.68,
+        "y_mm": 78.68,
+        "width_mm": 45.94,
+        "height_mm": 25.38,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 72.12,
+        "y_mm": 54.5,
+        "width_mm": 45.94,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 72.12,
+        "y_mm": 80.18,
+        "width_mm": 45.88,
+        "height_mm": 21.32,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.68,
+        "y_mm": 54.5,
+        "width_mm": 45.88,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.68,
+        "y_mm": 107.56,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -4373,7 +5478,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4384,7 +5497,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -4394,14 +5507,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.2_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.2_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.2_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.2_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.2_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.2_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.1,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 14.2,
+        "height_mm": 60.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.1,
+        "y_mm": 5.0,
+        "width_mm": 29.4,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.1,
+        "y_mm": 54.46,
+        "width_mm": 26.2,
+        "height_mm": 45.96,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 22.7,
+        "y_mm": 78.7,
+        "width_mm": 45.94,
+        "height_mm": 25.38,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 72.14,
+        "y_mm": 54.5,
+        "width_mm": 45.94,
+        "height_mm": 22.18,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 72.14,
+        "y_mm": 80.18,
+        "width_mm": 45.88,
+        "height_mm": 21.32,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 22.7,
+        "y_mm": 54.5,
+        "width_mm": 45.88,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 22.7,
+        "y_mm": 107.58,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -5015,6 +6219,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -5028,94 +6233,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.2_coupon.svg",
-    "dxf": "coupon/T3.2_coupon.dxf",
-    "svg_marked": "coupon/T3.2_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.2_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 22.08,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 45.96,
-      "height_mm": 29.4,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 37.9,
-      "width_mm": 45.96,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.58,
-      "y_mm": 67.6,
-      "width_mm": 25.38,
-      "height_mm": 45.94,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 59.46,
-      "y_mm": 67.6,
-      "width_mm": 22.18,
-      "height_mm": 45.94,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 85.14,
-      "y_mm": 67.6,
-      "width_mm": 21.32,
-      "height_mm": 45.88,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.58,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 109.96,
-      "y_mm": 67.6,
-      "width_mm": 18.12,
-      "height_mm": 45.88,
-      "rotated": true
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 94.26,
-      "y_mm": 48.5,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.2_parts.zip",
@@ -5205,6 +6322,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -5213,22 +6336,25 @@
     ],
     "min_clearance_mm": {
      "right/funfor": 0.381,
+     "right/outline": 0.381,
      "right/nofunfor": 0.381,
      "left/solid": 0.383,
      "left/outline": 0.383,
-     "front/traced": 1.0,
-     "top/a": 0.388,
-     "top/c": 0.37,
-     "B_left/traced": 0.41,
-     "B_right/traced": 0.387,
+     "front/outline": 0.985,
+     "front/traced": 0.985,
+     "top/a": 0.4,
+     "top/c": 0.4,
+     "B_left/traced": 0.407,
+     "B_right/traced": 0.419,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.375,
-     "T_right/traced": 0.394,
-     "T_face/traced": 4.034,
-     "lid/a": 0.414,
-     "lid/c": 0.4
+     "T_left/traced": 0.416,
+     "T_right/traced": 0.425,
+     "T_face/traced": 4.041,
+     "lid/a": 0.515,
+     "lid/c": 0.5
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.3": {
    "kerfs": {
@@ -5239,7 +6365,14 @@
       "zip": "fax-machine-box_T3.3_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5249,7 +6382,7 @@
       "zip": "fax-machine-box_T3.3_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5259,14 +6392,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.3_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.3_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.3_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.3_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.3_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.3_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.12,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.12,
+        "y_mm": 5.0,
+        "width_mm": 29.5,
+        "height_mm": 47.39,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.12,
+        "y_mm": 55.89,
+        "width_mm": 26.2,
+        "height_mm": 47.39,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.62,
+        "width_mm": 47.37,
+        "height_mm": 25.48,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 55.87,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 47.37,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 81.55,
+        "y_mm": 54.5,
+        "width_mm": 21.42,
+        "height_mm": 47.31,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 47.31,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 55.87,
+        "y_mm": 105.37,
+        "width_mm": 60.12,
+        "height_mm": 14.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.6,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -5275,7 +6499,14 @@
       "zip": "fax-machine-box_T3.3_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5285,7 +6516,7 @@
       "zip": "fax-machine-box_T3.3_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5295,26 +6526,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.3_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.3_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.3_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.3_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.3_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.18,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.18,
+        "y_mm": 5.0,
+        "width_mm": 29.5,
+        "height_mm": 47.39,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.18,
+        "y_mm": 55.89,
+        "width_mm": 26.2,
+        "height_mm": 47.39,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.68,
+        "width_mm": 47.37,
+        "height_mm": 25.48,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 55.87,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 47.37,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 81.55,
+        "y_mm": 54.5,
+        "width_mm": 21.42,
+        "height_mm": 47.31,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 47.31,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 55.87,
+        "y_mm": 105.37,
+        "width_mm": 60.18,
+        "height_mm": 14.18,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 107.66,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -5324,7 +6649,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5335,7 +6668,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -5345,14 +6678,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.3_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.3_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.3_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.3_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.3_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.3_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 47.39,
+        "height_mm": 29.5,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 126.5,
+        "y_mm": 38.0,
+        "width_mm": 47.39,
+        "height_mm": 26.2,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 67.7,
+        "width_mm": 25.48,
+        "height_mm": 47.37,
+        "rotated": true
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 33.98,
+        "y_mm": 54.5,
+        "width_mm": 70.2,
+        "height_mm": 22.2,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 107.68,
+        "y_mm": 67.7,
+        "width_mm": 22.18,
+        "height_mm": 47.37,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 133.36,
+        "y_mm": 67.7,
+        "width_mm": 47.31,
+        "height_mm": 21.42,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 133.36,
+        "y_mm": 92.62,
+        "width_mm": 47.31,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 33.98,
+        "y_mm": 80.2,
+        "width_mm": 60.2,
+        "height_mm": 14.2,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 33.98,
+        "y_mm": 97.9,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -5966,6 +7390,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -5979,94 +7404,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.3_coupon.svg",
-    "dxf": "coupon/T3.3_coupon.dxf",
-    "svg_marked": "coupon/T3.3_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.3_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 22.18,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 47.39,
-      "height_mm": 29.5,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 38.0,
-      "width_mm": 47.39,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.68,
-      "y_mm": 67.7,
-      "width_mm": 25.48,
-      "height_mm": 47.37,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 59.66,
-      "y_mm": 67.7,
-      "width_mm": 22.18,
-      "height_mm": 47.37,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 85.34,
-      "y_mm": 67.7,
-      "width_mm": 21.42,
-      "height_mm": 47.31,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 110.26,
-      "y_mm": 67.7,
-      "width_mm": 18.12,
-      "height_mm": 47.31,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.68,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 94.36,
-      "y_mm": 48.5,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.3_parts.zip",
@@ -6156,6 +7493,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -6163,23 +7506,26 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.381,
-     "right/nofunfor": 0.381,
+     "right/funfor": 0.383,
+     "right/outline": 0.383,
+     "right/nofunfor": 0.383,
      "left/solid": 0.383,
      "left/outline": 0.383,
-     "front/traced": 0.9,
-     "top/a": 0.381,
-     "top/c": 0.383,
-     "B_left/traced": 0.376,
-     "B_right/traced": 0.37,
+     "front/outline": 0.885,
+     "front/traced": 0.885,
+     "top/a": 0.383,
+     "top/c": 0.38,
+     "B_left/traced": 0.394,
+     "B_right/traced": 0.394,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.374,
+     "T_left/traced": 0.4,
      "T_right/traced": 0.392,
-     "T_face/traced": 4.034,
-     "lid/a": 0.414,
-     "lid/c": 0.4
+     "T_face/traced": 4.041,
+     "lid/a": 0.515,
+     "lid/c": 0.5
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.4": {
    "kerfs": {
@@ -6190,7 +7536,14 @@
       "zip": "fax-machine-box_T3.4_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6200,7 +7553,7 @@
       "zip": "fax-machine-box_T3.4_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6210,14 +7563,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.4_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.4_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.4_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.4_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.4_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.4_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.22,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.22,
+        "y_mm": 5.0,
+        "width_mm": 29.6,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.22,
+        "y_mm": 57.32,
+        "width_mm": 26.2,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.62,
+        "width_mm": 48.8,
+        "height_mm": 25.58,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 57.3,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 48.8,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 82.98,
+        "y_mm": 54.5,
+        "width_mm": 21.52,
+        "height_mm": 48.74,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 48.74,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 108.0,
+        "y_mm": 54.5,
+        "width_mm": 14.12,
+        "height_mm": 60.12,
+        "rotated": true
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 125.62,
+        "y_mm": 109.64,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -6226,7 +7670,14 @@
       "zip": "fax-machine-box_T3.4_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6236,7 +7687,7 @@
       "zip": "fax-machine-box_T3.4_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6246,26 +7697,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.4_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.4_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.4_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.4_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.4_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.4_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.4_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.4_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.4_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.28,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.28,
+        "y_mm": 5.0,
+        "width_mm": 29.6,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.28,
+        "y_mm": 57.32,
+        "width_mm": 26.2,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.68,
+        "width_mm": 48.8,
+        "height_mm": 25.58,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 57.3,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 48.8,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 82.98,
+        "y_mm": 54.5,
+        "width_mm": 21.52,
+        "height_mm": 48.74,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 48.74,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 108.0,
+        "y_mm": 54.5,
+        "width_mm": 14.18,
+        "height_mm": 60.18,
+        "rotated": true
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 125.68,
+        "y_mm": 109.64,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -6275,7 +7820,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6286,7 +7839,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -6296,14 +7849,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.4_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.4_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.4_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.4_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.4_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.4_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.3,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.3,
+        "y_mm": 5.0,
+        "width_mm": 29.6,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.3,
+        "y_mm": 57.32,
+        "width_mm": 26.2,
+        "height_mm": 48.82,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 78.7,
+        "width_mm": 48.8,
+        "height_mm": 25.58,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 57.3,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 48.8,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 82.98,
+        "y_mm": 54.5,
+        "width_mm": 21.52,
+        "height_mm": 48.74,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 48.74,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 108.0,
+        "y_mm": 54.5,
+        "width_mm": 14.2,
+        "height_mm": 60.2,
+        "rotated": true
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 125.7,
+        "y_mm": 109.64,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -6917,6 +8561,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -6930,94 +8575,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.4_coupon.svg",
-    "dxf": "coupon/T3.4_coupon.dxf",
-    "svg_marked": "coupon/T3.4_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.4_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 22.28,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 48.82,
-      "height_mm": 29.6,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 38.1,
-      "width_mm": 48.82,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.78,
-      "y_mm": 67.8,
-      "width_mm": 25.58,
-      "height_mm": 48.8,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 59.86,
-      "y_mm": 67.8,
-      "width_mm": 22.18,
-      "height_mm": 48.8,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 85.54,
-      "y_mm": 67.8,
-      "width_mm": 21.52,
-      "height_mm": 48.74,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 110.56,
-      "y_mm": 67.8,
-      "width_mm": 18.12,
-      "height_mm": 48.74,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.78,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 94.46,
-      "y_mm": 48.5,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.4_parts.zip",
@@ -7107,6 +8664,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -7114,23 +8677,26 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.38,
-     "right/nofunfor": 0.38,
+     "right/funfor": 0.375,
+     "right/outline": 0.375,
+     "right/nofunfor": 0.375,
      "left/solid": 0.383,
      "left/outline": 0.383,
-     "front/traced": 0.8,
+     "front/outline": 0.785,
+     "front/traced": 0.785,
      "top/a": 0.38,
-     "top/c": 0.38,
-     "B_left/traced": 0.39,
+     "top/c": 0.381,
+     "B_left/traced": 0.383,
      "B_right/traced": 0.394,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.4,
-     "T_right/traced": 0.388,
-     "T_face/traced": 4.034,
-     "lid/a": 0.414,
-     "lid/c": 0.4
+     "T_left/traced": 0.396,
+     "T_right/traced": 0.381,
+     "T_face/traced": 4.041,
+     "lid/a": 0.515,
+     "lid/c": 0.5
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   },
   "3.5": {
    "kerfs": {
@@ -7141,7 +8707,14 @@
       "zip": "fax-machine-box_T3.5_k0.12_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7151,7 +8724,7 @@
       "zip": "fax-machine-box_T3.5_k0.12_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7161,14 +8734,105 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.5_k0.12_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.5_k0.12_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.5_k0.12_coupon.svg",
+      "svg_marked": "coupon/T3.5_k0.12_coupon_marked.svg",
+      "dxf": "coupon/T3.5_k0.12_coupon.dxf",
+      "dxf_marked": "coupon/T3.5_k0.12_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.32,
+        "height_mm": 70.12,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.32,
+        "y_mm": 5.0,
+        "width_mm": 29.7,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.32,
+        "y_mm": 58.75,
+        "width_mm": 26.2,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 25.68,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 34.18,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 59.86,
+        "y_mm": 54.5,
+        "width_mm": 50.17,
+        "height_mm": 21.62,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 59.86,
+        "y_mm": 79.62,
+        "width_mm": 50.17,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 59.86,
+        "y_mm": 101.24,
+        "width_mm": 60.12,
+        "height_mm": 14.12,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 108.23,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.18": {
      "id": "co2",
@@ -7177,7 +8841,14 @@
       "zip": "fax-machine-box_T3.5_k0.18_cut.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7187,7 +8858,7 @@
       "zip": "fax-machine-box_T3.5_k0.18_labels.zip",
       "sheets": {
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7197,26 +8868,120 @@
       "beds": {
        "xtool_s1": {
         "zip": "fax-machine-box_T3.5_k0.18_engrave_xtool_s1.zip",
-        "sheets": 4
+        "sheets": 4,
+        "coupon_on_sheet": 4
        },
        "xtool_p2": {
         "zip": "fax-machine-box_T3.5_k0.18_engrave_xtool_p2.zip",
-        "sheets": 4
+        "sheets": 3,
+        "coupon_on_sheet": 1
        },
        "glowforge_pro": {
         "zip": "fax-machine-box_T3.5_k0.18_engrave_glowforge_pro.zip",
-        "sheets": 5
+        "sheets": 5,
+        "coupon_on_sheet": 5
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.5_k0.18_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        },
        "nycr_32x20": {
         "zip": "fax-machine-box_T3.5_k0.18_engrave_nycr_32x20.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.5_k0.18_coupon.svg",
+      "svg_marked": "coupon/T3.5_k0.18_coupon_marked.svg",
+      "dxf": "coupon/T3.5_k0.18_coupon.dxf",
+      "dxf_marked": "coupon/T3.5_k0.18_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.38,
+        "height_mm": 70.18,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.38,
+        "y_mm": 5.0,
+        "width_mm": 29.7,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.38,
+        "y_mm": 58.75,
+        "width_mm": 26.2,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 25.68,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 34.18,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 59.86,
+        "y_mm": 54.5,
+        "width_mm": 50.17,
+        "height_mm": 21.62,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 59.86,
+        "y_mm": 79.62,
+        "width_mm": 50.17,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 59.86,
+        "y_mm": 101.24,
+        "width_mm": 60.18,
+        "height_mm": 14.18,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 108.23,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     },
     "0.20": {
      "id": "ponoko",
@@ -7226,7 +8991,15 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
+       "glowforge_pro": 5,
+       "generic_600x400": 3,
+       "nycr_32x20": 2
+      },
+      "coupon_on_sheet": {
+       "ponoko": 2,
+       "xtool_s1": 4,
+       "xtool_p2": 1,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7237,7 +9010,7 @@
       "sheets": {
        "ponoko": 2,
        "xtool_s1": 4,
-       "xtool_p2": 4,
+       "xtool_p2": 3,
        "glowforge_pro": 5,
        "generic_600x400": 3,
        "nycr_32x20": 2
@@ -7247,14 +9020,105 @@
       "beds": {
        "ponoko": {
         "zip": "fax-machine-box_T3.5_k0.20_engrave_ponoko.zip",
-        "sheets": 2
+        "sheets": 2,
+        "coupon_on_sheet": 2
        },
        "generic_600x400": {
         "zip": "fax-machine-box_T3.5_k0.20_engrave_generic_600x400.zip",
-        "sheets": 3
+        "sheets": 3,
+        "coupon_on_sheet": 3
        }
       }
-     }
+     },
+     "coupon": {
+      "svg": "coupon/T3.5_k0.20_coupon.svg",
+      "svg_marked": "coupon/T3.5_k0.20_coupon_marked.svg",
+      "dxf": "coupon/T3.5_k0.20_coupon.dxf",
+      "dxf_marked": "coupon/T3.5_k0.20_coupon_marked.dxf",
+      "layout": [
+       {
+        "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
+        "x_mm": 5.0,
+        "y_mm": 5.0,
+        "width_mm": 118.0,
+        "height_mm": 46.0,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid slot block (slot T + clearance)",
+        "x_mm": 126.5,
+        "y_mm": 5.0,
+        "width_mm": 22.4,
+        "height_mm": 70.2,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
+        "x_mm": 152.4,
+        "y_mm": 5.0,
+        "width_mm": 29.7,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
+        "x_mm": 152.4,
+        "y_mm": 58.75,
+        "width_mm": 26.2,
+        "height_mm": 50.25,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
+        "x_mm": 5.0,
+        "y_mm": 54.5,
+        "width_mm": 25.68,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
+        "x_mm": 34.18,
+        "y_mm": 54.5,
+        "width_mm": 22.18,
+        "height_mm": 50.23,
+        "rotated": true
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
+        "x_mm": 59.86,
+        "y_mm": 54.5,
+        "width_mm": 50.17,
+        "height_mm": 21.62,
+        "rotated": false
+       },
+       {
+        "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
+        "x_mm": 59.86,
+        "y_mm": 79.62,
+        "width_mm": 50.17,
+        "height_mm": 18.12,
+        "rotated": false
+       },
+       {
+        "part": "S Coupon: lid strip",
+        "x_mm": 59.86,
+        "y_mm": 101.24,
+        "width_mm": 60.2,
+        "height_mm": 14.2,
+        "rotated": false
+       },
+       {
+        "part": "K Coupon: kerf square, 10 mm piece",
+        "x_mm": 5.0,
+        "y_mm": 108.23,
+        "width_mm": 10.0,
+        "height_mm": 10.0,
+        "rotated": false
+       }
+      ]
+     },
+     "stock_12x24_sheets": 3
     }
    },
    "wall_id": {
@@ -7868,6 +9732,7 @@
       "N1"
      ],
      "P": [],
+     "J": [],
      "I": []
     },
     "art_parts_unlabelled": [
@@ -7881,94 +9746,6 @@
      "P"
     ],
     "note": "x_mm, y_mm: part-local zero-kerf frame, origin bottom-left of the nominal rectangle, y up, outline as drawn. Parts with exterior art carry no marks on the outside."
-   },
-   "coupon": {
-    "svg": "coupon/T3.5_coupon.svg",
-    "dxf": "coupon/T3.5_coupon.dxf",
-    "svg_marked": "coupon/T3.5_coupon_marked.svg",
-    "dxf_marked": "coupon/T3.5_coupon_marked.dxf",
-    "layout": [
-     {
-      "part": "Q Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
-      "x_mm": 5.0,
-      "y_mm": 5.0,
-      "width_mm": 118.0,
-      "height_mm": 40.0,
-      "rotated": false
-     },
-     {
-      "part": "S Coupon: lid slot block (slot T + clearance)",
-      "x_mm": 5.0,
-      "y_mm": 48.5,
-      "width_mm": 22.38,
-      "height_mm": 70.18,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, finger piece",
-      "x_mm": 126.5,
-      "y_mm": 5.0,
-      "width_mm": 50.25,
-      "height_mm": 29.7,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.20, hole piece",
-      "x_mm": 126.5,
-      "y_mm": 38.2,
-      "width_mm": 50.25,
-      "height_mm": 26.2,
-      "rotated": false
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, finger piece",
-      "x_mm": 30.88,
-      "y_mm": 67.9,
-      "width_mm": 25.68,
-      "height_mm": 50.23,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.18, hole piece",
-      "x_mm": 60.06,
-      "y_mm": 67.9,
-      "width_mm": 22.18,
-      "height_mm": 50.23,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, finger piece",
-      "x_mm": 85.74,
-      "y_mm": 67.9,
-      "width_mm": 21.62,
-      "height_mm": 50.17,
-      "rotated": true
-     },
-     {
-      "part": "R Coupon: three-finger corner, kerf 0.12, hole piece",
-      "x_mm": 110.86,
-      "y_mm": 67.9,
-      "width_mm": 18.12,
-      "height_mm": 50.17,
-      "rotated": true
-     },
-     {
-      "part": "S Coupon: lid strip",
-      "x_mm": 30.88,
-      "y_mm": 48.5,
-      "width_mm": 60.18,
-      "height_mm": 14.18,
-      "rotated": false
-     },
-     {
-      "part": "K Coupon: kerf square, 10 mm piece",
-      "x_mm": 94.56,
-      "y_mm": 48.5,
-      "width_mm": 10.0,
-      "height_mm": 10.0,
-      "rotated": false
-     }
-    ]
    },
    "parts": {
     "zip": "fax-machine-box_T3.5_parts.zip",
@@ -8058,6 +9835,12 @@
       "stem": "P_drawer_faceplate_x2"
      },
      {
+      "letter": "J",
+      "name": "Drawer guide (lower, left wall)",
+      "qty": 4,
+      "stem": "J_drawer_guide__lower__left_wall_x4"
+     },
+     {
       "letter": "I",
       "name": "Sliding lid",
       "qty": 1,
@@ -8065,37 +9848,44 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.382,
-     "right/nofunfor": 0.382,
+     "right/funfor": 0.38,
+     "right/outline": 0.38,
+     "right/nofunfor": 0.38,
      "left/solid": 0.382,
      "left/outline": 0.382,
-     "front/traced": 0.7,
+     "front/outline": 0.685,
+     "front/traced": 0.685,
      "top/a": 0.381,
      "top/c": 0.38,
-     "B_left/traced": 0.385,
-     "B_right/traced": 0.399,
+     "B_left/traced": 0.384,
+     "B_right/traced": 0.4,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.389,
-     "T_right/traced": 0.381,
-     "T_face/traced": 4.034,
-     "lid/a": 0.414,
-     "lid/c": 0.4
+     "T_left/traced": 0.385,
+     "T_right/traced": 0.386,
+     "T_face/traced": 4.041,
+     "lid/a": 0.515,
+     "lid/c": 0.5
     }
-   }
+   },
+   "stock_12x24_sheets": 3
   }
  },
  "coupon_guide": {
   "order": [
    "Cut the coupon first, on a scrap of your real plywood.",
-   "Measure the kerf square, pick the kerf file set that matches, and try the joints.",
-   "Measure the plywood thickness with calipers or from the slot gauge."
+   "Measure the kerf square and pick the kerf file set.",
+   "Pick the thickness set from the slot gauge or your calipers.",
+   "Try the finger joints of your kerf, and the magnets.",
+   "Cut the box."
   ],
+  "orientation": "Hold the coupon with the clipped corner at the top left. The thickness slots run from the narrowest (2.8 mm drawn) at the left to the widest (3.5 mm) at the right. In the marked file the ticks sit between the slots and the magnet holes (below the slots as the file is drawn).",
+  "marks": "In the marked coupon (and the cut + labels sets) every engraved mark is a red hairline.",
   "features": [
    {
     "id": "kerf_square",
     "part": "K",
     "drawn_mm": 10.0,
-    "measure": "outside width of the cut square, with calipers",
+    "measure": "outside width of the cut square, with calipers; measure it in two directions and average",
     "formula": "kerf = 10.00 - measured width",
     "choose": [
      {
@@ -8111,7 +9901,8 @@
       "set": "ponoko"
      }
     ],
-    "then": "Use the file set whose kerf is closest to the number you measured."
+    "then": "Use the file set whose kerf is nearest. Between two sets: take the SMALLER kerf unless you measured within 0.01 mm of the larger one. A smaller assumed kerf leaves the joints a little loose (by 2 x the difference); a larger one leaves them tight and can jam. Kerf varies along the bed and with the plywood: cut and measure the square where the box will be cut, and if it reads differently in two places average them.",
+    "note": "The sets are 0.12, 0.18 and 0.20 mm. The gap 0.12 to 0.18 is wide; 0.18 and 0.20 are close and either works for a CO2 laser. If you measure about 0.15, use the 0.12 set."
    },
    {
     "id": "thickness_slots",
@@ -8127,10 +9918,10 @@
      3.4,
      3.5
     ],
-    "reading": "the narrowest slot your plywood slides into without force",
-    "formula": "thickness is about drawn width + kerf, rounded to 0.05",
-    "ticks": "the marked coupon has i engraved ticks above slot i (1 = 2.8 mm); on the plain coupon the slots run from the narrowest to the widest in a row: count them in order",
-    "then": "Pick the thickness set (2.8 ... 3.5 mm) nearest your plywood."
+    "reading": "the narrowest slot your plywood slides into without force; if it is between two slots (tight in one, loose in the next) take the tighter, narrower one",
+    "formula": "slot width = drawn width + kerf, so thickness = drawn width + kerf - 0.05 for the narrowest slot it enters",
+    "rounding": "the thickness sets are 0.1 mm apart: pick the set nearest the value you compute",
+    "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = 2.8 mm)"
    },
    {
     "id": "magnet_holes",
@@ -8143,7 +9934,7 @@
     ],
     "formula": "cut hole = drawn diameter + kerf; the box wants a 5.65 mm hole for a 6.0 mm magnet",
     "reading": "the hole a 6 x 2 mm magnet pushes into with firm finger pressure and stays in",
-    "then": "If that is the smallest hole, the plywood's hole is running big: nothing to change in the box files, but use a drop of glue. If the largest hole is still tight, the hole is running small: file or ream the 4 magnet holes."
+    "then": "If the smallest hole is already loose, the box holes will be loose too: add a drop of glue. If even the largest is tight, ream the 4 magnet holes lightly."
    },
    {
     "id": "finger_joints",
@@ -8165,17 +9956,24 @@
       "piece_height_mm": 26.0
      }
     ],
-    "identify": "the pairs differ in size: the smallest pair is the diode set, the middle one CO2, the largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces of a pair",
+    "identify": "the pairs differ in size: the smallest pair is the diode set, the middle one CO2, the largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces",
     "reading": "press each finger piece into the hole piece of the same size",
     "right": "goes together with firm hand pressure, no gap, no rattle",
-    "tight_along_the_finger": "tight when sliding along the length of the fingers: your kerf is smaller than that set assumes; use the next smaller kerf set",
-    "loose_along_the_finger": "loose or rattling: your kerf is larger; use the next larger kerf set",
-    "tight_through_the_slot": "the fingers will not go through the plywood thickness of the slot: your plywood is thicker than the set; use the next thickness"
+    "along_the_fingers": {
+     "what": "the fit along the length of the fingers depends on the KERF, not on the thickness",
+     "tight": "the fingers will not go in sideways, or stick: your kerf is smaller than the set assumes: use the next smaller kerf set",
+     "loose": "the fingers rattle sideways in their slots: your kerf is larger: use the next larger kerf set"
+    },
+    "through_the_thickness": {
+     "what": "the fit through the plywood thickness depends on the THICKNESS, not on the kerf",
+     "tight": "the plywood will not slide through the slot, or the fingers stand proud less than flush: your plywood is thicker than the set: use the next thicker thickness set",
+     "loose": "the plywood rattles through the slot or the fingers sit below the surface: your plywood is thinner: use the next thinner thickness set"
+    }
    },
    {
     "id": "lid_slot",
     "part": "S",
-    "reading": "slide the lid strip into the slot block",
+    "reading": "slide the lid strip into the slot block (cut for this set's kerf)",
     "right": "slides freely with a little vertical play (about 1.2 mm total)"
    }
   ]

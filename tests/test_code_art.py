@@ -15,7 +15,7 @@ Rules (see art/code/faxart/raster.py):
                                  smoothing at the 0.05 mm render grid)
   - ink coverage per face within a sane band, dense (> 80 % in a 3 mm
     window) area capped except where display lettering is solid by design
-  - no ink within 0.40 mm of any through-cut (keep-out is 0.5 mm at build)
+  - no ink within 0.45 mm of any through-cut (keep-out is 0.55 mm at build)
   - every SVG is exactly its part's nominal blank in mm, and the blank sits
     inside the generator's drawn piece.
 """
@@ -118,6 +118,37 @@ def test_no_narrow_gap(fid, v):
     assert n_gap == 0, f"{n_gap} gaps narrower than 0.30 mm"
 
 
+@lru_cache(maxsize=None)
+def ink40(svg_rel: str) -> np.ndarray:
+    return rasterize_svg(ART / svg_rel, 40.0)
+
+
+@pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
+def test_redteam_closing_gap_check(fid, v):
+    """Red-team pass 2's own method, reproduced exactly (art-2/scripts/
+    analyze.py): close the engraving with a cv2 13 px ellipse at 40 px/mm,
+    keep what it adds inside the wood, and fail any piece > 0.03 mm2. This
+    is the check the per-feature test missed before pass 2."""
+    E = ink40(v["svg"])
+    mat = material_mask(fid, 40.0)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13))
+    closed = cv2.morphologyEx(E.astype(np.uint8), cv2.MORPH_CLOSE, k).astype(bool)
+    n, _, st, _ = cv2.connectedComponentsWithStats((closed & mat & ~E).astype(np.uint8), connectivity=8)
+    big = int((st[1:, cv2.CC_STAT_AREA] > 0.03 * 1600).sum())
+    assert big == 0, f"{big} narrow gaps (cv2 13 px closing) over 0.03 mm2"
+
+
+@pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
+def test_redteam_opening_thin_check(fid, v):
+    """Same, for thin strands: cv2 11 px opening at 40 px/mm."""
+    E = ink40(v["svg"])
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    op = cv2.morphologyEx(E.astype(np.uint8), cv2.MORPH_OPEN, k).astype(bool)
+    n, _, st, _ = cv2.connectedComponentsWithStats((E & ~op).astype(np.uint8), connectivity=8)
+    big = int((st[1:, cv2.CC_STAT_AREA] > 0.03 * 1600).sum())
+    assert big == 0, f"{big} thin strands (cv2 11 px opening) over 0.03 mm2"
+
+
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
 def test_no_specks(fid, v):
     ink = ink_of(v["svg"]).astype(np.uint8)
@@ -144,9 +175,9 @@ def test_ink_coverage_and_density(fid, v):
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
 def test_clear_of_cuts(fid, v):
     ink = ink_of(v["svg"])
-    mat = material_mask(fid, PPM, 0.40)
+    mat = material_mask(fid, PPM, 0.45)
     bad = int((ink & ~mat).sum())
-    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.40 mm of a cut"
+    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.45 mm of a cut"
 
 
 PARTS = {p["id"]: p for p in json.loads((REPO / "site" / "data" / "parts.json").read_text())["parts"]}

@@ -22,7 +22,7 @@ PPM = 20.0
 MIN_LINE_MM = 0.25
 MIN_GAP_MM = 0.30
 SPECK_MM2 = 0.09
-KEEPOUT_MM = 0.5
+KEEPOUT_MM = 0.55   # art stays >= 0.45 mm from every cut after curve fitting
 
 
 def px(mm: float) -> int:
@@ -227,11 +227,11 @@ def _eopen(m: np.ndarray, r_px: float) -> np.ndarray:
 def enforce_laser_rules(mask: np.ndarray, material: np.ndarray | None = None,
                         rounds: int = 3) -> np.ndarray:
     """Guarantee min line / min gap / speck rules with exact Euclidean
-    morphology and a margin over the rules (line 0.28 mm, gap 0.36 mm), so
+    morphology and a margin over the rules (line 0.30 mm, gap 0.40 mm), so
     the traced curves still pass at 40 px/mm. Ends on the gap pass: an
     opening last would cut thin necks and leave new narrow gaps."""
-    r_line = 0.14 * PPM
-    r_gap = 0.18 * PPM
+    r_line = 0.15 * PPM
+    r_gap = 0.20 * PPM
     m = mask
     for _ in range(rounds):
         if material is not None:

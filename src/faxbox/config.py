@@ -100,7 +100,9 @@ SHELF_Z1 = SHELF_Z0 + T                          # 65.0875
 
 # --- Rear wall drawer openings ----------------------------------------------
 
-OPENING_WIDTH = INTERIOR_WIDTH - 2 * T           # 152.4 (leaves T webs at corners)
+# The posts either side of an opening are at least MIN_WEB wide (they were T,
+# 2.8-2.9 mm at thin stock): 152.4 at T = 3.175, 153.5 at 2.8.
+OPENING_WIDTH = INTERIOR_WIDTH - 2 * max(T, MIN_WEB)
 OPENING_HEIGHT = 55.0
 # Sill-free: each opening's bottom edge is exactly its slot's floor.  The
 # lower slot's floor is the bay floor, except at thin stock: the strip of
@@ -129,6 +131,13 @@ DRAWER_BODY = {   # external
                        # flush and slide clearance are mutually exclusive.
     "height": 53.5,    # Z
 }
+
+# Drawer guides (red-team H1): four plywood strips glued to the bay walls at the
+# divider end, two per drawer slot, standing on the bay floor (lower) or the
+# shelf (upper).  They narrow the channel to INTERIOR_WIDTH - 2T, which is the
+# rear-wall opening width at T >= 3.0, so the far end of a drawer can float no
+# further than its front end can (about 1.7 mm each way) instead of 4.9 mm.
+DRAWER_GUIDE = {"length": 40.0, "height": 10.0}        # X along the wall, Z; thickness T
 
 FACEPLATE = {
     "width": OPENING_WIDTH - 2 * FACEPLATE_REVEAL,    # 150.9
@@ -231,8 +240,15 @@ PAPER_SIDE_ROOM = INTERIOR_WIDTH - PAPER["width"]
 
 # --- Sliding lid -------------------------------------------------------------
 
+# The re-entrant corners at the rear end of the slot (the root of the rail's
+# cantilever) are rounded with this radius; the lid stops short of the arcs so
+# it never touches them even when it is lifted against the rail.
+LID_SLOT_CORNER_R = 1.0
+LID_REAR_X = DIVIDER_X0 - LID_SLOT_CORNER_R       # X of the lid's rear end when pushed home (78.375)
+LID_FRONT_RECESS = 0.375                          # lid front edge behind the front wall plane when home
+
 SLIDING_LID = {
-    "length": DIVIDER_X0 - 0.375,                     # X (79.0 at T=3.175)
+    "length": LID_REAR_X - LID_FRONT_RECESS,          # X (78.0 at T=3.175; was 79.0)
     "width": SHELL_EXT["width"] - SLIDE_CLEARANCE,    # 163.6 (rides in through-slots)
 }
 LID_GRIP_SLOT = {"width": 30.0, "height": 10.0, "radius": 5.0,

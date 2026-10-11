@@ -52,7 +52,7 @@ def emit(face_id: str, v: Variant) -> dict:
     desc = (f"Fax Machine box engraving, part {face_id}, variant {v.id}. Black fills = area "
             f"engrave. Units mm; drawn as the face is seen from outside the box (see "
             f"art_to_local in art/code/manifest.json).")
-    mat = material_mask(face_id, R.PPM, 0.42)
+    mat = material_mask(face_id, R.PPM, 0.5)
     mask = v.mask
     # verify-and-repair: measure the TRACED result per feature at 40 px/mm
     # and patch the bitmap where curve fitting left a thin sliver or a gap

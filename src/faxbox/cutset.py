@@ -35,7 +35,8 @@ can fix that.
 Engraving (cut + engrave): parts whose drawn outline shows the INTERIOR face
 are mirrored so every part lies on the bed with its OUTSIDE face up; the art is
 drawn unmirrored.  Colours: cut = blue #0000FF hairline, area engrave = filled
-black #000000, line engrave = red #FF0000 hairline, labels = gray #808080.
+gray #808080, every single-line mark (labels, joint numbers, glue-up lines, coupon ticks) = red
+#FF0000 hairline (Ponoko's recommended colours).
 Only cuts are kerf-offset.  Engraving keeps at least CLEARANCE_MIN from every
 cut (art is trimmed back where a thickness moves a slot under it).
 
@@ -80,7 +81,7 @@ KERF_LABELS = {
 BEDS = {
     "ponoko": (c.PONOKO_SHEET_WIDTH, c.PONOKO_SHEET_HEIGHT, 10.0, 5.0),
     "xtool_s1": (498.0, 301.6, 5.0, 3.5),
-    "xtool_p2": (594.9, 301.6, 5.0, 3.5),
+    "xtool_p2": (594.9, 301.6, 3.0, 3.0),
     "glowforge_pro": (495.0, 279.0, 5.0, 3.5),
     "generic_600x400": (600.0, 400.0, 5.0, 3.5),
     "nycr_32x20": (812.8, 508.0, 5.0, 3.5),
@@ -96,7 +97,7 @@ BED_INFO = {
     "xtool_s1": {"label": "xTool S1 (498 x 319 mm bed; layout 498 x 301.6 mm, cut from 12 x 24 in stock)", "kerfs": ["diode", "co2", "ponoko"],
                  "engrave_kerfs": ["diode", "co2"],
                  "stock": {"name": "12 x 24 in sheet, cut to 498 mm long", "width_mm": 498.0, "height_mm": 301.6},
-                 "note": "Layout is 498 x 301.6 mm so one 12 x 24 in sheet cut in two serves two runs."},
+                 "note": "Each sheet of this layout is one 12 x 24 in sheet cut to 498 mm long (a 108 mm offcut is left over)."},
     "xtool_p2": {"label": "xTool P2 bed and 12 x 24 in stock (594.9 x 301.6 mm)", "kerfs": ["diode", "co2", "ponoko"],
                  "engrave_kerfs": ["co2"],
                  "stock": {"name": "12 x 24 in sheet (301.6 x 606.4 mm true size)", "width_mm": 606.4, "height_mm": 301.6},
@@ -117,10 +118,17 @@ BED_INFO = {
 
 CUT = "rgb(0,0,255)"
 ENGRAVE = "rgb(255,0,0)"
-LABEL_GRAY = "#808080"
-ENGRAVE_FILL = "#000000"
+# Colours follow Ponoko's recommendation (help.ponoko.com/en/articles/2688732, fetched 2026-10-10:
+# "Blue stroke = cutting, Red stroke = line engraving, Gray fill = area engraving"; Ponoko assigns
+# a laser function to each line and fill colour at upload, so these are only the defaults).
+# Every single-line mark (part letters, joint numbers, faceplate glue-up lines, coupon ticks) is
+# a red stroke; the art is a gray fill.  No other colours appear in any file.
+MARK_RED = "rgb(255,0,0)"
+ENGRAVE_FILL = "#808080"
+PONOKO_COLOUR_URL = "https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions"
 CLEARANCE_MIN = 0.35        # mm, engrave to nearest cut (asserted per part)
-LABEL_CLEARANCE = 3.0       # mm, label text to the nearest cut
+LABEL_CLEARANCE = 1.5       # mm, part label text to the nearest cut
+JOINT_CLEARANCE = 1.0       # mm, joint number text to the nearest cut
 DXF_ART_TOL = 0.1           # mm, chord error + vertex thinning of art polylines in DXF
 
 SHELL_NAMES = [("A", "Bottom panel"), ("B", "Right wall"), ("C", "Left wall"), ("D", "Front wall"),
@@ -134,7 +142,7 @@ SHELL_PLATES = {"A": "bottom", "B": "right", "C": "left", "D": "front", "E": "re
                 "G": "shelf", "H": "top"}
 DRAWER_PLATES = {"K": "front", "L": "back", "M": "left", "N": "right", "O": "bottom", "P": "face"}
 SHORT_NAMES = {"A": "BOTTOM", "B": "RIGHT WALL", "C": "LEFT WALL", "D": "FRONT WALL", "E": "REAR WALL",
-               "F": "DIVIDER", "G": "SHELF", "H": "TOP PANEL", "I": "LID",
+               "F": "DIVIDER", "G": "SHELF", "H": "TOP PANEL", "I": "LID", "J": "DRAWER GUIDE",
                "K": "DRAWER FRONT", "L": "DRAWER BACK", "M": "DRAWER LEFT SIDE",
                "N": "DRAWER RIGHT SIDE", "O": "DRAWER BOTTOM", "P": "FACEPLATE"}
 
@@ -151,18 +159,98 @@ class Item:
     qty: int = 1
 
 
+def _make_rings_valid(p: Piece) -> Piece:
+    """Every cut contour must be a valid simple ring (no self-touching or
+    overshooting closing edge, no loops).  Contours that are not are rebuilt
+    from their flattened outline with the loop removed."""
+    new, changed = [], False
+    for sp in p.svg_paths:
+        if sp.attrib.get("stroke") == ENGRAVE:
+            new.append(sp)
+            continue
+        subs = eg.parse_subpaths(sp.d)
+        fixed = []
+        for sub in subs:
+            flat = eg.flatten([sub], 0.002)[0]
+            pts, closed = flat
+            if closed and len(pts) >= 3 and not Polygon(pts).is_valid:
+                g = Polygon(pts).buffer(0)
+                polys = sorted(g.geoms if hasattr(g, "geoms") else [g], key=lambda q: -q.area)
+                xy = list(polys[0].exterior.coords)[:-1]
+                fixed.append([("M", xy[0])] + [("L", q) for q in xy[1:]] + [("Z",)])
+                changed = True
+            else:
+                fixed.append(sub)
+        new.append(SourcePath(sp.attrib, eg.emit(fixed)))
+    p.svg_paths = new
+    return p
+
+
+def _merge_edge_holes(p: Piece) -> Piece:
+    """Finger-hole slots that break out through the part's edge (the 0.05 mm
+    hole-row breakouts, by design) come out of the kerf-compensated generator as
+    a hairline strip of 0.07-0.15 mm between the hole's cut and the outline's
+    cut: two cut lines on a visible edge and a strip some lasers cannot sever.
+    Merge each such slot into the outline so the notch is one contour.  The
+    physical result is the same (the strip is narrower than the kerf)."""
+    from shapely.affinity import translate
+    from shapely.ops import nearest_points, unary_union
+    cut_paths = [sp for sp in p.svg_paths if sp.attrib.get("stroke") != ENGRAVE]
+    red = [sp for sp in p.svg_paths if sp.attrib.get("stroke") == ENGRAVE]
+    rings = []
+    for sp in cut_paths:
+        for pts, closed in eg.flatten(eg.parse_subpaths(sp.d), 0.002):
+            if not closed or len(pts) < 3:
+                return p
+            rings.append(Polygon(pts).buffer(0))
+    if len(rings) < 2:
+        return p
+    rings.sort(key=lambda r: -r.area)
+    outer, holes = rings[0], rings[1:]
+    edge = outer.exterior
+    near, rest = [], []
+    for h in holes:
+        (near if (h.intersects(edge) or h.distance(edge) < 0.35) else rest).append(h)
+    if not near:
+        return p
+    ext = []
+    for h in near:
+        ph, pe = nearest_points(h, edge)
+        dx, dy = pe.x - ph.x, pe.y - ph.y
+        n = math.hypot(dx, dy)
+        if n < 1e-9:                      # overlapping: push the way the slot centre sits from the edge
+            ph, pe = nearest_points(h.centroid, edge)
+            dx, dy = pe.x - ph.x, pe.y - ph.y
+            n = math.hypot(dx, dy) or 1.0
+        u = (dx / n, dy / n)
+        ext.append(unary_union([h, translate(h, 0.6 * u[0], 0.6 * u[1])]).convex_hull)
+    material = Polygon(edge).difference(unary_union(ext + rest))
+    polys = list(material.geoms) if hasattr(material, "geoms") else [material]
+    subs = []
+    for poly in polys:
+        if poly.area < 1.0:
+            continue
+        for ring in [poly.exterior] + list(poly.interiors):
+            xy = list(ring.coords)[:-1]
+            subs.append([("M", xy[0])] + [("L", q) for q in xy[1:]] + [("Z",)])
+    attrib = cut_paths[0].attrib
+    p.svg_paths = [SourcePath(attrib, eg.emit([sb])) for sb in subs] + red
+    return p
+
+
 def _clean_piece(p: Piece) -> Piece:
-    """Drop the zero-length corner loops Boxes.py writes at inner corners."""
+    """Drop the zero-length corner loops Boxes.py writes at inner corners, then
+    merge edge breakouts into the outline."""
     new = []
     for sp in p.svg_paths:
         subs = eg.drop_degenerate_loops(eg.parse_subpaths(sp.d))
         new.append(SourcePath(sp.attrib, eg.emit(subs)))
     p.svg_paths = new
-    return p
+    return _merge_edge_holes(_make_rings_valid(p))
 
 
 def generate_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
-    """Every laser-cut part of one box (21 pieces), Ponoko provider colours,
+    """Every laser-cut part of one box (25 pieces), Ponoko provider colours,
     kerf compensation `kerf / 2` per side."""
     from faxbox import generate_drawers, generate_lids, shell_generator
     from faxbox.assembly3d import source_part
@@ -173,7 +261,8 @@ def generate_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
         shell = shell_generator.generate_shell(provider="ponoko", burn=burn)
         drawer = generate_drawers.generate_drawer(provider="ponoko", burn=burn)
         lid = generate_lids.generate_lids(provider="ponoko", burn=burn)
-        files = [Path(workdir) / p for p in (shell, drawer, lid)]
+        guides = generate_drawers.generate_guides(provider="ponoko", burn=burn)
+        files = [Path(workdir) / p for p in (shell, drawer, lid, guides)]
     finally:
         os.chdir(cwd)
     items: list[Item] = []
@@ -188,6 +277,10 @@ def generate_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
             face = f"{pre}_{suffix}" if suffix else None
             items.append(Item(letter, f"{name} ({tag})", _clean_piece(p), face, source_part(face) if face else None,
                               f"{pre}_{DRAWER_PLATES[letter]}", burn))
+    for (pid, nm), gp in zip((("B_guideL", "lower, left wall"), ("B_guideR", "lower, right wall"),
+                              ("T_guideL", "upper, left wall"), ("T_guideR", "upper, right wall")),
+                             _load_pieces(files[3], "Guide", strip_labels=True)):
+        items.append(Item("J", f"Drawer guide ({nm})", _clean_piece(gp), None, None, pid, burn))
     items.append(Item("I", "Sliding lid", _clean_piece(_load_pieces(files[2], "Lid", strip_labels=True)[0]),
                       "lid", "lid", "lid", burn))
     return items
@@ -231,18 +324,20 @@ def _piece_from(polys_cut=(), lines_engrave=()) -> Piece:
                  xmin=xmin, ymin=ymin, group_style="", svg_paths=paths)
 
 
-def coupon_items(workdir: Path) -> list[Item]:
-    """Test-fit coupon.  The measuring features are drawn with NO kerf
-    compensation, so what you measure is the laser's kerf; the joint tests are
-    compensated for each kerf variant.
+def coupon_items(workdir: Path, kerf: float = DEFAULT_KERF) -> list[Item]:
+    """Test-fit coupon for the file set of `kerf`.  The measuring features are
+    drawn with NO kerf compensation, so what you measure is the laser's kerf;
+    the joint tests are compensated for each kerf variant; the lid test for this
+    set's own kerf.
 
     K  10 mm square piece: kerf = 10 - measured width
-    Q  panel with eight thickness slots (drawn 2.8 ... 3.5 mm) and four magnet
-       holes (drawn 5.3 ... 5.6 mm)
+    Q  panel with a clipped top-left corner (orientation), eight thickness
+       slots (drawn 2.8 ... 3.5 mm, narrowest at the left), ticks 1-8 below the
+       slots in the marked file, and four magnet holes (drawn 5.3 ... 5.6 mm)
     R  three-finger corner (finger piece + hole piece) per kerf variant:
        diode 0.12 (smallest pair, 1 tick in the marked file), CO2 0.18
        (middle, 2 ticks), Ponoko 0.20 (largest, 3 ticks)
-    S  lid slot block and strip (compensated for the CO2 kerf)"""
+    S  lid slot block and strip (compensated for this set's kerf)"""
     from boxes import Boxes, edges
     items: list[Item] = []
 
@@ -250,18 +345,18 @@ def coupon_items(workdir: Path) -> list[Item]:
     items.append(Item("K", "Coupon: kerf square, 10 mm piece", _piece_from([sbox(0, 0, 10, 10)])))
 
     # Q. gauge panel -------------------------------------------------------------------------
-    pw, ph = 118.0, 40.0
-    panel = sbox(0, 0, pw, ph)
+    pw, ph = 118.0, 46.0
+    panel = sbox(0, 0, pw, ph).difference(Polygon([(0, 0), (9, 0), (0, 9)]))     # clipped corner = top left
     ticks = []
     x = 8.0
     for i, w in enumerate(GAUGE_WIDTHS):
         panel = panel.difference(sbox(x, 6, x + w, 6 + 14))             # drawn exactly w wide
         for k in range(i + 1):               # i+1 engraved ticks = nth gauge (2.8 = 1)
-            ticks.append((x + w / 2 - 2.0, 23.0 + 1.4 * k, x + w / 2 + 2.0, 23.0 + 1.4 * k))
+            ticks.append((x + w / 2 - 2.0, 23.0 + 1.1 * k, x + w / 2 + 2.0, 23.0 + 1.1 * k))
         x += w + 2.2
     gx = 10.0
     for d in MAGNET_DRAWN:
-        panel = panel.difference(_circle(gx + d / 2, 33, d))
+        panel = panel.difference(_circle(gx + d / 2, 38, d))
         gx += d + 7.0
     items.append(Item("Q", "Coupon: thickness slots 2.8-3.5 (1-8 ticks), magnet holes 5.3-5.6",
                       _piece_from([panel], ticks)))
@@ -303,8 +398,8 @@ def coupon_items(workdir: Path) -> list[Item]:
         items.append(Item("R", f"Coupon: three-finger corner, kerf {KERFS[kid]:.2f}, finger piece", ticked(fingers, idx), burn=burn))
         items.append(Item("R", f"Coupon: three-finger corner, kerf {KERFS[kid]:.2f}, hole piece", ticked(holes, idx), burn=burn))
 
-    # S. lid in slot -------------------------------------------------------------------------
-    b = KERFS["co2"] / 2
+    # S. lid in slot (compensated for this set's kerf) ----------------------------------------
+    b = kerf / 2
     slot_h = c.LID_SLOT_HEIGHT
     rail = c.LID_RAIL_HEIGHT
     block = sbox(0, 0, 70, 10 + slot_h + rail)
@@ -318,41 +413,63 @@ def coupon_items(workdir: Path) -> list[Item]:
 
 def coupon_guide() -> dict:
     """How to read the coupon, as data the site can draw."""
+    kerf_ids = [{"kerf_mm": v, "set": k} for k, v in KERFS.items()]
     return {
         "order": ["Cut the coupon first, on a scrap of your real plywood.",
-                  "Measure the kerf square, pick the kerf file set that matches, and try the joints.",
-                  "Measure the plywood thickness with calipers or from the slot gauge."],
+                  "Measure the kerf square and pick the kerf file set.",
+                  "Pick the thickness set from the slot gauge or your calipers.",
+                  "Try the finger joints of your kerf, and the magnets.",
+                  "Cut the box."],
+        "orientation": "Hold the coupon with the clipped corner at the top left. The thickness slots run from "
+                       "the narrowest (2.8 mm drawn) at the left to the widest (3.5 mm) at the right. In the "
+                       "marked file the ticks sit between the slots and the magnet holes (below the slots as "
+                       "the file is drawn).",
+        "marks": "In the marked coupon (and the cut + labels sets) every engraved mark is a red hairline.",
         "features": [
             {"id": "kerf_square", "part": "K", "drawn_mm": 10.0,
-             "measure": "outside width of the cut square, with calipers",
+             "measure": "outside width of the cut square, with calipers; measure it in two directions and "
+                        "average",
              "formula": "kerf = 10.00 - measured width",
-             "choose": [{"kerf_mm": v, "set": k} for k, v in KERFS.items()],
-             "then": "Use the file set whose kerf is closest to the number you measured."},
+             "choose": kerf_ids,
+             "then": "Use the file set whose kerf is nearest. Between two sets: take the SMALLER kerf unless "
+                     "you measured within 0.01 mm of the larger one. A smaller assumed kerf leaves the joints "
+                     "a little loose (by 2 x the difference); a larger one leaves them tight and can jam. "
+                     "Kerf varies along the bed and with the plywood: cut and measure the square where the "
+                     "box will be cut, and if it reads differently in two places average them.",
+             "note": "The sets are 0.12, 0.18 and 0.20 mm. The gap 0.12 to 0.18 is wide; 0.18 and 0.20 are "
+                     "close and either works for a CO2 laser. If you measure about 0.15, use the 0.12 set."},
             {"id": "thickness_slots", "part": "Q", "count": len(GAUGE_WIDTHS), "drawn_widths_mm": GAUGE_WIDTHS,
-             "reading": "the narrowest slot your plywood slides into without force",
-             "formula": "thickness is about drawn width + kerf, rounded to 0.05",
-             "ticks": "the marked coupon has i engraved ticks above slot i (1 = 2.8 mm); on the plain coupon "
-                      "the slots run from the narrowest to the widest in a row: count them in order",
-             "then": "Pick the thickness set (2.8 ... 3.5 mm) nearest your plywood."},
+             "reading": "the narrowest slot your plywood slides into without force; if it is between two "
+                        "slots (tight in one, loose in the next) take the tighter, narrower one",
+             "formula": "slot width = drawn width + kerf, so thickness = drawn width + kerf - 0.05 for the "
+                        "narrowest slot it enters",
+             "rounding": "the thickness sets are 0.1 mm apart: pick the set nearest the value you compute",
+             "ticks": "the marked coupon has i engraved ticks between slot i and the magnet holes (1 = 2.8 mm)"},
             {"id": "magnet_holes", "part": "Q", "drawn_diameters_mm": list(MAGNET_DRAWN),
              "formula": "cut hole = drawn diameter + kerf; the box wants a 5.65 mm hole for a 6.0 mm magnet",
              "reading": "the hole a 6 x 2 mm magnet pushes into with firm finger pressure and stays in",
-             "then": "If that is the smallest hole, the plywood's hole is running big: nothing to change in the "
-                     "box files, but use a drop of glue. If the largest hole is still tight, the hole is "
-                     "running small: file or ream the 4 magnet holes."},
+             "then": "If the smallest hole is already loose, the box holes will be loose too: add a drop of "
+                     "glue. If even the largest is tight, ream the 4 magnet holes lightly."},
             {"id": "finger_joints", "part": "R", "pairs": [{"kerf_mm": KERFS[k], "set": k, "piece_height_mm": h}
                                                            for k, h in JOINT_TESTS],
              "identify": "the pairs differ in size: the smallest pair is the diode set, the middle one CO2, the "
-                         "largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces of a pair",
+                         "largest Ponoko; the marked coupon also has 1, 2 or 3 engraved ticks on both pieces",
              "reading": "press each finger piece into the hole piece of the same size",
              "right": "goes together with firm hand pressure, no gap, no rattle",
-             "tight_along_the_finger": "tight when sliding along the length of the fingers: your kerf is "
-                                       "smaller than that set assumes; use the next smaller kerf set",
-             "loose_along_the_finger": "loose or rattling: your kerf is larger; use the next larger kerf set",
-             "tight_through_the_slot": "the fingers will not go through the plywood thickness of the slot: "
-                                       "your plywood is thicker than the set; use the next thickness"},
+             "along_the_fingers": {
+                 "what": "the fit along the length of the fingers depends on the KERF, not on the thickness",
+                 "tight": "the fingers will not go in sideways, or stick: your kerf is smaller than the "
+                          "set assumes: use the next smaller kerf set",
+                 "loose": "the fingers rattle sideways in their slots: your kerf is larger: use the next "
+                          "larger kerf set"},
+             "through_the_thickness": {
+                 "what": "the fit through the plywood thickness depends on the THICKNESS, not on the kerf",
+                 "tight": "the plywood will not slide through the slot, or the fingers stand proud less than "
+                          "flush: your plywood is thicker than the set: use the next thicker thickness set",
+                 "loose": "the plywood rattles through the slot or the fingers sit below the surface: your "
+                          "plywood is thinner: use the next thinner thickness set"}},
             {"id": "lid_slot", "part": "S",
-             "reading": "slide the lid strip into the slot block",
+             "reading": "slide the lid strip into the slot block (cut for this set's kerf)",
              "right": "slides freely with a little vertical play (about 1.2 mm total)"},
         ],
     }
@@ -445,6 +562,23 @@ def nest(items: list[Item], bed: str):
     return best[1]
 
 
+def add_coupon(sheets, coupon: list[Item], bed: str) -> int | None:
+    """Re-pack one of the sheets with the coupon pieces added, if they fit
+    (never adds a sheet).  Returns the 1-based sheet number or None."""
+    bw, bh, margin, spacing = BEDS[bed]
+    uw, uh = bw - 2 * margin, bh - 2 * margin
+    for idx in range(len(sheets) - 1, -1, -1):
+        its = [it for it, *_ in sheets[idx]] + list(coupon)
+        norot = frozenset(i for i, it in enumerate(its) if it.face)
+        sizes = sorted(((i, (it.piece.width, it.piece.height)) for i, it in enumerate(its)),
+                       key=lambda t: -t[1][0] * t[1][1])
+        res = _maxrects(sizes, uw, uh, spacing, norot)
+        if res is not None:
+            sheets[idx] = [(its[i], x + margin, y + margin, rot) for i, x, y, rot in res]
+            return idx + 1
+    return None
+
+
 # --- geometry of a part on the bed ---------------------------------------------------------------------
 
 MODES = {"cut": "drawn", "labels": "interior", "engrave": "exterior"}
@@ -526,7 +660,7 @@ def _label_subpaths(item: Item, cuts, kind: str | None):
         ps = prep(safe)
         done = False
         for text, h in ((f"{item.letter}  {SHORT_NAMES[item.letter]}", 4.0), (f"{item.letter}  {SHORT_NAMES[item.letter]}", 3.0),
-                        (item.letter, 6.0), (item.letter, 4.0)):
+                        (item.letter, 6.0), (item.letter, 4.0), (item.letter, 3.0)):
             w = lb.text_width(text, h)
             y = y1 - h
             while y >= y0 and not done:
@@ -546,27 +680,31 @@ def _label_subpaths(item: Item, cuts, kind: str | None):
     if jm:
         pc = item.piece
         m = eg.compose(eg.flip_affine(pc, kind), eg.local_to_piece(pc, source_part(item.plate), item.burn))
-        safe_j = material.buffer(-1.0).difference(cut_geom.buffer(1.0))
+        safe_j = material.buffer(-JOINT_CLEARANCE).difference(cut_geom.buffer(JOINT_CLEARANCE))
         if lab_box is not None:
             safe_j = safe_j.difference(lab_box)          # keep clear of the part label
-        h = 2.5
         for jid, lx, ly in jm:
             tx, ty = eg.apply(m, lx, ly)
-            w = lb.text_width(jid, h)
-            r = 45.0
-            gx = np.arange(tx - r, tx + r, 1.0)
-            gy = np.arange(ty - r, ty + r, 1.0)
-            X, Y = np.meshgrid(gx, gy)
-            boxes = shapely.box(X.ravel(), Y.ravel(), X.ravel() + w, Y.ravel() + h)
-            ok = shapely.contains(safe_j, boxes)
-            if not ok.any():
+            spot = None
+            for h, r in ((2.5, 45.0), (2.5, 400.0), (2.0, 400.0)):
+                w = lb.text_width(jid, h)
+                gx = np.arange(tx - r, tx + r, 1.0 if r < 100 else 2.0)
+                gy = np.arange(ty - r, ty + r, 1.0 if r < 100 else 2.0)
+                X, Y = np.meshgrid(gx, gy)
+                boxes = shapely.box(X.ravel(), Y.ravel(), X.ravel() + w, Y.ravel() + h)
+                ok = shapely.contains(safe_j, boxes)
+                if not ok.any():
+                    continue
+                cx, cy = X.ravel()[ok] + w / 2, Y.ravel()[ok] + h / 2
+                k = int(np.argmin((cx - tx) ** 2 + (cy - ty) ** 2))
+                spot = (float(X.ravel()[ok][k]), float(Y.ravel()[ok][k]), w, h)
+                break
+            if spot is None:
                 continue
-            cx, cy = X.ravel()[ok] + w / 2, Y.ravel()[ok] + h / 2
-            k = int(np.argmin((cx - tx) ** 2 + (cy - ty) ** 2))
-            bx, by = X.ravel()[ok][k], Y.ravel()[ok][k]
+            bx, by, w, h = spot
             subs += _text_subpaths(jid, h, bx, by)
             safe_j = safe_j.difference(sbox(bx - 1.0, by - 1.0, bx + w + 1.0, by + h + 1.0))
-            placed.append((jid, round(float(bx), 2), round(float(by), 2)))
+            placed.append((jid, round(bx, 2), round(by, 2)))
     return subs, placed
 
 
@@ -700,13 +838,14 @@ def dxf_text(items, height: float) -> str:
 
 MODE_TEXT = {
     "cut": "Cut only: blue hairline (#0000FF) = cut, nothing else. Parts lie as drawn.",
-    "labels": "Cut + labels: blue = cut, gray (#808080, layer LABELS) = part letter and joint numbers, red "
-              "(#FF0000) = faceplate glue-up lines. Every part lies INSIDE face up, so the labels and lines go "
-              "on the inside.",
-    "engrave": "Cut + engrave: blue hairline (#0000FF) = cut, filled black (#000000) = area engrave, gray "
-               "(#808080, layer LABELS) = part letter and joint numbers. Parts with art lie OUTSIDE face up (those "
-               "whose drawn face would be the inside are mirrored, data-mirrored, the art is not) and carry no "
-               "marks; parts without art lie INSIDE face up and carry the gray labels.",
+    "labels": "Cut + labels: blue = cut, red hairline (#FF0000, DXF layer LABELS) = marks: part letter and name, "
+              "joint numbers, faceplate glue-up lines, coupon ticks. Every part lies INSIDE face up, so the marks "
+              "go on the inside.",
+    "engrave": "Cut + engrave: blue hairline (#0000FF) = cut, filled gray (#808080, DXF layer ENGRAVE) = area "
+               "engrave, red hairline (#FF0000, DXF layer LABELS) = marks (part letter and joint numbers). Parts "
+               "with art lie OUTSIDE face up (those whose drawn face would be the inside are mirrored, "
+               "data-mirrored, the art is not) and carry no marks; parts without art lie INSIDE face up and carry "
+               "the marks.",
 }
 
 
@@ -739,12 +878,8 @@ def write_sheet(sheet, bed: str, n: int, total: int, out_svg: Path, out_dxf: Pat
         if fills:
             lines.append(f'<path d={quoteattr(eg.emit(fills, 2))} fill="{ENGRAVE_FILL}" fill-rule="evenodd" />')
             dxf_items += [("ENGRAVE", pts, True) for pts, closed in eg.flatten_simplified(fills, DXF_ART_TOL)]
-        for sub in strokes:
-            lines.append(f'<path d={quoteattr(eg.emit([sub]))} fill="none" stroke="{ENGRAVE}" '
-                         f'stroke-width="{HAIRLINE_STROKE_WIDTH_MM}" />')
-            dxf_items += [("ENGRAVE", pts, closed) for pts, closed in eg.flatten([sub], 0.01)]
-        for sub in labs:
-            lines.append(f'<path d={quoteattr(eg.emit([sub]))} fill="none" stroke="{LABEL_GRAY}" '
+        for sub in strokes + labs:
+            lines.append(f'<path class="marks" d={quoteattr(eg.emit([sub]))} fill="none" stroke="{MARK_RED}" '
                          f'stroke-width="{HAIRLINE_STROKE_WIDTH_MM}" />')
             dxf_items += [("LABELS", pts, closed) for pts, closed in eg.flatten([sub], 0.01)]
         lines.append("</g>")
@@ -782,35 +917,45 @@ Files: <bed>_sheet_N for your bed (see the bed list on the site). Sheets are nes
 the bed named in the file. Instructions, parts list and assembly guide: bjblabs.com/fax-machine/
 """
 
+README_COLOURS = """Colours (Ponoko's recommended set: https://help.ponoko.com/en/articles/2688732-how-should-i-specify-laser-actions ;
+Ponoko lets you assign any function to any line or fill colour at upload, so check the assignment):
+  blue stroke  #0000FF   cut through
+  gray fill    #808080   area engrave (the art)
+  red stroke   #FF0000   line engrave: the single-line marks (part letters, joint numbers, faceplate
+                         glue-up lines, coupon ticks)
+DXF layers: CUT, ENGRAVE (the art), LABELS (all the red marks).
+"""
+
 README_KINDS = {
     "cut": """CUT ONLY
 Blue hairline (#0000FF) is the only line colour: cut through. Nothing is engraved, so a
-service that cuts every line cuts exactly the parts. Parts lie as drawn.
+service that cuts every line cuts exactly the parts. Parts lie as drawn. Where a sheet had room, the
+coupon is on it (the small pieces labelled coupon in the file).
 """,
     "labels": """CUT + LABELS
-For your own laser. Blue = cut. Gray (#808080, DXF layer LABELS) = single-line part labels
-(letter and name) you can engrave on the INSIDE face to tell look-alike parts apart. Red
-(#FF0000) = the drawer faceplate glue-up lines (left side, right side and top edge of the drawer
-body; the body's bottom edge sits 0.75 mm below the plate). Every part lies INSIDE face up, so
-engraving the labels puts them on the inside. If you skip the gray and red layers you get a plain
-cut.
-""",
+For your own laser. Blue = cut. Red hairlines (DXF layer LABELS) are marks you can engrave on the INSIDE
+face: the part letter and name, a number next to each finger joint (the matching edge of the mating part
+carries the same number: match 1 to 1), the faceplate glue-up lines (left side, right side and top edge of
+the drawer body; the body's bottom edge sits 0.75 mm below the plate) and the coupon ticks. Every part lies
+INSIDE face up, so the marks end up on the inside. Switch the red layer off and you have a plain cut.
+
+""" + README_COLOURS,
     "engrave": """CUT + ENGRAVE
-Blue hairline = cut. Filled black (#000000) = area engrave (the art). DXF has no fill attribute:
-the art is closed polylines on layer ENGRAVE, so set that layer to fill / raster in the laser
-software. Parts with art lie OUTSIDE face up and carry nothing else on that face. Parts whose outline in the cut-only files shows the
-inside face (top panel, sliding lid, both faceplates, both left drawer sides) are mirrored here
-so the outside face is up; the art is not mirrored. Do not flip any part in the laser software.
-The mirrored parts are the same physical parts turned over, so the finger joints mate as usual.
+Blue hairline = cut. Gray fill = area engrave (the art). DXF has no fill attribute: the art is closed
+polylines on layer ENGRAVE, so set that layer to fill / raster in the laser software. Parts with art lie
+OUTSIDE face up and carry nothing else on that face. Parts whose outline in the cut-only files shows the
+inside face (top panel, sliding lid, both faceplates, both left drawer sides) are mirrored here so the
+outside face is up; the art is not mirrored. Do not flip any part in the laser software. The mirrored
+parts are the same physical parts turned over, so the finger joints mate as usual.
 Only cuts carry the kerf offset. Engraving stays at least 0.35 mm away from every cut.
-The faceplate glue-up lines of the cut + labels files are not here (the plate is engraved
-outside up); use the cut + labels faceplate for them, or align the grip slots and keep the plate
-0.75 mm above the body's bottom edge, 0.95 mm in from each side.
-Alternate art: the parts zip holds one file per art variant.
-Parts without art lie INSIDE face up and carry gray joint labels (layer LABELS): the part letter and
-a number next to each joint; the matching edge of the mating part carries the same number. Engrave
-them or leave the layer off. Parts with art carry no marks on the outside.
-""",
+Parts without art lie INSIDE face up and carry red marks (layer LABELS): the part letter and a number next
+to each joint; the matching edge of the mating part carries the same number. Engrave them or leave the layer
+off. The faceplate glue-up lines are in the cut + labels files only: with the faceplate engraved outside up,
+align its grip slot with the body's and keep the plate 0.75 mm above the body's bottom edge, 0.95 mm in
+from each side. The coupon is in this zip (and on a sheet where there was room). Alternate art: the parts
+zip holds one file per art variant.
+
+""" + README_COLOURS,
     "parts": """SINGLE PARTS, ZERO KERF
 For services that apply their own kerf compensation (SendCutSend and similar): one file per
 distinct part, drawn exactly to size with no offset. Quantity is in the file name (x2 = cut two).
@@ -821,10 +966,10 @@ Blue = cut, nothing else. Do not use these on your own laser unless it compensat
 
 README_FACES = """ART PARTS (faces/)
 faces/<face>__<variant>.svg|dxf: the 11 parts that carry art, one file per art variant, at zero kerf
-(your service applies its own). Blue = cut, filled black (#000000) = area engrave; in the DXF the
-art is closed polylines on layer ENGRAVE, so set that layer to fill / raster. The part lies OUTSIDE
-face up: parts whose outline in the plain part files shows the inside face are mirrored here, the
-art is not. Do not flip anything. Engraving stays at least 0.35 mm from every cut.
+(your service applies its own). Blue = cut, gray fill (#808080) = area engrave; in the DXF the art is
+closed polylines on layer ENGRAVE, so set that layer to fill / raster. The part lies OUTSIDE face up:
+parts whose outline in the plain part files shows the inside face are mirrored here, the art is not.
+Do not flip anything. Engraving stays at least 0.35 mm from every cut.
 """
 
 
@@ -885,8 +1030,8 @@ def build_set(out: Path, kerf: float = DEFAULT_KERF, kerf_id: str | None = None)
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         items = generate_items(td, kerf)
-        coupon = coupon_items(td)
-    assert len(items) == 21, len(items)
+        coupon = coupon_items(td, kerf)
+    assert len(items) == 25, len(items)
     (out / "labels").mkdir(exist_ok=True)
     variants = default_variants()
     info = {"thickness": T, "kerf": kerf, "kerf_id": kerf_id, "burn": kerf / 2, "beds": {},
@@ -895,7 +1040,10 @@ def build_set(out: Path, kerf: float = DEFAULT_KERF, kerf_id: str | None = None)
         if bed == "ponoko" and kerf_id != "ponoko":
             continue
         sheets = nest(items, bed)
-        info["beds"][bed] = {"sheets": len(sheets), "parts": [[f"{it.letter} {it.name}" for it, *_ in s] for s in sheets]}
+        on_sheet = add_coupon(sheets, coupon, bed)
+        info["beds"][bed] = {"sheets": len(sheets),
+                             "parts": [[f"{it.letter} {it.name}" for it, *_ in s if it.plate is not None] for s in sheets],
+                             "coupon_on_sheet": on_sheet}
         info["engrave_files"][bed] = []
         for n, s in enumerate(sheets, 1):
             svg, dxf = out / f"{bed}_sheet_{n}.svg", out / f"{bed}_sheet_{n}.dxf"
@@ -942,7 +1090,7 @@ def build_parts(out: Path) -> dict:
         if it.letter in seen:
             continue
         seen.add(it.letter)
-        qty = 2 if it.letter in "KLMNOP" else 1
+        qty = 4 if it.letter == "J" else 2 if it.letter in "KLMNOP" else 1
         base = it.name.replace(" (lower)", "")
         slug = "".join(ch if ch.isalnum() else "_" for ch in base).strip("_").lower()
         stem = f"{it.letter}_{slug}" + (f"_x{qty}" if qty > 1 else "")

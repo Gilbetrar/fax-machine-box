@@ -40,6 +40,7 @@ from faxbox.config import (
     DIVIDER_ROW_TOP_Z,
     LID_RAIL_HEIGHT,
     LID_SLOT_BOTTOM,
+    LID_SLOT_CORNER_R,
     LID_SLOT_HEIGHT,
     LID_SLOT_X_END,
     LID_SLOT_TOP,
@@ -88,15 +89,23 @@ class SlotMouthEdge(edges.BaseEdge):
 
     description = "Lid slot mouth"
 
-    def __init__(self, boxes, rail: float, slot_h: float, depth: float, rail_first: bool) -> None:
+    def __init__(self, boxes, rail: float, slot_h: float, depth: float, rail_first: bool,
+                 radius: float = 0.0) -> None:
         super().__init__(boxes, None)
+        self.radius = radius
         self.rail, self.slot_h, self.depth, self.rail_first = rail, slot_h, depth, rail_first
         self.length = rail + slot_h
 
     def __call__(self, length, **kw):
         if length and abs(length - self.length) > 1e-5:
             raise ValueError("Wrong length for SlotMouthEdge")
-        notch = (90, self.depth, -90, self.slot_h, -90, self.depth, 90)
+        r = self.radius
+        if r:
+            # the two rear corners of the slot are rounded (arc of radius r): each straight run
+            # next to an arc is r shorter
+            notch = (90, self.depth - r, (-90, r), self.slot_h - 2 * r, (-90, r), self.depth - r, 90)
+        else:
+            notch = (90, self.depth, -90, self.slot_h, -90, self.depth, 90)
         if self.rail_first:
             self.boxes.polyline(self.rail, *notch)
         else:
@@ -161,11 +170,11 @@ class OuterShell(Boxes):
         slot_depth = LID_SLOT_X_END - T
         front_edge_top_to_bottom = edges.CompoundEdge(
             self,
-            [SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, True), "f"],
+            [SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, True, LID_SLOT_CORNER_R), "f"],
             [front_plain_z, FRONT_WALL_TOP])
         front_edge_bottom_to_top = edges.CompoundEdge(
             self,
-            ["f", SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, False)],
+            ["f", SlotMouthEdge(self, LID_RAIL_HEIGHT, LID_SLOT_HEIGHT, slot_depth, False, LID_SLOT_CORNER_R)],
             [FRONT_WALL_TOP, front_plain_z])
         rear_edge = self.edges["f"]  # full height, mates rear wall
 
