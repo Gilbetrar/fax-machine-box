@@ -27,24 +27,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css?v=599bec8c3b">
+<link rel="stylesheet" href="css/site.css?v=8f7c11e8bc">
 <script type="importmap">
 {
  "imports": {
   "three": "./vendor/three/build/three.module.min.js",
   "three/addons/": "./vendor/three/examples/jsm/",
-  "./js/art2d.js": "./js/art2d.js?v=599bec8c3b",
-  "./js/box3d.js": "./js/box3d.js?v=599bec8c3b",
-  "./js/guide.js": "./js/guide.js?v=599bec8c3b",
-  "./js/laser.js": "./js/laser.js?v=599bec8c3b",
-  "./js/page.js": "./js/page.js?v=599bec8c3b",
-  "./js/render3d.js": "./js/render3d.js?v=599bec8c3b",
-  "./js/rules.js": "./js/rules.js?v=599bec8c3b",
-  "./js/version.js": "./js/version.js?v=599bec8c3b"
+  "./js/art2d.js": "./js/art2d.js?v=8f7c11e8bc",
+  "./js/box3d.js": "./js/box3d.js?v=8f7c11e8bc",
+  "./js/guide.js": "./js/guide.js?v=8f7c11e8bc",
+  "./js/laser.js": "./js/laser.js?v=8f7c11e8bc",
+  "./js/page.js": "./js/page.js?v=8f7c11e8bc",
+  "./js/render3d.js": "./js/render3d.js?v=8f7c11e8bc",
+  "./js/rules.js": "./js/rules.js?v=8f7c11e8bc",
+  "./js/version.js": "./js/version.js?v=8f7c11e8bc"
  }
 }
 </script>
-<script type="module" src="js/page.js?v=599bec8c3b"></script>
+<script type="module" src="js/page.js?v=8f7c11e8bc"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -242,7 +242,7 @@
         <ul class="legend" id="legend">
           <li><span class="sw" style="--c:#0000ff"></span><span><b>Blue is cut.</b> Hairline vector lines that go through the sheet.</span></li>
           <li><span class="sw" style="--c:#ff0000"></span><span><b>Red is engrave.</b> Raster or score the surface; never cut through.</span></li>
-          <li id="legend-labels" hidden><span class="sw" style="--c:#808080"></span><span><b>Gray is labels.</b> Part letters for you; turn this layer off before cutting.</span></li>
+          <li id="legend-labels" hidden><span class="sw" style="--c:#FF0000"></span><span><b>Red lines are labels.</b> Part letters and joint numbers, engraved lightly; turn this layer off if you do not want them.</span></li>
         </ul>
         <p class="small" id="dxf-note"></p>
         <p class="small">Order the cut so small inner holes go first and outer outlines last, which most laser software does by default. If your service does not engrave, the box still works plain.</p>

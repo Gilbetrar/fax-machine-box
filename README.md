@@ -491,8 +491,9 @@ BEFORE assembly. The holes are already in the parts.
    cut + labels files every part is engraved inside.
 3. Press each divider magnet into its hole with its dot facing OUT, toward the
    drawers (the rear of the box). Press each drawer-back magnet in with its dot
-   facing IN, toward the divider. Because all four are marked from the same
-   stack, each drawer magnet attracts the divider magnet it meets, and either
+   facing INTO the drawer, away from the divider. In the finished box every dot
+   faces the rear of the box. Because all four are marked from the same stack,
+   each drawer magnet then attracts the divider magnet it meets, and either
    drawer works in either bay. Use a drop of glue on each.
 4. Assemble the box and drawers as described under "Assembly steps".
 5. Test: each drawer should pull closed and need a deliberate one-finger pull to

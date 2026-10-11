@@ -482,7 +482,8 @@ the drawer closed.
   labels (the joint labels and part letters are engraved on the inside face of parts
   without art; in the cut + labels files every part is engraved inside). Press every
   divider magnet in with its dot facing OUT, toward the drawers (the rear of the box), and
-  every drawer-back magnet with its dot facing IN, toward the divider. Because all four
+  every drawer-back magnet with its dot facing INTO the drawer, away from the divider
+  (so in the finished box every dot faces the rear). Because all four
   are marked from the same stack, each drawer magnet attracts the divider magnet it meets,
   and either drawer works in either bay. Use a drop of glue. **Install the magnets FLUSH
   with the two MATING faces** (the drawer-Back's rear face and the divider's REAR face,
