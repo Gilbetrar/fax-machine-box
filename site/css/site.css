@@ -73,9 +73,9 @@ p { margin: 0 0 12px; }
 }
 .brand { display: flex; gap: 10px; align-items: center; font: 800 19px var(--display); color: var(--ink); text-decoration: none; letter-spacing: .02em; text-transform: uppercase; }
 .brand img { width: 28px; height: 28px; }
-nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
-nav a { font: 600 14px var(--body); color: var(--ink); text-decoration: none; padding: 6px 10px; border-radius: 999px; }
-nav a:hover, nav a.on { background: var(--yellow); }
+#nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+#nav a { font: 600 14px var(--body); color: var(--ink); text-decoration: none; padding: 6px 10px; border-radius: 999px; }
+#nav a:hover, #nav a.on { background: var(--yellow); }
 .navtoggle { display: none; margin-left: auto; font: 700 14px var(--body); background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px; color: var(--ink); }
 
 /* ---------- buttons ---------- */
@@ -335,9 +335,9 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   .engrave-stage { position: relative; top: 0; height: 70vw; max-height: 480px; min-height: 320px; }
   .maker { grid-template-columns: 1fr; gap: 28px; }
   .rules-after { grid-template-columns: 1fr; }
-  nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--paper); border-bottom: 2px solid var(--ink); flex-direction: column; padding: 8px 16px 14px; gap: 2px; }
-  nav.open { display: flex; }
-  nav a { font-size: 17px; padding: 10px 12px; }
+  #nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--paper); border-bottom: 2px solid var(--ink); flex-direction: column; padding: 8px 16px 14px; gap: 2px; }
+  #nav.open { display: flex; }
+  #nav a { font-size: 17px; padding: 10px 12px; }
   .navtoggle { display: block; }
 }
 @media (max-width: 720px) {
@@ -425,7 +425,7 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   .sheets a { min-height: 40px; min-width: 52px; display: inline-grid; place-items: center; padding: 0 10px; }
   .sheets li { gap: 8px; }
   .buy, .mitem a.buy, .pbody .buy { min-height: 44px; display: inline-grid; place-items: center; padding: 0 14px; }
-  nav a { min-height: 44px; display: flex; align-items: center; }
+  #nav a { min-height: 44px; display: flex; align-items: center; }
 }
 @media (prefers-reduced-motion: reduce) { .btn, .chip { transition: none; } }
 
@@ -466,7 +466,7 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   .controls .chip { padding: 8px 12px; }
   input[type=range] { height: 44px; }
   .foot a, .maker p a, .sheets a, .tbl a { display: inline-block; min-height: 44px; line-height: 44px; }
-  nav a { min-height: 44px; display: flex; align-items: center; }
+  #nav a { min-height: 44px; display: flex; align-items: center; }
 }
 .foot p { line-height: 2.2; }
 /* bed table as cards on narrow screens */

@@ -361,9 +361,10 @@ identification". The divider only fits one way (see step 6).
 **Box.**
 
 5. **Drawer guides.** While each side wall lies flat, glue its two guides (part
-   J) to the inside face at the divider end. Each guide's rear end is flush with
-   the divider's rear face (X = 82.55, the rear edge of the divider-hole column
-   in the wall), and its bottom edge sits on the top edge of the bottom-panel
+   J) to the inside face at the divider end. Each guide's FRONT end (the end
+   toward the paper slot) is flush with the divider's rear face (X = 82.55, the
+   rear edge of the divider-hole column in the wall), so the guide runs back
+   from there toward the drawer opening (X 82.55 to 122.55), and its bottom edge sits on the top edge of the bottom-panel
    hole row (lower guide) or of the shelf hole row (upper guide). The lower
    pair stand on the bay floor and the upper pair on the shelf. Let the glue set
    before the walls go on.
