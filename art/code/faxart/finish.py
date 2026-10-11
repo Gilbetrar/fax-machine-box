@@ -60,7 +60,9 @@ def emit(face_id: str, v: Variant) -> dict:
         ds = V.trace(mask)
         V.write_svg(svg, ds, size_mm(face_id), f"{f.title} - {v.label}", desc)
         ink40 = V.rasterize_svg(svg, rules.RULE_PPM)
-        thin, gap, nt, ng = rules.violations(ink40)
+        # repaired down to 0.01 mm2 features (the rule fails at 0.02): margin
+        # for the cut-set's re-flattening of the curves
+        thin, gap, nt, ng = rules.violations(ink40, min_mm2=0.01, line_mm=0.30)
         if nt == 0 and ng == 0:
             break
         k = int(rules.RULE_PPM / R.PPM)
@@ -72,7 +74,7 @@ def emit(face_id: str, v: Variant) -> dict:
         mask = mask | (cv2.dilate(R.u8(down(gap)), grow).astype(bool) & mat)
         # a thin feature is nearly always a pointed stroke tip: fatten it into
         # a round cap rather than shortening the stroke (which just moves the tip)
-        mask = mask | (cv2.dilate(R.u8(down(thin)), R.disk(5)).astype(bool) & mat)
+        mask = mask | (cv2.dilate(R.u8(down(thin)), R.disk(7)).astype(bool) & mat)
         mask = R.enforce_laser_rules(mask, mat, rounds=1)
     v.mask = mask
     v.stats_rules = {"thin": nt, "gap": ng}

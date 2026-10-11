@@ -41,11 +41,19 @@ def features(diff: np.ndarray, ppm: float, min_mm2: float = FEATURE_MM2):
     return lab, keep
 
 
-def violations(ink: np.ndarray, ppm: float = RULE_PPM, min_mm2: float = FEATURE_MM2):
+# The rules themselves, for checking art after the cut-set has placed and
+# trimmed it (its geometry is simplified to ~0.02 mm, so it is checked
+# against the rule, not against the build's stricter measuring discs).
+RULE_LINE_MM = 0.25
+RULE_GAP_MM = 0.30
+
+
+def violations(ink: np.ndarray, ppm: float = RULE_PPM, min_mm2: float = FEATURE_MM2,
+               line_mm: float = MIN_LINE_MM, gap_mm: float = MIN_GAP_MM):
     """-> (thin_mask, gap_mask, n_thin, n_gap) of features >= min_mm2."""
-    thin = ink & ~opening(ink, MIN_LINE_MM / 2 * ppm)
+    thin = ink & ~opening(ink, line_mm / 2 * ppm)
     paper = ~ink
-    gap = paper & ~opening(paper, MIN_GAP_MM / 2 * ppm)
+    gap = paper & ~opening(paper, gap_mm / 2 * ppm)
     gap[:3, :] = gap[-3:, :] = False
     gap[:, :3] = gap[:, -3:] = False
     lt, kt = features(thin, ppm, min_mm2)

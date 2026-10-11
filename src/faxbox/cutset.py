@@ -660,6 +660,7 @@ def bed_up(item: Item, mode: str) -> str:
     return MODES[mode]
 _BED_CACHE: dict = {}
 KEEPOUT = 0.40          # mm; art closer than CLEARANCE_MIN to a cut is trimmed back to this
+TRIM_OPEN = 0.14        # mm; trimmed art is opened by this radius (> half the 0.25 mm min line)
 
 
 def cut_geometry(cuts):
@@ -704,7 +705,19 @@ def _keep_clear(cuts, fills, burn: float = 0.0):
             kept.extend(fills[i] for i in idx)
         else:
             n_trim += 1
-            trimmed.extend(eg.polygon_subpaths(poly.intersection(burnt).difference(keepout).simplify(0.02)))
+            cut = poly.intersection(burnt).difference(keepout)
+            # trimming a stroke where a hole moved under it can leave a
+            # hairline along the trim; open by the 0.25 mm minimum line
+            # (art red-team final, item 1) and drop the specks that leaves
+            # only the thin parts the trim itself made (next to the trim line)
+            # are removed; the rest of the component is left exactly as drawn
+            opened = cut.buffer(-TRIM_OPEN, quad_segs=8).buffer(TRIM_OPEN, quad_segs=8)
+            sliver = cut.difference(opened).intersection(keepout.buffer(0.6))
+            cut = cut.difference(sliver.buffer(0.02))
+            parts = [g for g in (getattr(cut, "geoms", None) or [cut]) if g.area >= 0.09]
+            if parts:
+                from shapely.ops import unary_union
+                trimmed.extend(eg.polygon_subpaths(unary_union(parts).simplify(0.02)))
     return kept + trimmed, n_trim
 
 
