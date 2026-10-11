@@ -27,6 +27,7 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- chrome ----------
 function initChrome() {
+  const hint = document.getElementById('stage-hint'); if (hint && matchMedia('(pointer: coarse)').matches) hint.textContent = 'Drag to turn · tap a drawer or the lid';
   for (const w of document.querySelectorAll('.rainbow .w')) {
     const t = w.textContent; w.textContent = '';
     for (const ch of t) w.append(h('span', { class: 'ch', 'aria-hidden': 'true' }, ch));
@@ -207,7 +208,7 @@ const mm2 = x => Number(x).toFixed(2);
 const mm1 = x => Number(x).toFixed(1);
 const dlBtn = (href, label, cls = 'btn-line') => h('a', { class: 'btn ' + cls, href: fileUrl(href), download: '' }, label);
 const soonBox = (title, text) => h('div', { class: 'soon', html: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="6" y="4" width="28" height="36" rx="3" fill="#fff" stroke="#1d1b19" stroke-width="2.4"/><path d="M12 14h16M12 20h16M12 26h10" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/><circle cx="33" cy="33" r="8" fill="#f6d33c" stroke="#1d1b19" stroke-width="2.4"/><path d="M33 29v4l3 2" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round"/></svg>' }, h('div', {}, h('b', {}, title), h('span', {}, text)));
-const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2').replace(/\b0\.2 mm/g, '0.20 mm').replace(/\bi engraved ticks above slot i\b/g, 'one engraved tick above the first slot, two above the second, and so on').replace(/rounded to 0\.05\b/g, 'rounded to the nearest 0.05 mm');
+const tidy = s => String(s || '').replace(/(\d)\s*x\s*(\d)/g, '$1 × $2').replace(/\b0\.2 mm/g, '0.20 mm').replace(/\bi engraved ticks (above|below|between) slot i( and the magnet holes)?/g, (m, w, x) => `one engraved tick ${w === 'between' ? 'beside' : w} the first slot, two beside the second, and so on${x ? ', between the slots and the magnet holes' : ''}`).replace(/rounded to 0\.05\b/g, 'rounded to the nearest 0.05 mm');
 const sheetsTxt = n => n == null ? '' : `${n} sheet${n == 1 ? '' : 's'}`;
 function seg(label, opts, cur, onPick) {
   return h('div', { class: 'seg seg-inline', role: 'group', 'aria-label': label },
@@ -236,12 +237,13 @@ async function initFiles() {
     const T = man.thicknesses[st.t];
     if (!T) { box.append(soonBox(`No files for ${st.t} mm yet`, 'Pick another thickness.')); return; }
     if (T.wall_id) wall.append(h('b', {}, 'Telling the side walls apart: '), `${T.wall_id.rule || 'the left wall has one more divider hole.'} At ${st.t} mm the left wall has ${T.wall_id.left_divider_holes} and the right wall ${T.wall_id.right_divider_holes}.`);
-    // coupon
-    const c = T.coupon;
+    // coupon (per kerf in schema 4)
+    const Kc = (T.kerfs && Object.values(T.kerfs).find(k => k.id === st.kerf)) || null;
+    const c = (Kc && Kc.coupon) || T.coupon;
     if (c) coupon.append(h('div', { class: 'dl-row' },
       c.svg_marked ? dlBtn(c.svg_marked, 'Coupon with tick marks, SVG', 'btn-ink') : null, c.dxf_marked ? dlBtn(c.dxf_marked, 'DXF') : null,
       c.svg ? dlBtn(c.svg, 'Cut-only coupon, SVG') : null, c.dxf ? dlBtn(c.dxf, 'DXF') : null),
-      h('p', { class: 'small' }, `For ${st.t} mm plywood. The marked version engraves small ticks that make the tests easier to read; use the cut-only one if your service only cuts.`));
+      h('p', { class: 'small' }, `For ${st.t} mm plywood${Kc && Kc.coupon ? ` and the ${mm2(Kc.kerf_mm)} mm kerf` : ''}. The marked version engraves small ticks that make the tests easier to read; use the cut-only one if your service only cuts.`));
     else coupon.append(soonBox('Coupon file coming soon', 'It ships with the box files.'));
     // kerf and version pickers
     const K = (T.kerfs && Object.values(T.kerfs).find(k => k.id === st.kerf)) || null;
@@ -261,6 +263,7 @@ async function initFiles() {
     box.append(row);
     if (T.parts && T.parts.zip) box.append(h('p', { class: 'small' }, 'The one-file-per-part set has no kerf added, for services such as SendCutSend that apply their own; it also has the engraving for each art part on its own.'));
     // beds
+    renderCouponGuide(man, st);
     const beds = Object.entries(man.beds || {});
     if (!beds.length) return;
     const tbl = h('table', { class: 'tbl beds-tbl' },
@@ -294,16 +297,19 @@ async function initFiles() {
   });
   render();
   if (man) { renderCouponGuide(man, st); renderLegend(man); }
+  else renderCouponGuide(null, st);
 }
 function renderLegend(man) {
   const e = man.engrave; if (!e || !e.colors) return;
   const L = $('#legend'); L.innerHTML = '';
-  const rows = [['cut', 'Blue is cut.', 'Hairline vector lines that go through the sheet.'],
-    ['engrave_fill', 'Black is engrave.', 'The art: filled shapes to raster engrave. Never cut through.'],
-    ['engrave_line', 'Red is a scored line.', 'Faceplate glue-up guides, in the cut + labels files only.'],
-    ['labels', 'Gray is labels.', 'Part letters and joint numbers on the inside faces; engraving them is optional.']];
-  for (const [k, a, b] of rows) if (e.colors[k]) L.append(h('li', {}, h('span', { class: 'sw', style: `--c:${e.colors[k]}` }), h('span', {}, h('b', {}, a), ' ' + b)));
-  if (e.dxf_note) $('#dxf-note').textContent = tidy(e.dxf_note);
+  const name = c => ({ '#0000ff': 'Blue', '#808080': 'Gray', '#ff0000': 'Red', '#000000': 'Black' })[String(c).toLowerCase()] || c;
+  const rows = [['cut', 'is cut.', 'Hairline vector lines that go through the sheet (layer CUT in the DXF).'],
+    ['engrave_fill', 'fill is area engrave.', 'The art: filled shapes to raster engrave (layer ENGRAVE). Never cut through.'],
+    ['marks', 'hairline is a line engrave.', 'Single-line marks: part letters, joint numbers, faceplate glue-up lines and coupon ticks (layer LABELS). They are optional.'],
+    ['engrave_line', 'is a scored line.', 'Faceplate glue-up guides.'],
+    ['labels', 'is labels.', 'Part letters and joint numbers on the inside faces.']];
+  for (const [k, a, b] of rows) if (e.colors[k]) L.append(h('li', {}, h('span', { class: 'sw' + (k === 'engrave_fill' ? ' fill' : ''), style: `--c:${e.colors[k]}` }), h('span', {}, h('b', {}, `${name(e.colors[k])} ${a}`), ' ' + b)));
+  $('#dxf-note').textContent = [e.colour_note, e.dxf_note].filter(Boolean).map(t => tidy(t.replace(/\s*\(https?:[^)]*\)/, ''))).join(' ');
 }
 // the coupon: layout drawn from the manifest, plus how to read each test
 const FEATURE_NAMES = { kerf_square: 'Kerf square', thickness_slots: 'Thickness slots', magnet_holes: 'Magnet holes', finger_joints: 'Finger joints', lid_slot: 'Lid slot' };
@@ -318,14 +324,40 @@ function couponSVG(layout) {
   }
   return o + '</svg>';
 }
+const couponCache = new Map();
+async function realCoupon(file, layout) {
+  // the actual coupon drawing (marked version), with each piece shaded and lettered from the layout
+  if (!couponCache.has(file)) couponCache.set(file, getText(DL + file));
+  const txt = await couponCache.get(file); if (!txt) return null;
+  const d = new DOMParser().parseFromString(txt, 'image/svg+xml'); const svg = d.documentElement;
+  if (!svg || svg.nodeName !== 'svg') return null;
+  svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'The test-fit coupon');
+  const NS = 'http://www.w3.org/2000/svg';
+  const col = { Q: '#fdf5cf', R: '#e7f0fb', S: '#e6f3e6', K: '#fbe3df' };
+  const under = d.createElementNS(NS, 'g'), over = d.createElementNS(NS, 'g');
+  for (const r of layout || []) {
+    const L = r.part[0];
+    const rect = d.createElementNS(NS, 'rect'); for (const [k, v] of Object.entries({ x: r.x_mm, y: r.y_mm, width: r.width_mm, height: r.height_mm, fill: col[L] || '#eee' })) rect.setAttribute(k, v); under.append(rect);
+    const t = d.createElementNS(NS, 'text'); for (const [k, v] of Object.entries({ x: r.x_mm + r.width_mm - 3, y: r.y_mm + 7, 'font-family': 'Rubik, sans-serif', 'font-weight': 800, 'font-size': 6, 'text-anchor': 'end', fill: '#1d1b19' })) t.setAttribute(k, v); t.textContent = L; over.append(t);
+  }
+  svg.insertBefore(under, svg.firstChild); svg.append(over);
+  return new XMLSerializer().serializeToString(svg);
+}
 function renderCouponGuide(man, st) {
   const el = $('#coupon-guide'); el.innerHTML = '';
+  if (!man) { el.append(h('p', { class: 'small' }, 'The reading guide comes with the next set of files.')); return; }
   const g = man.coupon_guide; const T = man.thicknesses[st.t] || Object.values(man.thicknesses)[0];
   if (!g) { el.append(h('p', { class: 'small' }, 'The reading guide comes with the next set of files.')); return; }
-  const layout = T && T.coupon && T.coupon.layout;
+  const Kc = T && T.kerfs && Object.values(T.kerfs).find(k => k.id === st.kerf);
+  const cp = (Kc && Kc.coupon) || (T && T.coupon) || {};
+  const layout = cp.layout;
   const left = h('div', { class: 'cg-left' });
   if (layout && layout.length) {
-    left.append(h('div', { class: 'cg-svg', html: couponSVG(layout) }));
+    const box = h('div', { class: 'cg-svg', html: couponSVG(layout) });
+    left.append(box);
+    const f = cp.svg_marked || cp.svg;
+    if (f) realCoupon(f, layout).then(s => { if (s) box.innerHTML = s; });
+    if (g.orientation) left.append(h('p', { class: 'small' }, tidy(g.orientation)));
     const pieces = {}; for (const r of layout) { const L = r.part[0]; (pieces[L] = pieces[L] || []).push(r.part.replace(/^\w\s+Coupon:\s*/, '')); }
     left.append(h('ul', { class: 'cg-keys' }, Object.entries(pieces).map(([L, ps]) => h('li', {}, h('span', { class: 'letter' }, L), h('span', {}, tidy([...new Set(ps.map(p => p.replace(/, (finger|hole) piece$/, '').replace(/, kerf [\d.]+/, '')))].join('; ')))))));
   }
@@ -338,6 +370,7 @@ function renderCouponGuide(man, st) {
     if (f.identify) lines.push(['Which is which', f.identify]);
     if (f.ticks) lines.push(['Tick marks', f.ticks]);
     if (f.formula) lines.push(['Work it out', f.formula]);
+    if (f.rounding) lines.push(['Rounding', f.rounding]);
     if (f.choose) lines.push(['Pick', f.choose.map(c => `${mm2(c.kerf_mm)} mm: ${(man.kerfs && man.kerfs[c.set] ? man.kerfs[c.set].label.split(' (')[0] : c.set)} files`).join(' · ')]);
     if (f.drawn_widths_mm) lines.push(['Drawn widths', `${mm1(f.drawn_widths_mm[0])} to ${mm1(f.drawn_widths_mm[f.drawn_widths_mm.length - 1])} mm in ${mm1(f.drawn_widths_mm[1] - f.drawn_widths_mm[0])} mm steps`]);
     if (f.drawn_diameters_mm) lines.push(['Drawn holes', f.drawn_diameters_mm.map(mm1).join(', ') + ' mm']);
@@ -389,7 +422,7 @@ async function initMaterials() {
   const man = await new Promise(r => { if (dlState.man !== undefined) r(dlState.man); else { const prev = dlState.ready; dlState.ready = m => { prev && prev(m); r(m); }; } });
   const stock = man && man.beds && Object.entries(man.beds).find(([, b]) => /12 x 24/.test((b.stock && b.stock.name) || '') && b.stock.width_mm > 600);
   const t32 = man && man.thicknesses && man.thicknesses['3.2'];
-  const n1224 = stock && t32 && t32.kerfs && Object.values(t32.kerfs).map(k => k.cut_only && k.cut_only.sheets && k.cut_only.sheets[stock[0]]).find(n => n != null);
+  const n1224 = (man && man.stock_12x24_sheets_per_box) || stock && t32 && t32.kerfs && Object.values(t32.kerfs).map(k => k.cut_only && k.cut_only.sheets && k.cut_only.sheets[stock[0]]).find(n => n != null);
   // every plywood number comes from the 12 x 24 in layout's sheet count and the listed pack price
   const ply = d.items.find(i => /12 × 24 in, box of (\d+)/.test(i.name));
   if (ply && n1224) {

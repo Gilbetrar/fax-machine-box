@@ -3,7 +3,7 @@
 
 export const stepNumber = (s, i) => s.number ?? s.n ?? s.step ?? s.index ?? (i + 1);
 export const stepParts = s => s.parts || s.part_ids || s.added || [];
-export const cleanName = n => String(n || '').replace(/\s*\((lower|upper)( drawer)?\)/i, '');
+export const cleanName = n => String(n || '').replace(/\s*\((lower|upper)[^)]*\)/i, '');
 
 // Site-side wording added to the exporter's steps, keyed by step id.
 export const STEP_TEXT = {
@@ -27,12 +27,12 @@ export const EXTRA_STEPS = [
   { before: 'drawer_walls', id: 'prep', title: 'Sort the parts and dry-fit', focus: 'dryfit',
     caption: 'Lay the parts out by letter. Engraved faces always face out; a part with its gray labels showing is inside-out. Parts without art carry small gray joint numbers on their inside face, and two edges with the same number go together; where a plain part meets an art part, only the plain part is numbered. Dry-fit the whole box once without glue, following the steps below, then take it apart and glue it in the same order. Titebond III stays workable for about 10 minutes, so glue in short sessions as the steps say, letting each one set for 30 minutes: a thin line of glue on the fingers, tap the joint home with a mallet or a block of wood, and wipe off what squeezes out.',
     tools: ['wood glue', 'mallet or block of wood', 'damp cloth'] },
-  { before: 'drawer_walls', id: 'magnets_drawer', title: 'Magnets: drawer backs', focus: 'magnets_drawer',
-    caption: 'Magnets go in while the parts are loose. Snap two magnets together and, without separating them, put a marker dot on both outer faces. Pull them apart. Press one into the hole in a drawer back with its dot facing into the drawer, flush with the outside face; keep its partner for the divider. Do the same for the second drawer. A drop of CA glue holds them if the fit is loose.',
-    hardware: ['{MAGNETS} × 6 × 2 mm disc magnet'], tools: ['marker', 'CA glue'] },
-  { before: 'box_frame', id: 'magnets_divider', title: 'Magnets: divider', focus: 'magnets_divider',
-    caption: 'Press each partner magnet into a divider hole from the rear (drawer) side, dot facing the front, flush with the rear face. The dots face away from each other across the gap, so each pair always attracts.',
-    hardware: [], tools: ['CA glue'] },
+  { before: 'drawer_walls', id: 'magnets', title: 'Magnets', focus: 'magnets',
+    caption: 'Magnets go in while the parts are loose, before anything is assembled. Stack all four magnets in one column and put a marker dot on the top face of the stack, so every dot marks the same pole; then slide them off one at a time. Find each part\'s inside face first: it carries the gray part letter and joint numbers. Press the two divider magnets into their holes from the divider\'s rear face (the side the drawers close against), dot facing the rear, flush with that face. Press each drawer-back magnet in with its dot facing into the drawer, flush with the outside face that meets the divider. Each pair then attracts, and either drawer works in either bay. A drop of CA glue holds a loose magnet.',
+    hardware: ['4 × 6 × 2 mm disc magnet'], tools: ['marker', 'CA glue'] },
+  { before: 'box_frame', id: 'guides', title: 'Drawer guides', focus: 'guides',
+    caption: 'Lay each side wall flat, inside face up, and glue its two guides (part J) to the inside face at the divider end. The rear end of each guide lines up with the rear edge of the divider-hole column; its bottom edge sits on the top edge of the bottom-panel hole row (lower guide) or the shelf hole row (upper guide). Let the glue set before the walls go on.',
+    hardware: [], tools: ['wood glue', 'clamps'] },
   { after: 'box_bottom', id: 'square', title: 'Square and clamp', focus: 'square',
     caption: 'Measure both diagonals. When they match, clamp or tape the box for 30 to 60 minutes, and give the glue 24 hours before you load it. Slide each drawer into its opening once while the glue is soft to check the bay is square.',
     tools: ['clamps or painter\'s tape', 'tape measure'] },
@@ -94,7 +94,7 @@ export function buildSteps(data) {
 
 export const HOW_CARDS = [
   { id: 'paper', title: 'Paper slot', text: 'The front compartment holds a stack of quarter-letter sheets (4.25 × 5.5 in) standing on their long edge. Slide the lid forward, out the front, to take a page.', alt: 'Cutaway of the front compartment holding a stack of paper on edge' },
-  { id: 'drawers', title: 'Two drawers with magnet catches', text: 'COLORS holds colored pencils and Lines holds pens. Each drawer pulls out the back. A pair of small magnets, one in the drawer and one in the divider, pulls it shut and keeps it closed when you carry the box.', alt: 'The upper drawer pulled out of the back of the box, with its magnet catch' },
+  { id: 'drawers', title: 'Two drawers with magnet catches', text: 'COLORS holds colored pencils and Lines holds pens. Each drawer pulls out the back. Two small wooden guides on each side keep it centred, and a pair of small magnets, one in the drawer and one in the divider, pulls it shut and keeps it closed when you carry the box.', alt: 'The upper drawer pulled out of the back of the box, with its magnet catch' },
   { id: 'lid', title: 'Sliding lid', text: 'The lid rides in two slots cut into the side walls and slides out the front. It has no lock. The lid rests in its slots and stays closed while the box is level, so carry it level and lift it from below, never by the lid or the top front edges.', alt: 'The sliding lid pulled forward out of its slots' },
   { id: 'joints', title: 'Finger joints', text: 'Every corner is a row of interlocking fingers cut to the exact plywood thickness. They line the box up square on their own, and a little wood glue makes them permanent.', alt: 'A corner of the box pulled apart to show the interlocking finger joints' },
 ];

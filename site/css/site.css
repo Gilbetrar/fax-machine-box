@@ -479,3 +479,9 @@ input[type=range] { flex: 1; accent-color: var(--ink); height: 28px; }
   .beds-tbl td[data-l]::before { content: attr(data-l) ": "; font: 700 12px var(--body); color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
   .beds-tbl td:first-child::before { content: none; }
 }
+
+.cg-svg svg { width: 100%; height: auto; display: block; background: #fff; border: 1.5px solid var(--line); border-radius: 8px; }
+.cg-svg svg path[stroke="rgb(0,0,255)"], .cg-svg svg path { vector-effect: non-scaling-stroke; stroke-width: 1.2px; }
+.cg-svg svg path[stroke="rgb(255,0,0)"] { stroke-width: 1px; }
+.sw.fill { height: 12px; border-top: 0; background: var(--c); transform: translateY(1px); border-radius: 2px; }
+@media (max-width: 720px) { .foot a { display: inline-block; min-height: 44px; line-height: 44px; } input[type=range] { height: 44px; } }

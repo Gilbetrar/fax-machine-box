@@ -41,11 +41,11 @@
      "default": true,
      "notes": "Solid black drip lettering, as on the original cardboard box.",
      "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
-     "ink_pct": 24.5,
-     "paths": 50,
+     "ink_pct": 23.9,
+     "paths": 43,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 144,
+     "svg_kb": 141,
      "png_sm": "art/sm/left__solid.png"
     },
     {
@@ -56,11 +56,11 @@
      "default": false,
      "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
      "source": "art/ai-versions/final/IMG_4228_ai_vH1.png ",
-     "ink_pct": 14.2,
-     "paths": 417,
+     "ink_pct": 14.1,
+     "paths": 388,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 227,
+     "svg_kb": 232,
      "png_sm": "art/sm/left__outline.png"
     }
    ]
@@ -107,11 +107,26 @@
      "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
      "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
      "ink_pct": 24.6,
-     "paths": 437,
+     "paths": 387,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 261,
+     "svg_kb": 259,
      "png_sm": "art/sm/right__funfor.png"
+    },
+    {
+     "id": "outline",
+     "label": "Outlined title",
+     "svg": "out/right__outline.svg",
+     "png": "out/right__outline.png",
+     "default": false,
+     "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+     "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
+     "ink_pct": 20.7,
+     "paths": 512,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 299,
+     "png_sm": "art/sm/right__outline.png"
     },
     {
      "id": "nofunfor",
@@ -122,10 +137,10 @@
      "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
      "source": "art/ai-versions/final/IMG_4230_ai_vH2.png ",
      "ink_pct": 24.4,
-     "paths": 434,
+     "paths": 385,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 259,
+     "svg_kb": 257,
      "png_sm": "art/sm/right__nofunfor.png"
     }
    ]
@@ -164,18 +179,33 @@
    "engrave_part_flipped": false,
    "variants": [
     {
+     "id": "outline",
+     "label": "Outlined letters",
+     "svg": "out/front__outline.svg",
+     "png": "out/front__outline.png",
+     "default": false,
+     "notes": "FAX MACHINE as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
+     "source": "art/ai-versions/final/IMG_4229_ai_vH1.png",
+     "ink_pct": 19.8,
+     "paths": 218,
+     "thin": 0,
+     "gap": 0,
+     "svg_kb": 157,
+     "png_sm": "art/sm/front__outline.png"
+    },
+    {
      "id": "traced",
      "label": "Fax machine",
      "svg": "out/front__traced.svg",
      "png": "out/front__traced.png",
      "default": true,
      "notes": "The fax machine from the front of the original box, with its WRITE and DRAW buttons.",
-     "source": "art/ai-versions/final/IMG_4229_ai_vH1.png ",
-     "ink_pct": 25.4,
-     "paths": 88,
+     "source": "art/ai-versions/final/IMG_4229_ai_vH1.png",
+     "ink_pct": 25.5,
+     "paths": 83,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 127,
+     "svg_kb": 126,
      "png_sm": "art/sm/front__traced.png"
     }
    ]
@@ -221,11 +251,11 @@
      "default": true,
      "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
      "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-     "ink_pct": 21.7,
-     "paths": 181,
+     "ink_pct": 19.8,
+     "paths": 166,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 231,
+     "svg_kb": 203,
      "png_sm": "art/sm/top__a.png"
     },
     {
@@ -237,10 +267,10 @@
      "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
      "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
      "ink_pct": 19.8,
-     "paths": 231,
+     "paths": 211,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 223,
+     "svg_kb": 225,
      "png_sm": "art/sm/top__c.png"
     }
    ]
@@ -249,7 +279,7 @@
    "part_id": "lid",
    "title": "Sliding lid",
    "size_mm": [
-    79.0,
+    78.0,
     163.6
    ],
    "frame": "exterior view: u right, v down, mm, over the part's nominal rectangle",
@@ -286,11 +316,11 @@
      "default": true,
      "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
      "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-     "ink_pct": 16.3,
-     "paths": 61,
+     "ink_pct": 21.6,
+     "paths": 68,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 57,
+     "svg_kb": 93,
      "png_sm": "art/sm/lid__a.png"
     },
     {
@@ -301,11 +331,11 @@
      "default": false,
      "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
      "source": "art/ai-versions/final/IMG_4231_ai_vT1_master.png (approved panorama)",
-     "ink_pct": 20.2,
-     "paths": 51,
+     "ink_pct": 20.0,
+     "paths": 57,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 76,
+     "svg_kb": 75,
      "png_sm": "art/sm/lid__c.png"
     }
    ]
@@ -351,11 +381,11 @@
      "default": true,
      "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
      "source": "art/ai-versions/final/IMG_4236_ai_vH3.png",
-     "ink_pct": 8.7,
-     "paths": 87,
+     "ink_pct": 8.8,
+     "paths": 65,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 39,
+     "svg_kb": 43,
      "png_sm": "art/sm/B_face__traced.png"
     }
    ]
@@ -401,11 +431,11 @@
      "default": true,
      "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
      "source": "art/ai-versions/final/IMG_4238_ai_vH2.png",
-     "ink_pct": 5.9,
-     "paths": 30,
+     "ink_pct": 6.0,
+     "paths": 22,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 33,
+     "svg_kb": 36,
      "png_sm": "art/sm/T_face__traced.png"
     }
    ]
@@ -451,11 +481,11 @@
      "default": true,
      "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
      "source": "art/trimmed/IMG_4233.jpeg",
-     "ink_pct": 16.3,
-     "paths": 88,
+     "ink_pct": 17.4,
+     "paths": 145,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 91,
+     "svg_kb": 102,
      "png_sm": "art/sm/B_left__traced.png"
     }
    ]
@@ -502,10 +532,10 @@
      "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
      "source": "art/trimmed/IMG_4235.jpeg",
      "ink_pct": 15.1,
-     "paths": 131,
+     "paths": 116,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 81,
+     "svg_kb": 83,
      "png_sm": "art/sm/B_right__traced.png"
     }
    ]
@@ -551,11 +581,11 @@
      "default": true,
      "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
      "source": "art/trimmed/IMG_4237.jpeg",
-     "ink_pct": 26.5,
-     "paths": 253,
+     "ink_pct": 26.6,
+     "paths": 217,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 175,
+     "svg_kb": 177,
      "png_sm": "art/sm/T_left__traced.png"
     }
    ]
@@ -601,11 +631,11 @@
      "default": true,
      "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
      "source": "art/trimmed/IMG_4239.jpeg",
-     "ink_pct": 28.1,
-     "paths": 224,
+     "ink_pct": 28.3,
+     "paths": 185,
      "thin": 0,
      "gap": 0,
-     "svg_kb": 183,
+     "svg_kb": 185,
      "png_sm": "art/sm/T_right__traced.png"
     }
    ]

@@ -100,6 +100,8 @@ def stamp(v: str) -> None:
     assert n == 1, "import map not found"
     html = re.sub(r'(href="css/site\.css)(\?v=[^"]*)?"', rf'\1?v={v}"', html)
     html = re.sub(r'(src="js/page\.js)(\?v=[^"]*)?"', rf'\1?v={v}"', html)
+    og = hashlib.sha256((SITE / "img" / "og.jpg").read_bytes()).hexdigest()[:10]
+    html = re.sub(r'(content="https://bjblabs\.com/fax-machine/img/og\.jpg)(\?v=[^"]*)?"', rf'\1?v={og}"', html)
     (SITE / "index.html").write_text(html)
     print("version", v)
 

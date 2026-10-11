@@ -169,18 +169,27 @@ function stepPicture(step, data, R) {
   const s = R._scene(), b = new THREE.Box3();
   const mags = (data.hardware && data.hardware.magnets) || [];
   if (step.focus === 'paper') return null;
-  if (step.focus === 'magnets_divider' || step.focus === 'magnets_drawer') {
-    const drawer = step.focus === 'magnets_drawer';
-    const part = drawer ? data.parts.find(p => p.group === 'drawer_lower' && /back/i.test(p.id + p.name)) : findPart(data, /divider/i);
-    if (!part) return null;
-    R.addPart(s, part, 'hi', [0, 0, 0], b);
-    const pull = drawer ? -1 : 1;   // magnets go into the drawer back from the front, into the divider from the rear
+  if (step.focus === 'magnets') {
+    // the divider and one drawer back, magnets pulled out toward the faces they go into
+    const div = findPart(data, /divider/i), back = data.parts.find(p => p.group === 'drawer_lower' && /back/i.test(p.id + p.name));
+    const gap = [70, 0, 0];
+    if (div) R.addPart(s, div, 'hi', [0, 0, 0], b);
+    if (back) R.addPart(s, back, 'hi', gap, b);
     for (const m of mags) {
-      if (drawer ? m.group !== 'drawer_lower' : !!m.group) continue;
-      R.addMagnet(s, m, b, [pull * 34, 0, 0]);
-      R.addArrow(s, new THREE.Vector3(m.at[0] + pull * 30, m.at[1], m.at[2]), [-pull, 0, 0], 24, b);
+      if (m.group && m.group !== 'drawer_lower') continue;
+      const off = m.group ? [gap[0] + 22, 0, 0] : [16, 0, 0];
+      R.addMagnet(s, m, b, off);
     }
-    return R.render(s, b, { dir: drawer ? [-0.75, 1, 0.5] : [0.75, -1, 0.5] });
+    return R.render(s, b, { dir: [0.8, -1, 0.5] });
+  }
+  if (step.focus === 'guides') {
+    const walls = data.parts.filter(p => /^(left|right)$/i.test(p.id) || /^(left|right) wall$/i.test(p.name));
+    const guides = data.parts.filter(p => /guide/i.test(p.id + ' ' + p.name));
+    // the right wall seen from inside, its two guides pulled off toward the camera
+    const rw = walls.find(w => /right/i.test(w.id + w.name)) || walls[0];
+    if (rw) R.addPart(s, rw, 'plain', [0, 0, 0], b);
+    for (const q of guides.filter(q => /R$|right/i.test(q.id))) R.addPart(s, q, 'hi', [0, 28, 0], b);
+    return R.render(s, b, { dir: [-0.45, 1, 0.4] });
   }
   if (!hi.length) {
     const shell = data.parts.filter(p => !isDrawer(p.group));

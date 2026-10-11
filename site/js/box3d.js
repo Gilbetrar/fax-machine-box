@@ -17,6 +17,7 @@ export const INK = '#1d1b19';
 export function partGroup(p) {
   if (p.group) return p.group;
   const s = (p.id + ' ' + (p.name || '')).toLowerCase();
+  if (s.includes('guide')) return 'shell';   // drawer guides are glued to the walls
   if (s.includes('drawer') || /^(b|t)_/.test(p.id)) {
     if (s.includes('upper') || s.includes('top drawer') || /^t_/.test(p.id)) return 'drawer_upper';
     return 'drawer_lower';
