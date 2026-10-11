@@ -34,7 +34,7 @@ STYLE = {
         "stroke-weight variation. Shading is redrawn in code as hand-style hatching "
         "(per-stroke angle jitter, wobble, ragged ends) at laser-safe spacing. "
         "Large solids get gap channels unless they are display lettering. Rules: "
-        "every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.35 mm from the laser's burnt edge (0.55 mm from every cut path)."
+        "every line >= 0.25 mm, every gap >= 0.30 mm, no islands < 0.09 mm2, at least 0.35 mm from the laser's burnt edge."
     ),
 }
 

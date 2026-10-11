@@ -926,7 +926,10 @@ def test_sheet_art_and_face_file_art_are_the_same_per_part(built, parts_built):
                 A = _start_points(rec) - origin(rec, burn)
                 B = _start_points(ref) - origin(ref, 0.0)
                 tree = STRtree([Point(p) for p in B])
-                d = np.array([Point(p).distance(Point(B[tree.nearest(Point(p))])) for p in A[::7]])
+                # every 7th start point, but denser for art with few subpaths
+                # (the faceplates) so there are always > 20 to compare
+                step = max(1, min(7, len(A) // 40))
+                d = np.array([Point(p).distance(Point(B[tree.nearest(Point(p))])) for p in A[::step]])
                 kept = d[d < 0.5]                       # the points the clearance trim left alone
                 assert len(kept) > 20, (key, len(kept))
                 assert np.percentile(kept, 90) <= 0.005, (bed, i, key, float(np.percentile(kept, 90)))

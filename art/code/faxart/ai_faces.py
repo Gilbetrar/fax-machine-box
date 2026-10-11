@@ -324,6 +324,12 @@ def title_solids(ink: np.ndarray, top_mm: float = 60.0, exclude=()) -> np.ndarra
 # right wall: the stamp portrait's hair and the writer's black CAP poster are
 # solid art, not title lettering (pass 3, W4)
 RIGHT_NOT_TITLE = [(0.0, 0.0, 30.0, 45.0), (40.0, 30.0, 70.0, 100.0)]
+POSTER_BOX = (44.0, 30.0, 72.0, 100.0)   # the writer's black CAP poster, after his move
+
+
+def poster_solid(ink: np.ndarray) -> np.ndarray:
+    """The CAP poster stays solid black in every right-wall variant."""
+    return grow(solid_regions(ink, 1.6) & E.rect(ink.shape, *POSTER_BOX), 1.0) & ink
 
 
 def left_wall(face_id):
@@ -388,12 +394,13 @@ def right_wall(face_id):
     ink_ff = blank_invented_spines(ink_ff)
     # book-pile titles: keep the knock-out channels off the lettering
     books = E.rect(ink.shape, 5.0, 100.0, 150.0, 127.0)
-    lettering = lettering | (books & ink)
+    lettering = lettering | (books & ink) | poster_solid(ink)
     return [
         Variant("funfor", "With 'Fun For'", finish(face_id, ink_ff, protect=lettering), source=src,
                 notes="The full title, with 'Fun For' moved down beside 'Terrible' so the lid "
                       "slot doesn't cut it."),
-        Variant("outline", "Outlined title", finish(face_id, outline_fill(ink, title_solids(ink, 60.0, RIGHT_NOT_TITLE))),
+        Variant("outline", "Outlined title", finish(face_id, outline_fill(ink, title_solids(ink, 60.0, RIGHT_NOT_TITLE)),
+                       protect=poster_solid(ink)),
                 source=src,
                 notes="The title as outlined letters with light hatching inside. Faster to "
                       "engrave and less likely to scorch."),
@@ -413,11 +420,17 @@ def front_wall(face_id):
     # the AI drawing's second row of buttons runs off its bottom edge and
     # reads as stubs sitting on the base line: erase them, keep the line
     ink &= ~E.rect(ink.shape, 66.5, 107.2, 114.5, 109.3)
-    # tick remnants of those stubs left on the base line (pass 3, W5)
-    lab, comps = E.components(ink & E.rect(ink.shape, 66.0, 106.0, 116.0, 111.0), min_mm2=0.0)
+    # tick remnants of those stubs left on the base line (pass 3, W5, and
+    # the bumps still attached to the line at u ~100 / 112): inside this
+    # strip keep only long horizontal runs, i.e. the base line itself
+    strip = E.rect(ink.shape, 66.0, 106.0, 117.0, 111.0)
+    lab, comps = E.components(ink & strip, min_mm2=0.0)
     for c in comps:
         if (c["u1"] - c["u0"]) < 2.5 and (c["v1"] - c["v0"]) < 2.5:
             ink &= ~(lab == c["i"])
+    line = cv2.morphologyEx(R.u8(ink & strip), cv2.MORPH_OPEN,
+                            cv2.getStructuringElement(cv2.MORPH_RECT, (E.P(4.0), 1))).astype(bool)
+    ink = (ink & ~strip) | line
     lettering = grow(solid_regions(ink), 1.0) & ink
     outlined = Variant("outline", "Outlined letters",
                        finish(face_id, outline_fill(ink, title_solids(ink, 80.0))),

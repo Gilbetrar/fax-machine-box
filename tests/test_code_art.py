@@ -15,8 +15,9 @@ Rules (see art/code/faxart/raster.py):
                                  smoothing at the 0.05 mm render grid)
   - ink coverage per face within a sane band, dense (> 80 % in a 3 mm
     window) area capped except where display lettering is solid by design
-  - no ink within 0.55 mm of any cut path, i.e. >= 0.35 mm from the burnt
-    edge at kerfs up to 0.40 mm (keep-out is 0.65 mm at build)
+  - in the art frame, no ink within 0.55 mm of the nominal cut outline
+    (keep-out 0.65 mm at build); the shipped rule, >= 0.35 mm from the
+    burnt edge, is checked on the exported sheets by test_engrave_cutfiles
   - every SVG is exactly its part's nominal blank in mm, and the blank sits
     inside the generator's drawn piece.
 """
@@ -202,3 +203,32 @@ def test_art_frame_vectors():
             assert list(up) == [0, 0, 1], fid
     assert MANIFEST["faces"]["lid"]["art_right"] == [1, 0, 0]     # front -> rear
     assert MANIFEST["faces"]["top"]["art_up"] == MANIFEST["faces"]["lid"]["art_up"]
+
+
+# --- the art AS EXPORTED --------------------------------------------------------------------------
+# faxbox.cutset places the art on each part and trims it back from the burnt
+# edge wherever a thickness moves a slot or hole under it. Trimming can leave
+# hairlines (final verification: 0.25 x 6.7 mm beside the POOS ON ROUGE frame),
+# so the same per-feature rules are checked on the trimmed art, at the
+# thinnest, nominal and thickest stock and the smallest and largest kerf.
+
+import subprocess  # noqa: E402
+
+TRIM_CHECK = ART / "tools" / "trimmed_check.py"
+
+
+@lru_cache(maxsize=None)
+def trimmed_results(T: float):
+    env = dict(__import__("os").environ, FAXBOX_THICKNESS=str(T), PYTHONPATH=str(REPO / "src"))
+    out = subprocess.run([sys.executable, str(TRIM_CHECK), "0.12", "0.20"], env=env,
+                         capture_output=True, text=True, check=True, cwd=str(REPO)).stdout
+    return [json.loads(l) for l in out.splitlines() if l.startswith("{")]
+
+
+@pytest.mark.parametrize("T", [2.8, 3.2, 3.5])
+def test_exported_art_has_no_thin_or_narrow_features(T):
+    rows = trimmed_results(T)
+    assert len(rows) == 2 * sum(len(f["variants"]) for f in MANIFEST["faces"].values())
+    bad = [(r["kerf"], r["face"], r["variant"], r["thin"], r["gap"], r["thin_at"][:2], r["gap_at"][:2])
+           for r in rows if r["thin"] or r["gap"]]
+    assert not bad, bad

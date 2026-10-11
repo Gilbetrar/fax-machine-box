@@ -22,11 +22,11 @@ PPM = 20.0
 MIN_LINE_MM = 0.25
 MIN_GAP_MM = 0.30
 SPECK_MM2 = 0.09
-# Art keep-out from every cut PATH (holes, slots, finger notches and their
-# corners; the erosion is isotropic so corners get the full distance). The
-# laser's burnt edge sits up to half a kerf (<= 0.10 mm) outside the path, so
-# 0.65 here leaves the traced art >= 0.55 mm from the path and >= 0.35 mm
-# from the burnt edge at every kerf we ship (pass 3, W3).
+# Art keep-out, measured in the art frame from every nominal cut outline
+# (holes, slots, finger notches and their corners; the erosion is isotropic,
+# so corners get the full distance). It is generous on purpose: the rule the
+# exported sheets meet is >= 0.35 mm from the laser's burnt edge at every
+# thickness and kerf, after faxbox.cutset trims anything a moved slot reaches.
 KEEPOUT_MM = 0.65
 
 

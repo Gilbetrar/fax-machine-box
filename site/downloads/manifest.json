@@ -309,7 +309,7 @@
       "label": "Outlined letters",
       "default": false,
       "notes": "The same letters as an outline with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 14.2
+      "ink_pct": 14.3
      }
     ]
    },
@@ -324,21 +324,21 @@
       "label": "With 'Fun For'",
       "default": false,
       "notes": "The full title, with 'Fun For' moved down beside 'Terrible' so the lid slot doesn't cut it.",
-      "ink_pct": 23.7
+      "ink_pct": 24.0
      },
      {
       "id": "outline",
       "label": "Outlined title",
       "default": false,
       "notes": "The title as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 20.2
+      "ink_pct": 20.7
      },
      {
       "id": "nofunfor",
       "label": "Without 'Fun For'",
       "default": true,
       "notes": "The title reads 'Terrible Writers & Artists of All Ages'.",
-      "ink_pct": 23.5
+      "ink_pct": 23.8
      }
     ]
    },
@@ -353,14 +353,14 @@
       "label": "Outlined letters",
       "default": false,
       "notes": "FAX MACHINE as outlined letters with light hatching inside. Faster to engrave and less likely to scorch.",
-      "ink_pct": 19.8
+      "ink_pct": 20.0
      },
      {
       "id": "traced",
       "label": "Fax machine",
       "default": true,
       "notes": "The fax machine from the front of the original box, with its WRITE and DRAW buttons.",
-      "ink_pct": 25.5
+      "ink_pct": 25.7
      }
     ]
    },
@@ -375,14 +375,14 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 19.6
+      "ink_pct": 19.7
      },
      {
       "id": "c",
       "label": "Whole cat",
       "default": false,
       "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
-      "ink_pct": 19.7
+      "ink_pct": 19.8
      }
     ]
    },
@@ -397,14 +397,14 @@
       "label": "Snake head",
       "default": true,
       "notes": "The mosaic snake's head sits on the sliding lid and its scaled body runs back across the top. The cat is left off.",
-      "ink_pct": 21.5
+      "ink_pct": 21.7
      },
      {
       "id": "c",
       "label": "Whole cat",
       "default": false,
       "notes": "The whole cat and the flowered wallpaper fill the top panel; the lid shows the snake's scales. The snake's head is left off.",
-      "ink_pct": 19.9
+      "ink_pct": 20.0
      }
     ]
    },
@@ -419,7 +419,7 @@
       "label": "Patterned letters",
       "default": true,
       "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
-      "ink_pct": 8.8
+      "ink_pct": 8.9
      }
     ]
    },
@@ -434,7 +434,7 @@
       "label": "Patterned letters",
       "default": true,
       "notes": "The hand-drawn letters, each filled with its own pattern, set below the finger slot.",
-      "ink_pct": 6.0
+      "ink_pct": 6.1
      }
     ]
    },
@@ -449,7 +449,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 17.3
+      "ink_pct": 17.4
      }
     ]
    },
@@ -494,7 +494,7 @@
       "label": "Hand-drawn scene",
       "default": true,
       "notes": "Traced from the original cardboard box. The colored-pencil shading becomes hatching.",
-      "ink_pct": 28.2
+      "ink_pct": 28.3
      }
     ]
    }
@@ -1654,17 +1654,17 @@
      "right/funfor": 0.381,
      "right/outline": 0.381,
      "right/nofunfor": 0.381,
-     "left/solid": 0.381,
-     "left/outline": 0.381,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
      "front/outline": 1.335,
      "front/traced": 1.335,
-     "top/a": 0.383,
-     "top/c": 0.386,
-     "B_left/traced": 0.635,
-     "B_right/traced": 0.633,
+     "top/a": 0.384,
+     "top/c": 0.381,
+     "B_left/traced": 0.615,
+     "B_right/traced": 0.608,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.632,
-     "T_right/traced": 0.63,
+     "T_left/traced": 0.608,
+     "T_right/traced": 0.612,
      "T_face/traced": 4.041,
      "lid/a": 0.4,
      "lid/c": 0.4
@@ -2822,20 +2822,20 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.383,
-     "right/outline": 0.383,
-     "right/nofunfor": 0.383,
-     "left/solid": 0.382,
-     "left/outline": 0.382,
+     "right/funfor": 0.382,
+     "right/outline": 0.382,
+     "right/nofunfor": 0.382,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
      "front/outline": 1.235,
      "front/traced": 1.235,
      "top/a": 0.4,
-     "top/c": 0.388,
-     "B_left/traced": 0.643,
-     "B_right/traced": 0.637,
+     "top/c": 0.384,
+     "B_left/traced": 0.613,
+     "B_right/traced": 0.606,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.624,
-     "T_right/traced": 0.629,
+     "T_left/traced": 0.603,
+     "T_right/traced": 0.611,
      "T_face/traced": 4.041,
      "lid/a": 0.37,
      "lid/c": 0.37
@@ -4002,14 +4002,14 @@
      "front/traced": 1.135,
      "top/a": 0.4,
      "top/c": 0.381,
-     "B_left/traced": 0.641,
-     "B_right/traced": 0.637,
+     "B_left/traced": 0.615,
+     "B_right/traced": 0.606,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.633,
-     "T_right/traced": 0.631,
+     "T_left/traced": 0.603,
+     "T_right/traced": 0.611,
      "T_face/traced": 4.041,
-     "lid/a": 0.441,
-     "lid/c": 0.426
+     "lid/a": 0.425,
+     "lid/c": 0.427
     }
    },
    "stock_12x24_sheets": 3
@@ -5171,16 +5171,16 @@
      "left/outline": 0.383,
      "front/outline": 1.035,
      "front/traced": 1.035,
-     "top/a": 0.388,
-     "top/c": 0.385,
-     "B_left/traced": 0.641,
-     "B_right/traced": 0.637,
+     "top/a": 0.386,
+     "top/c": 0.384,
+     "B_left/traced": 0.613,
+     "B_right/traced": 0.608,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.624,
-     "T_right/traced": 0.629,
+     "T_left/traced": 0.607,
+     "T_right/traced": 0.612,
      "T_face/traced": 4.041,
-     "lid/a": 0.541,
-     "lid/c": 0.526
+     "lid/a": 0.525,
+     "lid/c": 0.527
     }
    },
    "stock_12x24_sheets": 3
@@ -6335,23 +6335,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.381,
-     "right/outline": 0.381,
-     "right/nofunfor": 0.381,
-     "left/solid": 0.381,
-     "left/outline": 0.381,
+     "right/funfor": 0.382,
+     "right/outline": 0.382,
+     "right/nofunfor": 0.382,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
      "front/outline": 0.935,
      "front/traced": 0.935,
      "top/a": 0.4,
      "top/c": 0.4,
-     "B_left/traced": 0.511,
+     "B_left/traced": 0.496,
      "B_right/traced": 0.519,
      "B_face/traced": 2.756,
-     "T_left/traced": 0.523,
-     "T_right/traced": 0.514,
+     "T_left/traced": 0.496,
+     "T_right/traced": 0.51,
      "T_face/traced": 4.041,
-     "lid/a": 0.614,
-     "lid/c": 0.6
+     "lid/a": 0.6,
+     "lid/c": 0.605
     }
    },
    "stock_12x24_sheets": 3
@@ -7506,23 +7506,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.38,
-     "right/outline": 0.38,
-     "right/nofunfor": 0.38,
-     "left/solid": 0.38,
-     "left/outline": 0.38,
+     "right/funfor": 0.383,
+     "right/outline": 0.383,
+     "right/nofunfor": 0.383,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
      "front/outline": 0.835,
      "front/traced": 0.835,
-     "top/a": 0.388,
-     "top/c": 0.388,
-     "B_left/traced": 0.389,
-     "B_right/traced": 0.392,
+     "top/a": 0.372,
+     "top/c": 0.375,
+     "B_left/traced": 0.397,
+     "B_right/traced": 0.4,
      "B_face/traced": 2.756,
      "T_left/traced": 0.4,
-     "T_right/traced": 0.383,
+     "T_right/traced": 0.394,
      "T_face/traced": 4.041,
-     "lid/a": 0.614,
-     "lid/c": 0.6
+     "lid/a": 0.6,
+     "lid/c": 0.605
     }
    },
    "stock_12x24_sheets": 3
@@ -8677,23 +8677,23 @@
      }
     ],
     "min_clearance_mm": {
-     "right/funfor": 0.381,
-     "right/outline": 0.381,
-     "right/nofunfor": 0.381,
-     "left/solid": 0.385,
-     "left/outline": 0.381,
+     "right/funfor": 0.383,
+     "right/outline": 0.383,
+     "right/nofunfor": 0.383,
+     "left/solid": 0.383,
+     "left/outline": 0.383,
      "front/outline": 0.735,
      "front/traced": 0.735,
-     "top/a": 0.382,
-     "top/c": 0.382,
-     "B_left/traced": 0.383,
-     "B_right/traced": 0.396,
+     "top/a": 0.381,
+     "top/c": 0.38,
+     "B_left/traced": 0.385,
+     "B_right/traced": 0.438,
      "B_face/traced": 2.756,
      "T_left/traced": 0.4,
-     "T_right/traced": 0.386,
+     "T_right/traced": 0.383,
      "T_face/traced": 4.041,
-     "lid/a": 0.614,
-     "lid/c": 0.6
+     "lid/a": 0.6,
+     "lid/c": 0.605
     }
    },
    "stock_12x24_sheets": 3
@@ -9852,19 +9852,19 @@
      "right/outline": 0.376,
      "right/nofunfor": 0.376,
      "left/solid": 0.383,
-     "left/outline": 0.382,
+     "left/outline": 0.383,
      "front/outline": 0.635,
      "front/traced": 0.635,
-     "top/a": 0.383,
-     "top/c": 0.38,
-     "B_left/traced": 0.39,
+     "top/a": 0.38,
+     "top/c": 0.383,
+     "B_left/traced": 0.396,
      "B_right/traced": 0.4,
      "B_face/traced": 2.756,
      "T_left/traced": 0.385,
-     "T_right/traced": 0.386,
+     "T_right/traced": 0.382,
      "T_face/traced": 4.041,
-     "lid/a": 0.614,
-     "lid/c": 0.6
+     "lid/a": 0.6,
+     "lid/c": 0.605
     }
    },
    "stock_12x24_sheets": 3
