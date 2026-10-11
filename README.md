@@ -706,3 +706,7 @@ FAXBOX_SHEET_WIDTH=458 FAXBOX_SHEET_HEIGHT=304 .venv/bin/python -m faxbox.layout
 Look at every rendered sheet before sending anything to a laser. The sheet
 files on disk are always exactly one run's output (stale sheets from a
 previous nesting are purged automatically).
+
+## License
+
+Designs, cut files and art: CC BY-NC 4.0 (make and share, not sell). Generator code: GPL-3.0-or-later, because it builds on boxes.py. See LICENSE.

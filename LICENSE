@@ -1,0 +1,14 @@
+Fax Machine box — licensing
+
+Designs, cut files, engraving art, renders and written guides
+(everything under site/, art/, output/ and the docs) are licensed under
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).
+You may make, share and adapt them for non-commercial purposes, with credit.
+You may not sell boxes, files or art made from them.
+Full text: LICENSE-DESIGNS.txt, https://creativecommons.org/licenses/by-nc/4.0/
+
+The generator source code (src/, scripts/, tests/) builds on boxes.py,
+which is GPL-3.0, so the code is licensed under the GNU General Public
+License v3.0 or later. Full text: LICENSE-CODE.txt
+
+Copyright (c) 2026 Ben Bateman

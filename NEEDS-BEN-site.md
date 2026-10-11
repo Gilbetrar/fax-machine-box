@@ -1,6 +1,5 @@
 # Site decisions waiting on Ben
 
-- License for the files and art (footer shows "License: to be announced").
-- Pass direction: the page says "always pass in the same direction"; Ben's card arrows go right. Confirm left or right.
-- Small groups (fewer than four players): what to do when a stack comes back before it is full.
-- Whether the right wall keeps "Fun For" (art manifest default decides what shows first).
+- Art choices (lid snake head vs whole cat, "Fun For" on the right wall, solid vs outlined FAX MACHINE): Ben will review later on the site.
+
+Decided 2026-10-11: license CC BY-NC 4.0 for designs/art (code GPL-3.0 because of boxes.py); minimum five players, stacks may come back around; no part labels on art faces; v2 merged to main.
