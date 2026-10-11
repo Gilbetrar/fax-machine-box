@@ -21,6 +21,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
+from . import edits as E
 from . import raster as R
 from .ai_faces import finish, load_gray
 from .finish import Variant
@@ -122,7 +123,7 @@ def split(ink_field: np.ndarray):
     return lid, top
 
 
-def drop_edge_orphans(m: np.ndarray, band_mm: float = 8.0, max_mm2: float = 25.0) -> np.ndarray:
+def drop_edge_orphans(m: np.ndarray, band_mm: float = 10.0, max_mm2: float = 70.0) -> np.ndarray:
     """Small pieces of the lid's drawing that spill over the seam onto the
     top panel's front edge read as orphans there: drop them."""
     n, lab, st, _ = cv2.connectedComponentsWithStats(R.u8(m), connectivity=8)
@@ -153,6 +154,10 @@ def _variants(part: str):
         m = lid if part == "lid" else top
         if part == "top":
             m = drop_edge_orphans(m)
+            if v == "A":
+                # pass 3, W5: a loose bit of the head mosaic's beading at the
+                # panel's front-left, cut off from the head by the seam
+                m &= ~E.rect(m.shape, 0.0, 120.5, 10.8, 131.0)
         # the snake's pupils (the solid almond slits, ~100 mm2 each) stay solid;
         # the dark crosshatch under each eye still gets gap channels
         pupils = cv2.morphologyEx(R.u8(m), cv2.MORPH_OPEN, R.disk(R.px(3.0))).astype(bool)

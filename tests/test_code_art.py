@@ -15,7 +15,8 @@ Rules (see art/code/faxart/raster.py):
                                  smoothing at the 0.05 mm render grid)
   - ink coverage per face within a sane band, dense (> 80 % in a 3 mm
     window) area capped except where display lettering is solid by design
-  - no ink within 0.45 mm of any through-cut (keep-out is 0.55 mm at build)
+  - no ink within 0.55 mm of any cut path, i.e. >= 0.35 mm from the burnt
+    edge at kerfs up to 0.40 mm (keep-out is 0.65 mm at build)
   - every SVG is exactly its part's nominal blank in mm, and the blank sits
     inside the generator's drawn piece.
 """
@@ -175,9 +176,9 @@ def test_ink_coverage_and_density(fid, v):
 @pytest.mark.parametrize("fid,v", VARIANTS, ids=IDS)
 def test_clear_of_cuts(fid, v):
     ink = ink_of(v["svg"])
-    mat = material_mask(fid, PPM, 0.45)
+    mat = material_mask(fid, PPM, 0.55)
     bad = int((ink & ~mat).sum())
-    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.45 mm of a cut"
+    assert bad <= 40, f"{bad} px ({bad / PPM ** 2:.2f} mm2) of ink within 0.55 mm of a cut"
 
 
 PARTS = {p["id"]: p for p in json.loads((REPO / "site" / "data" / "parts.json").read_text())["parts"]}
